@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Basal Metabolic Rate, or BMR, is the amount of energy (in the form of calories) that the body needs to function while resting for 24 hours."
+        android:id="@+id/textView3"
+        android:padding="10dp"
+        android:textAlignment="center"
+        android:textColor="@color/colorPrimary"/>
+
+</LinearLayout>

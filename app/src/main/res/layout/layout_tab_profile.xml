@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tab3"
+    style="@style/tab_background">
+
+    <TableLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageViewProfile"
+                android:minHeight="128dp"
+                android:minWidth="128dp"
+                android:adjustViewBounds="true"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp">
+
+
+                <TextView
+                    style="@style/tab_profile_textLarge"
+                    android:text="Medium Text"
+                    android:id="@+id/tvName"/>
+
+                <TextView
+                    style="@style/tab_profile_textLarge"
+                    android:text="Medium Text"
+                    android:id="@+id/tvGender"/>
+
+                <TextView
+                    style="@style/tab_profile_textLarge"
+                    android:text="Medium Text"
+                    android:id="@+id/tvAge"
+                    />
+
+                <TextView
+                    style="@style/tab_profile_textLarge"
+                    android:text="Medium Text"
+                    android:id="@+id/tvHeight"/>
+            </LinearLayout>
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="20dp">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="fill_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <TextView
+                    style="@style/tab_profile_textLarge"
+                    android:text="Personal best"
+                    android:id="@+id/textView13"
+                    android:padding="10dp"/>
+
+                <View style="@style/horizontal_divider"/>
+
+                <TextView
+                    style="@style/tab_profile_textSmall"
+                    android:text="Small Text"
+                    android:id="@+id/tvPersonalBestStepsDate"/>
+
+                <TextView
+                    style="@style/tab_profile_textMedium"
+                    android:text="Medium Text"
+                    android:id="@+id/tvPersonalBestSteps"
+                    />
+
+                <TextView
+                    style="@style/tab_profile_textSmall"
+                    android:text="Small Text"
+                    android:id="@+id/tvPersonalBestWeightDate"/>
+
+                <TextView
+                    style="@style/tab_profile_textMedium"
+                    android:text="Medium Text"
+                    android:id="@+id/tvPersonalBestWeight"/>
+
+            </LinearLayout>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp">
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="fill_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+            <TextView
+                style="@style/tab_profile_textLarge"
+                android:text="Average"
+                android:id="@+id/textView17"
+                android:padding="10dp"/>
+
+            <View style="@style/horizontal_divider"/>
+
+                <TextView
+                    style="@style/tab_profile_textMedium"
+                    android:text="Medium Text"
+                    android:id="@+id/tvAverageSteps"/>
+
+                <TextView
+                    style="@style/tab_profile_textMedium"
+                    android:text="Medium Text"
+                    android:id="@+id/tvAverageWeight"/>
+
+            </LinearLayout>
+        </TableRow>
+    </TableLayout>
+</LinearLayout>

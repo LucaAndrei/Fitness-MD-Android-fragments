@@ -1,0 +1,110 @@
+<resources>
+
+    <style name="MyMaterialTheme" parent="MyMaterialTheme.Base">
+
+    </style>
+
+    <style name="MyMaterialTheme.Base" parent="Theme.AppCompat.Light">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- Base application theme. -->
+
+    <style name="ButtonTextView">
+        <item name="android:background">#52B3D9</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:textSize">8pt</item>
+    </style>
+
+    <style name="Button">
+        <item name="android:background">#52B3D9</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:textSize">8pt</item>
+        <item name="android:paddingTop">2pt</item>
+        <item name="android:paddingBottom">2pt</item>
+        <item name="android:paddingLeft">6pt</item>
+        <item name="android:paddingRight">6pt</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="app_background">
+        <item name="android:background">#EEEEEE</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+    </style>
+
+    <style name="tab_background">
+        <item name="android:background">#EEEEEE</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">6pt</item>
+    </style>
+
+    <style name="tab_text_color">
+        <item name="android:textColor">#336E7B</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">10pt</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="tab_profile_textLarge">
+        <item name="android:textColor">#336E7B</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">8pt</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:paddingLeft">8pt</item>
+        <item name="android:paddingTop">4pt</item>
+    </style>
+
+    <style name="tab_profile_textMedium">
+        <item name="android:textColor">#336E7B</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">6.5pt</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:layout_marginTop">4pt</item>
+        <item name="android:layout_marginLeft">8pt</item>
+    </style>
+
+    <style name="tab_profile_textSmall">
+        <item name="android:textColor">#336E7B</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">5pt</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:layout_marginTop">4pt</item>
+        <item name="android:layout_marginLeft">8pt</item>
+    </style>
+
+    <style name="horizontal_divider">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">1pt</item>
+        <item name="android:background">#000000</item>
+    </style>
+
+    <style name="tab_text_title">
+        <item name="android:textColor">#336E7B</item>
+        <item name="android:textSize">12pt</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:layout_marginTop">30dp</item>
+    </style>
+
+</resources>

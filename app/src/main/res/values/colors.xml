@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#125688</color>
+    <color name="colorPrimaryDark">#125688</color>
+    <color name="textColorPrimary">#FFFFFF</color>
+    <color name="windowBackground">#FFFFFF</color>
+    <color name="navigationBarColor">#000000</color>
+    <color name="colorAccent">#c8e8ff</color>
+
+    <color name="tab_menu_background">#2C3E50</color>
+
+    <!--<color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>-->
+    <color name="colorPedometer">#FF4081</color>
+    <color name="colorScale">#FF4081</color>
+    <color name="colorProfile">#FF4081</color>
+    <color name="colorDoctor">#FF4081</color>
+    <color name="colorSettings">#FF4081</color>
+
+    <color name="bg_login">#FFF</color>
+
+
+    <color name="bg_pedometer">#FFF</color>
+    <color name="bg_tab_item_pedometer">#FFF</color>
+    <color name="pedometer_arc_progress">#FFF</color>
+    <color name="txt_goal_pedometer_arc_prg">#FFF</color>
+    <color name="txt_steps_pedometer_arc_prg">#FFF</color>
+    <color name="txt_pedometer">#FFF</color>
+
+    <color name="bg_settings">#FFF</color>
+    <color name="bg_tab_item_settings">#FFF</color>
+
+
+    <color name="bg_profile">#FFF</color>
+    <color name="bg_tab_item_profile">#FFF</color>
+    <color name="txt_profile">#FFF</color>
+
+
+
+    <color name="bg_stats">#FFF</color>
+    <color name="bg_tab_item_stats">#FFF</color>
+    <color name="stats_col_1">#FFF</color>
+    <color name="stats_col_2">#FFF</color>
+    <color name="stats_col_3">#FFF</color>
+    <color name="stats_col_4">#FFF</color>
+    <color name="stats_col_5">#FFF</color>
+    <color name="stats_col_6">#FFF</color>
+    <color name="stats_col_7">#FFF</color>
+
+
+    <color name="bg_tabs">#FFF</color>
+    <color name="bg_doctor">#FFF</color>
+    <color name="bg_tab_item_doctor">#FFF</color>
+
+    <color name="bg_weight">#FFF</color>
+    <color name="bg_tab_item_weight">#FFF</color>
+    <color name="weight_arc_progress">#FFF</color>
+    <color name="txt_kg_weight_arc_prg">#FFF</color>
+    <color name="txt_goal_weight_arc_prg">#FFF</color>
+
+    <color name="btn">#FFF</color>
+</resources>

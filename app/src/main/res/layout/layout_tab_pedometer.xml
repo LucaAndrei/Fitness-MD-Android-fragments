@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tab1"
+    tools:context="com.master.aluca.fitnessmd."
+    style="@style/tab_background">
+
+    <TextView
+        android:id="@+id/tvDateToday"
+        style="@style/tab_text_title"/>
+
+    <com.master.aluca.fitnessmd.common.ArcProgress
+        android:id="@+id/arc_progress_pedometer"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        app:arc_progress="1"
+        app:arc_bottom_text="Goal: 10000"
+        app:arc_max="100000"
+        app:arc_suffix_text="steps"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="70dp"
+        app:arc_text_color="#336E7B"
+        app:arc_unfinished_color="#336E7B"
+        app:arc_finished_color="#019875"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/startTimer"
+        android:text="Start"/>
+
+
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="60dp">
+
+            <TextView
+                style="@style/tab_text_color"
+                android:text="Large Text"
+                android:id="@+id/tvKm"/>
+
+            <TextView
+                style="@style/tab_text_color"
+                android:text="Large Text"
+                android:id="@+id/tvKCal"/>
+
+            <Chronometer
+                style="@style/tab_text_color"
+                android:id="@+id/chronometer"
+                android:format="%s">
+
+            </Chronometer>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                style="@style/tab_text_color"
+                android:text="km"
+                android:id="@+id/textView4"/>
+
+            <TextView
+                style="@style/tab_text_color"
+                android:text="kCal"
+                android:id="@+id/textView6"/>
+
+            <TextView
+                style="@style/tab_text_color"
+                android:text="time"
+                android:id="@+id/textView5"/>
+        </TableRow>
+    </TableLayout>
+
+
+</LinearLayout>

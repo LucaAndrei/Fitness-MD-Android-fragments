@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tabSettings"
+    style="@style/tab_background">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="20dp">
+
+        <Button
+            style="@style/Button"
+            android:text="Gender"
+            android:id="@+id/btnGender"
+            android:drawableEnd="@drawable/genders"
+            android:textAlignment="textStart"
+            android:padding="10dp"/>
+
+        <View style="@style/horizontal_divider"/>
+
+        <Button
+            style="@style/Button"
+            android:text="Year of birth"
+            android:id="@+id/btnYoB"
+            android:drawableEnd="@drawable/yob"
+            android:textAlignment="textStart"
+            android:padding="10dp"/>
+        <View style="@style/horizontal_divider"/>
+        <Button
+            style="@style/Button"
+            android:text="Weight"
+            android:id="@+id/btnWeight"
+            android:drawableEnd="@drawable/scale"
+            android:textAlignment="textStart"
+            android:padding="10dp"/>
+
+        <View style="@style/horizontal_divider"/>
+
+        <Button
+            style="@style/Button"
+            android:text="Height"
+            android:id="@+id/btnHeight"
+            android:drawableEnd="@drawable/height"
+            android:textAlignment="textStart"
+            android:padding="10dp"/>
+
+    </LinearLayout>
+
+    <Button
+        style="@style/Button"
+        android:text="Pair device"
+        android:id="@+id/btnPairDevice"
+        android:drawableEnd="@drawable/pair"
+        android:textAlignment="textStart"
+        android:padding="10dp"/>
+
+        <View style="@style/horizontal_divider"/>
+
+        <Button
+            style="@style/Button"
+            android:text="Sync now"
+            android:id="@+id/btnSyncNow"
+            android:drawableEnd="@drawable/cloud"
+            android:textAlignment="textStart"
+            android:padding="10dp"/>
+
+        <View style="@style/horizontal_divider"/>
+
+        <Button
+            style="@style/Button"
+            android:text="Erase all data"
+            android:id="@+id/btnEraseData"
+            android:drawableEnd="@drawable/recyclebin"
+            android:textAlignment="textStart"
+            android:padding="10dp"/>
+
+    <View style="@style/horizontal_divider"/>
+        <Button
+            style="@style/Button"
+            android:text="Log out"
+            android:id="@+id/btnLogout"
+            android:drawableEnd="@drawable/exit"
+            android:textAlignment="textStart"
+            android:padding="10dp"/>
+    </LinearLayout>
+</LinearLayout>

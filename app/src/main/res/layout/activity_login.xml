@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:fitsSystemWindows="true"
+            tools:context=".LoginActivity"
+            style="@style/app_background">
+
+    <LinearLayout
+        android:id="@+id/lin_lay"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="56dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:weightSum="1"
+        android:descendantFocusability="beforeDescendants"
+        android:focusableInTouchMode="true">
+
+        <ImageView
+            android:id="@+id/logo"
+            android:src="@drawable/icon_lg"
+            android:layout_width="176dp"
+            android:layout_height="152dp"
+            android:layout_marginBottom="24dp"
+            android:layout_gravity="center_horizontal" />
+
+        <!-- Email Label -->
+
+
+        <EditText
+            android:layout_marginTop="50dp"
+            android:id="@+id/input_email_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress|textAutoComplete"
+            android:hint="Email"
+            android:textColor="#336E7B"
+            android:textCursorDrawable="@color/abc_input_method_navigation_guard"/>
+
+        <!-- Password Label -->
+        <EditText
+            android:layout_marginTop="10dp"
+            android:id="@+id/input_password_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:hint="Password"
+            android:textColor="#336E7B"
+            android:textCursorDrawable="@color/abc_input_method_navigation_guard"/>
+
+        <Button
+            android:id="@+id/btn_login"
+            android:layout_marginTop="48dp"
+            android:layout_marginBottom="48dp"
+            android:text="Login"
+            style="@style/Button"/>
+
+        <TextView
+            android:id="@+id/link_signup"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="No account yet? Create one"
+            android:gravity="center"
+            android:textSize="16dip"
+            android:textColor="#336E7B"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/fa_icon_piechart"
+            android:textColor="@color/colorPrimary"/>
+
+    </LinearLayout>
+</ScrollView>

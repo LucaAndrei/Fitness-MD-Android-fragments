@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tab5"
+    style="@style/tab_background"
+    tools:context="com.master.aluca.fitnessmd.">
+
+    <TextView
+        android:id="@+id/tvDateToday"
+        style="@style/tab_text_title"
+        android:textColor="#336E7B"/>
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:text="Average"
+                android:id="@+id/textView20"
+                style="@style/tab_text_color"/>
+
+            <TextView
+                android:text="Total"
+                android:id="@+id/textView22"
+                style="@style/tab_text_color"/>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="10dp">
+            <TextView
+                android:text="7245"
+                android:id="@+id/tvStatsAverageSteps"
+                style="@style/tab_text_color"/>
+            <TextView
+                android:text="32042"
+                android:id="@+id/tvStatsTotalSteps"
+                style="@style/tab_text_color"/>
+        </TableRow>
+    </TableLayout>
+
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/chart1"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_marginTop="10dp"
+        />
+
+
+</LinearLayout>

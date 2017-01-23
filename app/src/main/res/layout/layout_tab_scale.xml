@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tab4"
+    tools:context="com.master.aluca.fitnessmd."
+    style="@style/tab_background">
+
+    <TextView
+        android:text="2 November 2016"
+        android:id="@+id/tvDate"
+        style="@style/tab_text_title"/>
+
+    <com.master.aluca.fitnessmd.common.ArcProgress
+        android:id="@+id/arc_progress_scale"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        app:arc_progress_weight="74.3"
+        app:is_weight="true"
+        app:arc_bottom_text="Goal: 69.0 kg"
+        app:arc_max="100000"
+        app:arc_suffix_text="Kg"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="70dp"
+        app:arc_text_color="#336E7B"
+        app:arc_unfinished_color="#336E7B"
+        app:arc_finished_color="#019875"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Last measurement : 2 November, 2016"
+        android:id="@+id/tvLastMeasurement"
+        android:layout_gravity="center_horizontal"
+        android:textSize="10dp"
+        android:textColor="#336E7B"/>
+
+
+</LinearLayout>

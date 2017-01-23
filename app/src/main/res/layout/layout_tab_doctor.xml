@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tab2"
+    style="@style/tab_background">
+<ScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+<LinearLayout
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                >
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="10dp">
+
+                    <TextView
+                        android:text="Height"
+                        android:id="@+id/tvDrHeight"
+                        style="@style/tab_text_color"/>
+
+                    <TextView
+                        android:text="Age"
+                        android:id="@+id/tvDrAge"
+                        style="@style/tab_text_color"/>
+
+                    <TextView
+
+                        android:text="Weight"
+                        android:id="@+id/tvDrWeight"
+                        style="@style/tab_text_color"/>
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="1dp">
+
+                    <TextView
+
+                        android:text="cm"
+                        android:id="@+id/tvDrHeightUM"
+                        style="@style/tab_text_color"/>
+
+                    <TextView
+
+                        android:text="yrs"
+                        android:id="@+id/tvDrAgeUM"
+                        style="@style/tab_text_color"/>
+
+                    <TextView
+
+                        android:text="kg"
+                        android:id="@+id/tvDrWeightUM"
+                        style="@style/tab_text_color"/>
+                </TableRow>
+            </TableLayout>
+
+    <include
+        layout="@layout/list_row"
+        android:id="@+id/listRowBMI"/>
+    <include
+        layout="@layout/list_row"
+        android:id="@+id/listRowBMR"/>
+    <include
+        layout="@layout/list_row"
+        android:id="@+id/listRowWater"/>
+    <include
+        layout="@layout/list_row"
+        android:id="@+id/listRowIdealBodyWeight"/>
+    <include
+        layout="@layout/list_row"
+        android:id="@+id/listRowCalorieNeeds"/>
+    <include
+        layout="@layout/list_row"
+        android:id="@+id/listRowDiet"/>
+
+    <include
+        layout="@layout/list_row"
+        android:id="@+id/listRowAdvice"/>
+
+</LinearLayout>
+    </ScrollView>
+    </LinearLayout>

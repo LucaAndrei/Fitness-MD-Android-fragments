@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+<RelativeLayout
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Sedentary"
+        android:id="@+id/tvSedentary"
+        android:textAlignment="center"
+        android:padding="20dp"
+        android:textColor="#000"
+        android:layout_alignParentLeft = "true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="9999.99 cal"
+        android:id="@+id/tvSedentaryValue"
+        android:textAlignment="center"
+        android:padding="20dp"
+        android:textColor="#000"
+        android:layout_alignParentRight = "true"/>
+</RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Lightly Active"
+            android:id="@+id/tvLightActive"
+            android:textAlignment="center"
+            android:padding="20dp"
+            android:textColor="#000"
+            android:layout_alignParentLeft = "true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="9999.99 cal"
+            android:id="@+id/tvLightActiveValue"
+            android:textAlignment="center"
+            android:padding="20dp"
+            android:textColor="#000"
+            android:layout_alignParentRight = "true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Moderately Active"
+            android:id="@+id/tvModActive"
+            android:textAlignment="center"
+            android:padding="20dp"
+            android:textColor="#000"
+            android:layout_alignParentLeft = "true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="9999.99 cal"
+            android:id="@+id/tvModActiveValue"
+            android:textAlignment="center"
+            android:padding="20dp"
+            android:textColor="#000"
+            android:layout_alignParentRight = "true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Very active"
+            android:id="@+id/tvVeryActive"
+            android:textAlignment="center"
+            android:padding="20dp"
+            android:textColor="#000"
+            android:layout_alignParentLeft = "true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="9999.99 cal"
+            android:id="@+id/tvVeryActiveValue"
+            android:textAlignment="center"
+            android:padding="20dp"
+            android:textColor="#000"
+            android:layout_alignParentRight = "true"/>
+    </RelativeLayout>
+</LinearLayout>

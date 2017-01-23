@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/custom_selector"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:padding="10dp"
+                android:clickable="true">
+
+    <LinearLayout android:id="@+id/thumbnail"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:padding="3dip"
+                  android:layout_alignParentLeft="true"
+                  android:layout_marginRight="5dip">
+
+        <ImageView
+            android:id="@+id/listRowIcon"
+            android:layout_width="50dip"
+            android:layout_height="50dip"
+            android:src="@android:drawable/star_on"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/listRowTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/thumbnail"
+        android:layout_toRightOf="@+id/thumbnail"
+        android:text="Body Mass Index"
+        android:textColor="#336E7B"
+        android:typeface="sans"
+        android:textSize="20dip"
+        android:textStyle="bold"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_marginTop="2dp"/>
+
+    <TextView
+        android:id="@+id/listRowSubtitle"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/listRowTitle"
+        android:textColor="#336E7B"
+        android:textSize="15dp"
+        android:layout_marginTop="1dip"
+        android:layout_toRightOf="@+id/thumbnail"
+        android:text="20.2"
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="50dp"
+        android:background="@android:color/holo_blue_dark"
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@+id/listRowInfo"
+        />
+
+    <ImageView
+        android:id="@+id/listRowInfo"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:src="@android:drawable/ic_menu_info_details"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+               android:layout_alignParentRight="true"
+               android:layout_centerVertical="true"/>
+</RelativeLayout>
