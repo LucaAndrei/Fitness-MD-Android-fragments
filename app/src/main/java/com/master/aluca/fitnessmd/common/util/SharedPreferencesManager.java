@@ -53,6 +53,8 @@ public class SharedPreferencesManager {
 
 
 
+
+
     public static SharedPreferencesManager getInstance(Context context) {
         if (mInstance == null) {
             mInstance = new SharedPreferencesManager(context);
@@ -70,7 +72,7 @@ public class SharedPreferencesManager {
         sharedPreferences = mContext.getSharedPreferences(Constants.SHARED_PREFERENCES, Context.MODE_PRIVATE);
         sharedPreferencesEditor = sharedPreferences.edit();
 
-        mUserName = sharedPreferences.getString(Constants.SHARED_PREFS_NAME_KEY, null);
+
         mWeight = sharedPreferences.getFloat(Constants.SHARED_PREFS_WEIGHT_KEY, Constants.WEIGHT_DEFAULT_VALUE);
         mHeight = sharedPreferences.getInt(Constants.SHARED_PREFS_HEIGHT_KEY, Constants.HEIGHT_DEFAULT_VALUE);
         mGender = sharedPreferences.getString(Constants.SHARED_PREFS_GENDER_KEY, "Male");
@@ -85,13 +87,14 @@ public class SharedPreferencesManager {
         mAlwaysEnableBT = sharedPreferences.getBoolean(Constants.SHARED_PREFS_ALWAYS_ENABLE, false);
 
         mEmail = sharedPreferences.getString(Constants.SHARED_PREFS_EMAIL_KEY, null);
+        mUserName = sharedPreferences.getString(Constants.SHARED_PREFS_NAME_KEY+mEmail, null);
         mWeightLastMeasurementDay = sharedPreferences.getLong(Constants.SHARED_PREFS_WEIGHT_LAST_MSRMNT, -1);
 
         mSavedDeviceName = sharedPreferences.getString(Constants.SAVED_DEVICE_NAME_KEY, null);
         mSavedDeviceAddress = sharedPreferences.getString(Constants.SAVED_DEVICE_ADDRESS_KEY, null);
 
 
-        mStepsForCurrentDay = sharedPreferences.getInt(Constants.SHARED_PREFS_CURR_DAY_STEPS, 0);
+        mStepsForCurrentDay = sharedPreferences.getInt(Constants.SHARED_PREFS_CURR_DAY_STEPS+mEmail, 0);
         mChronometerBase = sharedPreferences.getLong(Constants.CHRONOMETER_SHARED_PREFS, SystemClock.elapsedRealtime());
         mChronometerRunning = sharedPreferences.getBoolean(Constants.CHRONOMETER_RUNNING_SHARED_PREFS, false);
 
@@ -99,23 +102,25 @@ public class SharedPreferencesManager {
 
         mServerLoginToken = sharedPreferences.getString(Constants.SERVER_LOGIN_TOKEN, null);
 
-        mSWStartTime = sharedPreferences.getLong(Constants.SHARED_PREFS_SW_START_TIME, 0);
-        mSWAccumulatedTime = sharedPreferences.getLong(Constants.SHARED_PREFS_SW_ACCUM_TIME, 0);
-        mSWState = sharedPreferences.getInt(Constants.SHARED_PREFS_SW_STATE, Constants.STOPWATCH_RESET);
+        mSWStartTime = sharedPreferences.getLong(Constants.SHARED_PREFS_SW_START_TIME+mEmail, System.currentTimeMillis());
+        mSWAccumulatedTime = sharedPreferences.getLong(Constants.SHARED_PREFS_SW_ACCUM_TIME+mEmail, System.currentTimeMillis());
+        mSWState = sharedPreferences.getInt(Constants.SHARED_PREFS_SW_STATE + mEmail, Constants.STOPWATCH_RESET);
     }
 
     public String getUserName() {
         return mUserName;
     }
 
-    public String getUserNameByEmail(String email) {
-        return sharedPreferences.getString(email, null);
-    }
     public void setUserName(String email, String name) {
-        sharedPreferencesEditor.putString(email, name);
+        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_NAME_KEY+email, name);
         sharedPreferencesEditor.commit();
         mUserName = name;
     }
+
+    public String getUserNameByEmail(String email) {
+        return sharedPreferences.getString(email, null);
+    }
+
 
 
     public float getWeight() {
@@ -253,7 +258,7 @@ public class SharedPreferencesManager {
     }
 
     public void saveServerLoginToken(String loginToken) {
-        sharedPreferencesEditor.putString(Constants.SERVER_LOGIN_TOKEN, mServerLoginToken);
+        sharedPreferencesEditor.putString(Constants.SERVER_LOGIN_TOKEN, loginToken);
         sharedPreferencesEditor.commit();
         mServerLoginToken = loginToken;
     }
@@ -263,17 +268,15 @@ public class SharedPreferencesManager {
         return mStepsForCurrentDay;
     }
 
-    public void setStepsForCurrentDay(int steps, boolean isUpdate) {
+    public void setStepsForCurrentDay(String key, int steps) {
         /*if (isUpdate) {
             mStepsForCurrentDay += steps;
         } else {
             mStepsForCurrentDay = 0;
         }*/
-
-        mStepsForCurrentDay = steps;
-
-        sharedPreferencesEditor.putInt(Constants.SHARED_PREFS_CURR_DAY_STEPS, mStepsForCurrentDay);
+        sharedPreferencesEditor.putInt(key, steps);
         sharedPreferencesEditor.commit();
+        mStepsForCurrentDay = steps;
     }
 
     public void setChronometerBase(long chronometerBase) {
@@ -306,14 +309,14 @@ public class SharedPreferencesManager {
     }
 
 
-    public void saveSWStartTime(long mStartTime) {
-        sharedPreferencesEditor.putLong(Constants.SHARED_PREFS_SW_START_TIME, mStartTime);
+    public void saveSWStartTime(String key, long mStartTime) {
+        sharedPreferencesEditor.putLong(key, mStartTime);
         sharedPreferencesEditor.commit();
         mSWStartTime = mStartTime;
     }
 
-    public void saveSWAccumTime(long mAccumulatedTime) {
-        sharedPreferencesEditor.putLong(Constants.SHARED_PREFS_SW_ACCUM_TIME, mAccumulatedTime);
+    public void saveSWAccumTime(String key, long mAccumulatedTime) {
+        sharedPreferencesEditor.putLong(key, mAccumulatedTime);
         sharedPreferencesEditor.commit();
         mSWAccumulatedTime = mAccumulatedTime;
     }
@@ -328,13 +331,31 @@ public class SharedPreferencesManager {
         return mSWAccumulatedTime;
     }
 
-    public void saveSWState(int mState) {
-        sharedPreferencesEditor.putInt(Constants.SHARED_PREFS_SW_STATE, mState);
+    public void saveSWState(String key, int mState) {
+        sharedPreferencesEditor.putInt(key, mState);
         sharedPreferencesEditor.commit();
         mSWState = mState;
     }
 
     public int getSWState() {
         return mSWState;
+    }
+
+    public String getEmail(String email) {
+        return sharedPreferences.getString(Constants.SHARED_PREFS_EMAIL_KEY + email, null);
+    }
+
+    public String getPassword(String email) {
+        return sharedPreferences.getString(Constants.SHARED_PREFS_PASSWORD_KEY + email, null);
+    }
+
+    public void addEmail(String email) {
+        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_EMAIL_KEY+email, email);
+        sharedPreferencesEditor.commit();
+    }
+
+    public void addPassword(String email, String password) {
+        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_PASSWORD_KEY+email, password);
+        sharedPreferencesEditor.commit();
     }
 }

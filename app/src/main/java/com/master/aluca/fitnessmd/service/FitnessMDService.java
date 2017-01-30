@@ -1,5 +1,6 @@
 package com.master.aluca.fitnessmd.service;
 
+import android.app.ProgressDialog;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -19,16 +20,12 @@ import android.widget.Chronometer;
 import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.bluetooth.ActivityReport;
 import com.master.aluca.fitnessmd.common.bluetooth.BluetoothManager;
 import com.master.aluca.fitnessmd.common.bluetooth.BluetoothMessageType;
 import com.master.aluca.fitnessmd.common.bluetooth.BluetoothState;
 import com.master.aluca.fitnessmd.common.bluetooth.ConnectionInfo;
-import com.master.aluca.fitnessmd.common.bluetooth.ContentManager;
-import com.master.aluca.fitnessmd.common.bluetooth.ContentObject;
 import com.master.aluca.fitnessmd.common.bluetooth.DBHelper;
 import com.master.aluca.fitnessmd.common.bluetooth.DBHelper.ErrorCodes;
-import com.master.aluca.fitnessmd.common.bluetooth.TransactionReceiver;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IStepNotifier;
@@ -85,16 +82,12 @@ public class FitnessMDService extends Service {
     private final IBinder mBinder = new FitnessMD_Binder();
     private static boolean sRunning = false;
 
-    private TransactionReceiver mTransactionReceiver;
     private ConnectionInfo mConnectionInfo;
 
 
     private BluetoothManager mBtManager;
-    private ContentManager mContentManager;
 
     private static AtomicBoolean isFirstReading = new AtomicBoolean(true);
-
-    private static ActivityReport mActivityReport = new ActivityReport();
 
     private ArrayList<StepsDayReport> mNotPushedToServerData = new ArrayList<>();
 
@@ -113,6 +106,8 @@ public class FitnessMDService extends Service {
 
     private WebserverManager mWebserverManager;
     private SharedPreferencesManager sharedPreferencesManager;
+
+    ProgressDialog progressDialog = null;
 
 
 
@@ -149,9 +144,6 @@ public class FitnessMDService extends Service {
         }
 
         alarm = new AlarmReceiver();
-
-
-
 
         Log.d(LOG_TAG, "# Service : initialize ---");
 
@@ -251,8 +243,6 @@ public class FitnessMDService extends Service {
         if(mBtManager == null)
             initializeBluetoothManager();
 
-        // Initialize transaction builder & receiver
-        mTransactionReceiver = TransactionReceiver.getInstance();
 
         // If ConnectionInfo holds previous connection info,
         // try to connect using it.
@@ -266,7 +256,6 @@ public class FitnessMDService extends Service {
         }
 
         // Get content manager
-        mContentManager = ContentManager.getInstance(mContext);
         // TODO:
     }
 
@@ -277,6 +266,7 @@ public class FitnessMDService extends Service {
      */
     public void connectDevice(String address) {
         Log.d(LOG_TAG, "Service - connect to " + address);
+
 
         // Get the BluetoothDevice object
         if (mBluetoothAdapter != null) {
@@ -301,18 +291,8 @@ public class FitnessMDService extends Service {
         sRunning = false;
     }
 
-
-    public int getSteps() {
-        return mActivityReport.mShakeActionCount;
-    }
-
     public float getWeight() {
         return sharedPreferencesManager.getWeight();
-    }
-
-    public int getCalories() {
-        calories = (int)mActivityReport.mCalorie;
-        return calories;
     }
 
     public long getTimeActive() {
@@ -352,17 +332,18 @@ public class FitnessMDService extends Service {
                     }
 
                     Log.d(LOG_TAG, "Service - CONNECTION_STATE: " + state);
-
-                    switch (msg.arg1) {
-                        case BluetoothState.NOT_CONNECTED:
-                            mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_INITIALIZED).sendToTarget();
-                            break;
-                        case BluetoothState.CONNECTING:
-                            mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_CONNECTING).sendToTarget();
-                            break;
-                        case BluetoothState.CONNECTED:
-                            mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_CONNECTED).sendToTarget();
-                            break;
+                    if (mActivityHandler != null) {
+                        switch (msg.arg1) {
+                            case BluetoothState.NOT_CONNECTED:
+                                mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_INITIALIZED).sendToTarget();
+                                break;
+                            case BluetoothState.CONNECTING:
+                                mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_CONNECTING).sendToTarget();
+                                break;
+                            case BluetoothState.CONNECTED:
+                                mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_CONNECTED).sendToTarget();
+                                break;
+                        }
                     }
                     break;
                 // Received packets from remote
@@ -384,31 +365,12 @@ public class FitnessMDService extends Service {
                     Intent intent1 = new Intent(Constants.STEP_INCREMENT_INTENT);
                     intent1.putExtra(Constants.STEP_INCREMENT_BUNDLE_KEY, numberOfSteps);
                     mContext.sendBroadcast(intent1);
-
-                    // construct commands from the valid bytes in the buffer
-                    /*ContentObject co = mTransactionReceiver.parseStream(buffer, nrOfBytes);
-                    if(co != null) {
-                        ActivityReport ar = mContentManager.addContentObject(co);
-                        setAccelerometerData(ar);
-                        if (ar != null) {
-                            mActivityHandler.obtainMessage(Constants.MESSAGE_READ_ACCEL_REPORT, ar).sendToTarget();
-
-                        }
-                        mActivityHandler.obtainMessage(Constants.MESSAGE_READ_ACCEL_DATA, co).sendToTarget();
-                        // TODO: If you want to save accel raw data, do it here.
-                    }*/
                     break;
             }    // End of switch(msg.what)
 
             super.handleMessage(msg);
         }
-    }    // End of class MainHandler
-
-    private void setAccelerometerData(ActivityReport ar) {
-        mActivityReport.mShakeActionCount = ar.mShakeActionCount;
-        mActivityReport.mCalorie = ar.mCalorie;
     }
-
 
     public void registerCallback(IStepNotifier callback) {
         mCallback = callback;
@@ -473,15 +435,15 @@ public class FitnessMDService extends Service {
                 Log.d(LOG_TAG, "save to db intent received");
                 Log.d(LOG_TAG, "weight : " + mDB.getAverageWeight().getWeight());
                 long dayForReport = intent.getLongExtra(Constants.END_OF_DAY_BUNDLE_KEY, -1);
-                int steps = getSteps();
+                int steps = 110;//getSteps();
                 float weight = getWeight();
-                int calories = getCalories();
+                int calories = 220;//getCalories();
                 long timeActive = getTimeActive();
                 int wasPushedToServer = 0;
                 Log.d(LOG_TAG, "dayForReport : " + (new Date(dayForReport)) + " >>> steps : " + steps + " >>> weight : " + weight
                         + " >>> calories : " + calories + " >>> timeActive : " + (new Date(timeActive)) + " >>> wasPushedToServer : " + wasPushedToServer);
                 long error = mDB.insertActivityReport(dayForReport, steps, weight, calories, timeActive, wasPushedToServer);
-                sharedPreferencesManager.setStepsForCurrentDay(0, false);
+                sharedPreferencesManager.setStepsForCurrentDay(sharedPreferencesManager.getEmail(), 0);
 
                 if ( error == ErrorCodes.GENERAL_ERROR) {
                     Log.d(LOG_TAG, "inserting to DB failed. GENERAL_ERROR");

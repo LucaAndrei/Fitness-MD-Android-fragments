@@ -15,8 +15,6 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
-
-import com.master.aluca.fitnessmd.common.util.AlertMessage;
 import com.master.aluca.fitnessmd.common.Constants;
 
 import java.io.IOException;
@@ -63,6 +61,17 @@ public class BluetoothManager {
         mState = BluetoothState.NOT_CONNECTED;
         mHandler = handler;
         mContext = context;
+    }
+
+    private String getStateAsString() {
+        if (mState == BluetoothState.NOT_CONNECTED) {
+            return "NOT_CONNECTED";
+        } else if (mState == BluetoothState.CONNECTED) {
+            return "CONNECTED";
+        } else if (mState == BluetoothState.CONNECTING) {
+            return "CONNECTING";
+        }
+        return "";
     }
 
     /**
@@ -130,7 +139,7 @@ public class BluetoothManager {
      * @param device  The BluetoothDevice to connect
      */
     public synchronized void pairDevice(BluetoothDevice device) {
-        Log.d(LOG_TAG, "Connecting to: " + device);
+        Log.d(LOG_TAG, "Connecting to: " + device + " mState : " + getStateAsString());
 
         if (mState == BluetoothState.CONNECTED)
             return;
@@ -179,7 +188,7 @@ public class BluetoothManager {
      */
     public class PairWithDeviceTask extends AsyncTask<Void, Void, Void> {
         private BluetoothSocket mmSocket;
-        AlertMessage alertMessage = new AlertMessage();
+        //AlertMessage alertMessage = new AlertMessage();
 
         @Override
         protected void onPreExecute() {
@@ -187,7 +196,7 @@ public class BluetoothManager {
 
             //progress = ProgressDialog.show(mContext, "Connecting...", "Please wait!!!");  //show a progress dialog
 
-            alertMessage.alertbox();
+            //alertMessage.alertbox();
         }
 
         @Override
@@ -233,7 +242,7 @@ public class BluetoothManager {
                 initiateCommunicationWithDevice(mmSocket);
             }
             Log.d(LOG_TAG, "PairWithDeviceTask dismiss progress dialog");
-            alertMessage.dismiss();
+            //alertMessage.dismiss();
         }
 
         @Override
@@ -277,17 +286,24 @@ public class BluetoothManager {
             // Keep listening to the InputStream while connected
             while (true) {
                 try {
+                    Log.d(LOG_TAG,"true. read !!!");
                     // Read from the InputStream
-                    byte[] buffer = new byte[8];
+                    byte[] buffer = new byte[1];
                     Arrays.fill(buffer, (byte)0x00);
                     bytes = mmInStream.read(buffer);
+                    Log.d(LOG_TAG,"bytes : " + bytes);
+                    for (int i = 0; i < buffer.length; i++) {
+                        Log.d(LOG_TAG,"buffer["+i+"] : " + buffer[i]);
+                    }
+
+                    Log.d(LOG_TAG,"===========================================");
 
                     // Send the obtained bytes to the main thread
                     mHandler.obtainMessage(BluetoothMessageType.READ, bytes, -1, buffer).sendToTarget();
 
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "CommunicationWithDevice disconnected - device connection lost", e);
-                    Constants.displayToastMessage(mContext, "Device connection was lost");
+                    //Constants.displayToastMessage(mContext, "Device connection was lost");
                     Intent intent = new Intent(Constants.DEVICE_CONNECTION_LOST);
                     mContext.sendBroadcast(intent);
                     break;

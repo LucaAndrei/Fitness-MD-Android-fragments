@@ -25,7 +25,7 @@ public class FitnessMDMeteor {
 
 
 
-    private static final String LOG_TAG = "Fitness_MeteorSingleton";
+    private static final String LOG_TAG = "Fitness_MDMeteor";
 
     public synchronized static Meteor createInstance(final Context context, final String serverUri) {
         if (mInstance != null) {

@@ -3,12 +3,14 @@ package com.master.aluca.fitnessmd.common.webserver;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.common.Constants;
+import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
@@ -55,7 +57,10 @@ public class WebserverManager implements MeteorCallback{
     private AtomicBoolean isMeteorClientConnected = new AtomicBoolean(false);
 
     private static WebserverManager sWebserverManager = null;
+    private StepsDayReport bestSteps;
     //private Collection advices;
+
+    private ArrayList<Handler> handlerList = new ArrayList<>();
 
 
 
@@ -74,7 +79,7 @@ public class WebserverManager implements MeteorCallback{
         mContext = context;
 
         // create a new instance
-        FitnessMDMeteor.createInstance(context, "ws://128.224.108.234:3000/websocket");
+        FitnessMDMeteor.createInstance(context, "ws://192.168.1.4:3000/websocket");
         // register the callback that will handle events and receive messages
 
         FitnessMDMeteor.getInstance().addCallback(this);
@@ -95,47 +100,42 @@ public class WebserverManager implements MeteorCallback{
         Log.d(LOG_TAG, "requestLogin");
         if (!mAuthLogicInstance.isInputValid(null, _emailText, _passwordText)) {
             Log.d(LOG_TAG, "Login failed");
-            Intent intent = new Intent(Constants.LOGIN_RESULT_INTENT);
-            intent.putExtra(Constants.LOGIN_RESULT_BUNDLE_KEY, false);
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Input is not valid");
         } else {
-            if (FitnessMDMeteor.getInstance().isConnected()) {
-                Log.d(LOG_TAG, "Meteor client connected");
-                if (FitnessMDMeteor.getInstance().isLoggedIn()) {
-                    Log.d(LOG_TAG, "Meteor user already logged in.");
-                    Intent intent = new Intent(Constants.LOGIN_RESULT_INTENT);
-                    intent.putExtra(Constants.LOGIN_RESULT_BUNDLE_KEY, true);
-                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                    return;
+            String emailFromSharedPrefs = sharedPreferencesManager.getEmail(_emailText.getText().toString());
+            String passwordFromSharedPrefs = sharedPreferencesManager.getPassword(_emailText.getText().toString());
+            if (emailFromSharedPrefs != null && _emailText.getText().toString().equalsIgnoreCase(emailFromSharedPrefs)) {
+                // emails OK
+                if (passwordFromSharedPrefs != null && _passwordText.getText().toString().equalsIgnoreCase(passwordFromSharedPrefs)) {
+                    // password OK
+                    sharedPreferencesManager.setLoggedIn(true);
+                    sharedPreferencesManager.setUserName(_emailText.getText().toString(), sharedPreferencesManager.getUserName());
+                    sharedPreferencesManager.setEmail(_emailText.getText().toString());
+                    dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Login successfully");
+
+                    // try to login on server
+
+                    if (FitnessMDMeteor.getInstance().isConnected()) { 
+                        if (!FitnessMDMeteor.getInstance().isLoggedIn()) {
+                            FitnessMDMeteor.getInstance().loginWithEmail(emailFromSharedPrefs, passwordFromSharedPrefs,
+                                new ResultListener() {
+                                    @Override
+                                    public void onSuccess(String s) {
+                                        Log.d(LOG_TAG, "Meteor Login SUCCESS");
+                                    }
+
+                                    @Override
+                                    public void onError(String error, String reason, String details) {
+                                        Log.d(LOG_TAG, "Meteor Login ERROR");
+                                    }
+                                });
+                        }
+                    }
                 } else {
-                    Log.d(LOG_TAG, "Meteor user NOT logged in");
+                    dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Password does not match");
                 }
-                FitnessMDMeteor.getInstance().loginWithEmail(_emailText.getText().toString(), _passwordText.getText().toString(),
-                        new ResultListener() {
-                            @Override
-                            public void onSuccess(String s) {
-                                Log.d(LOG_TAG, "Meteor Login SUCCESS");
-
-                                Intent intent = new Intent(Constants.LOGIN_RESULT_INTENT);
-                                intent.putExtra(Constants.LOGIN_RESULT_BUNDLE_KEY, true);
-                                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                            }
-
-                            @Override
-                            public void onError(String error, String reason, String details) {
-                                Log.d(LOG_TAG, "Meteor Login ERROR");
-                                Intent intent = new Intent(Constants.LOGIN_RESULT_INTENT);
-                                intent.putExtra(Constants.LOGIN_RESULT_BUNDLE_KEY, false);
-                                intent.putExtra(Constants.LOGIN_RESULT_EXTRA_BUNDLE_KEY, reason);
-                                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                            }
-                        });
-
-            } else {
-                Log.d(LOG_TAG, "Meteor client is not connected");
-                Intent intent = new Intent(Constants.LOGIN_RESULT_INTENT);
-                intent.putExtra(Constants.LOGIN_RESULT_BUNDLE_KEY, false);
-                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            }  else {
+                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Email not registered");
             }
         }
     }
@@ -143,109 +143,44 @@ public class WebserverManager implements MeteorCallback{
     public void requestSignup(final EditText nameText, final EditText emailText, final EditText passwordText) {
         Log.d(LOG_TAG, "requestSignup");
         if (!mAuthLogicInstance.isInputValid(nameText, emailText, passwordText)) {
-            Log.d(LOG_TAG, "signup failed");
-            Intent intent = new Intent(Constants.SIGNUP_RESULT_INTENT);
-            intent.putExtra(Constants.SIGNUP_RESULT_BUNDLE_KEY, false);
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            Log.d(LOG_TAG, "input not valid");
+            dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Input is not valid");
         } else {
-            if (FitnessMDMeteor.getInstance().isConnected()) {
-                Log.d(LOG_TAG, "Meteor client connected");
-                FitnessMDMeteor.getInstance().registerAndLogin(nameText.getText().toString(),
+            if (sharedPreferencesManager.getEmail(emailText.getText().toString()) != null) {
+                // email already registered
+                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false);
+                return;
+            } else {
+                // try to login to server
+
+                if (FitnessMDMeteor.getInstance().isConnected()) {
+                    Log.d(LOG_TAG, "Meteor client connected");
+                    FitnessMDMeteor.getInstance().registerAndLogin(nameText.getText().toString(),
                         emailText.getText().toString(), passwordText.getText().toString(), new ResultListener() {
                             @Override
                             public void onSuccess(String s) {
                                 Log.d(LOG_TAG, "Meteor Login after Signup SUCCESS");
+                                sharedPreferencesManager.addEmail(emailText.getText().toString());
+                                sharedPreferencesManager.addPassword(emailText.getText().toString(), passwordText.getText().toString());
+                                sharedPreferencesManager.setUserName(emailText.getText().toString(), nameText.getText().toString());
+                                sharedPreferencesManager.setEmail(emailText.getText().toString());
 
-                                Intent intent = new Intent(Constants.SIGNUP_RESULT_INTENT);
-                                intent.putExtra(Constants.SIGNUP_RESULT_BUNDLE_KEY, true);
-                                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                                sharedPreferencesManager.setLoggedIn(true);
+                                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully");
                             }
 
                             @Override
                             public void onError(String error, String reason, String details) {
                                 Log.d(LOG_TAG, "Meteor Login after signup ERROR");
                                 Log.d(LOG_TAG, "error : " + error + " >>> reason : " + reason + " >>> details : " + details);
-                                Intent intent = new Intent(Constants.SIGNUP_RESULT_INTENT);
-                                intent.putExtra(Constants.SIGNUP_RESULT_BUNDLE_KEY, false);
-                                intent.putExtra(Constants.SIGNUP_RESULT_EXTRA_BUNDLE_KEY, reason);
-                                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+                                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, reason);
                             }
                         });
-
-
-                /*if (FitnessMDMeteor.getInstance().isLoggedIn()) {
-                    Log.d(LOG_TAG, "Meteor user already logged in. Logging out ...");
-                    FitnessMDMeteor.getInstance().logout(new ResultListener() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(LOG_TAG, "logout onSuccess");
-                        }
-
-                        @Override
-                        public void onError(String error, String reason, String details) {
-                            Log.d(LOG_TAG, "logout onError");
-                        }
-                    });
                 } else {
-                    Log.d(LOG_TAG, "Meteor user NOT logged in");
-                }*/
-
-
-                /*FitnessMDMeteor.getInstance().loginWithEmail(emailText.getText().toString(), passwordText.getText().toString(),
-                        new ResultListener() {
-                            @Override
-                            public void onSuccess(String s) {
-                                Log.d(LOG_TAG, "Meteor Login in signup SUCCESS");
-                                // user with this e-mail already exists
-                                // logout so it doesn't remain logged in
-                                FitnessMDMeteor.getInstance().logout(new ResultListener() {
-                                    @Override
-                                    public void onSuccess(String result) {
-                                        Log.d(LOG_TAG, "logout onSuccess");
-                                    }
-
-                                    @Override
-                                    public void onError(String error, String reason, String details) {
-                                        Log.d(LOG_TAG, "logout onError");
-                                    }
-                                });
-                                Intent intent = new Intent(Constants.SIGNUP_RESULT_INTENT);
-                                intent.putExtra(Constants.SIGNUP_RESULT_BUNDLE_KEY, false);
-                                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                            }
-
-                            @Override
-                            public void onError(String error, String reason, String details) {
-                                Log.d(LOG_TAG, "Meteor Login in signup ERROR");
-
-                                //user with this e-mail does not exist
-
-                                FitnessMDMeteor.getInstance().registerAndLogin(nameText.getText().toString(),
-                                        emailText.getText().toString(), passwordText.getText().toString(), new ResultListener() {
-                                            @Override
-                                            public void onSuccess(String s) {
-                                                Log.d(LOG_TAG, "Meteor Login after Signup SUCCESS");
-
-                                                Intent intent = new Intent(Constants.SIGNUP_RESULT_INTENT);
-                                                intent.putExtra(Constants.SIGNUP_RESULT_BUNDLE_KEY, true);
-                                                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                                            }
-
-                                            @Override
-                                            public void onError(String error, String reason, String details) {
-                                                Log.d(LOG_TAG, "Meteor Login after signup ERROR");
-                                                Intent intent = new Intent(Constants.SIGNUP_RESULT_INTENT);
-                                                intent.putExtra(Constants.SIGNUP_RESULT_BUNDLE_KEY, false);
-                                                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                                            }
-                                        });
-                            }
-                        });*/
-            } else {
-                Log.d(LOG_TAG, "Meteor client disconnected");
-                Intent intent = new Intent(Constants.SIGNUP_RESULT_INTENT);
-                intent.putExtra(Constants.SIGNUP_RESULT_BUNDLE_KEY, false);
-                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                    dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, 
+                        false, "Server could not be contacted. Do you have internet connection for account validation?");
+                }
             }
         }
 
@@ -399,22 +334,31 @@ public class WebserverManager implements MeteorCallback{
     }
 
     @Override
-    public void onConnect() {
+    public void onConnect(boolean shouldSignIn) {
         Log.d(LOG_TAG, "Meteor DDP onConnect");
-        Intent intent = new Intent(Constants.METEOR_CLIENT_CONNECTED);
-        intent.putExtra(Constants.METEOR_CONNECTED_BUNDLE_KEY,true);
         isMeteorClientConnected.set(true);
-        mContext.sendBroadcast(intent);
+        dispatchMessageToHandlers(Constants.METEOR_CLIENT_STATE, shouldSignIn);
+    }
+    private void dispatchMessageToHandlers(int what, boolean b) {
+        dispatchMessageToHandlers(what, b ? 1 : 0, 0, null);
+    }
+
+    private void dispatchMessageToHandlers(int what, boolean b, String reason) {
+        dispatchMessageToHandlers(what, b ? 1 : 0, 0, reason);
+    }
+
+    private void dispatchMessageToHandlers(int what, int arg1, int arg2, Object obj) {
+
+        Log.d(LOG_TAG, "dispatchMessageToHandlers handlerList.size : " + handlerList.size());
+        for(Handler handler : handlerList) {
+            handler.obtainMessage(what, arg1, arg2, obj).sendToTarget();
+        }
     }
 
     @Override
     public void onDisconnect() {
         Log.d(LOG_TAG, "Meteor DDP onDisconnect");
-        Intent intent = new Intent(Constants.METEOR_CLIENT_CONNECTED);
-        intent.putExtra(Constants.METEOR_CONNECTED_BUNDLE_KEY, false);
-        isMeteorClientConnected.set(false);
-        mContext.sendBroadcast(intent);
-
+        dispatchMessageToHandlers(Constants.METEOR_CLIENT_STATE, false);
     }
 
     @Override
@@ -502,5 +446,29 @@ public class WebserverManager implements MeteorCallback{
             }
         }
         return null;
+    }
+
+    public StepsDayReport getBestSteps() {
+        bestSteps = new StepsDayReport(1234, 1485461807,3600);
+        return bestSteps;
+    }
+
+    public WeightDayReport getBestWeight() {
+        WeightDayReport bestWeight = new WeightDayReport();
+        return bestWeight;
+    }
+
+    public StepsDayReport getAverageSteps() {
+        StepsDayReport averageSteps = new StepsDayReport(345, 0, 0);
+        return averageSteps;
+    }
+
+    public WeightDayReport getAverageWeight() {
+        WeightDayReport averageWeight = new WeightDayReport();
+        return averageWeight;
+    }
+
+    public void registerCallback(Handler mActivityHandler) {
+        handlerList.add(mActivityHandler);
     }
 }

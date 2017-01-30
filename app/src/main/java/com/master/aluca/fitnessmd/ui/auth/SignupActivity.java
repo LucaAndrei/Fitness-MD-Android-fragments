@@ -10,6 +10,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
@@ -39,6 +41,7 @@ public class SignupActivity extends Activity {
 
     private WebserverManager mWebserverManager;
     private SharedPreferencesManager sharedPreferencesManager;
+    private static Handler mActivityHandler = null;
 
     ProgressDialog progressDialog = null;
 
@@ -50,14 +53,8 @@ public class SignupActivity extends Activity {
         ButterKnife.bind(this);
 
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
-        mWebserverManager = WebserverManager.getInstance(this);
 
         progressDialog = new ProgressDialog(SignupActivity.this);
-
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Constants.SIGNUP_RESULT_INTENT);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
 
         _signupButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,7 +76,9 @@ public class SignupActivity extends Activity {
             }
         });
 
-
+        mWebserverManager =  WebserverManager.getInstance(this);
+        mActivityHandler = new ActivityHandler();
+        mWebserverManager.registerCallback(mActivityHandler);
     }
 
     public void signup() {
@@ -91,48 +90,54 @@ public class SignupActivity extends Activity {
         mWebserverManager.requestSignup(_nameText, _emailText, _passwordText);
     }
 
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
+    public class ActivityHandler extends Handler {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            Log.d(LOG_TAG, "action : " + action.toString());
-            if (action.equals(Constants.SIGNUP_RESULT_INTENT)) {
-                if(intent.getBooleanExtra(Constants.SIGNUP_RESULT_BUNDLE_KEY, false)) {
-                    _signupButton.setEnabled(false);
-
-                    Log.d(LOG_TAG, "Login after signup sucess");
-                    // TODO - do I still need this if I use meteor?
-                    // probably yes, because meteor works only with internet connection
-                    // i should use the value from sharedPrefs only to open the application
-                    // and the value from meteor to make requests to the webserver
-                    //sharedPreferencesManager.setLoggedIn(true);
-                    String email = _emailText.getText().toString();
-                    sharedPreferencesManager.setUserName(email, _nameText.getText().toString());
-                    sharedPreferencesManager.setEmail(email);
-                    Intent intentMainActivity = new Intent(getApplicationContext(), MainActivity.class);
-                    startActivity(intentMainActivity);
-                    finish();
-                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                    progressDialog.dismiss();
-                } else {
-                    String reason = intent.getStringExtra(Constants.SIGNUP_RESULT_EXTRA_BUNDLE_KEY);
-                    if( reason!= null) {
-                        Toast.makeText(getBaseContext(), reason, Toast.LENGTH_LONG).show();
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case Constants.SIGNUP_RESULT_INTENT:
+                    Log.d(LOG_TAG, "msg SIGNUP_RESULT_INTENT");
+                    Log.d(LOG_TAG, "msg.what : " + msg.what);
+                    Log.d(LOG_TAG, "msg.arg1 : " + msg.arg1);
+                    Log.d(LOG_TAG, "msg.arg2 : " + msg.arg2);
+                    if (msg.obj != null) {
+                        Log.d(LOG_TAG, "msg.obj : " + String.valueOf(msg.obj.toString()));
                     }
-                    _signupButton.setEnabled(true);
-                    Log.d(LOG_TAG, "Login after signup error");
-                    progressDialog.dismiss();
-                }
-            }
-        }
+                    if (msg.arg1 > 0) {
+                        Log.d(LOG_TAG, "signup and login success");
 
-    };
+                        _signupButton.setEnabled(false);
+                        Intent intentMainActivity = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intentMainActivity);
+                        finish();
+                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                        if (progressDialog.isShowing()) {
+                            progressDialog.dismiss();
+                        }
+                        if (msg.obj!= null) {
+                            Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Log.d(LOG_TAG, "signup and login failure");
+                        _signupButton.setEnabled(true);
+                        Log.d(LOG_TAG, "Login after signup error");
+                        if (progressDialog.isShowing()) {
+                            progressDialog.dismiss();
+                        }
+                        if (msg.obj!= null) {
+                            Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                default:
+                    break;
+            }
+
+            super.handleMessage(msg);
+        }
+    }
 
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         super.onDestroy();
     }
 

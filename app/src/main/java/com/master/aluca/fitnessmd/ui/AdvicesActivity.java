@@ -23,7 +23,6 @@ import android.widget.Toast;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.MessageDetails;
-import com.master.aluca.fitnessmd.common.util.AlertMessage;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryCollection;

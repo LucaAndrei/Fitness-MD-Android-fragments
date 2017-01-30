@@ -36,6 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Random;
 
 /**
  * Created by aluca on 11/7/16.
@@ -208,7 +209,7 @@ public class StatisticsFragment extends Fragment {
         String dateFormat = "EEE,MMM d";
         SimpleDateFormat s = new SimpleDateFormat(dateFormat);
         Calendar cal = Calendar.getInstance();
-        if (stepsDayReports.size() == 0) {
+        /*if (stepsDayReports.size() == 0) {
             Log.d(LOG_TAG, "NO DATA CHART TEXT");
             Paint paint = mChart.getPaint(Chart.PAINT_INFO);
             paint.setTextSize(24);
@@ -216,14 +217,20 @@ public class StatisticsFragment extends Fragment {
             mChart.setNoDataTextColor(getActivity().getResources().getColor(R.color.tab_menu_background));
             mChart.clear();
             mChart.invalidate();
-        } else {
-            for (int i = 0; i < stepsDayReports.size(); i++) {
-                barValues.add(new BarEntry(-2-i, stepsDayReports.get(i).getSteps()));
+        } else {*/
+            for (int i = 0; i < count; i++) {
+                //barValues.add(new BarEntry(-2-i, stepsDayReports.get(i).getSteps()));
+                Random r = new Random();
+                int Low = 3000;
+                int High = 10000;
+                int Result = r.nextInt(High-Low) + Low;
+                barValues.add(new BarEntry(-2-i, Result));
                 //barValues.add(new BarEntry(s.format(new Date(stepsDayReports.get(i).getDay())),stepsDayReports.get(i).getSteps()));
-                Log.d(LOG_TAG,"stepsDayReports.size : " + stepsDayReports.size());
-                Log.d(LOG_TAG,"stepsDayReports.get(i).getSteps() : " + stepsDayReports.get(i).getSteps());
+                //Log.d(LOG_TAG,"stepsDayReports.size : " + stepsDayReports.size());
+                //Log.d(LOG_TAG,"stepsDayReports.get(i).getSteps() : " + stepsDayReports.get(i).getSteps());
                 //String yesterday = getCalculatedDate((int) (value + 1));
                 //Log.d(LOG_TAG, (int)value + " day(s) ago was : " + yesterday);
+                Log.d(LOG_TAG, "Result : " + Result);
 
                 //cal.add(Calendar.DAY_OF_YEAR, days);
                 //return s.format(new Date(cal.getTimeInMillis()));
@@ -237,7 +244,7 @@ public class StatisticsFragment extends Fragment {
             data.setValueTextSize(10);
             //data.setBarWidth(0.8f);
             mChart.setData(data);
-        }
+       // }
     }
 
     private void setStatsAverageSteps() {

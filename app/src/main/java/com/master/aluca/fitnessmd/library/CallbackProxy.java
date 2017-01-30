@@ -47,7 +47,7 @@ public class CallbackProxy implements MeteorCallback {
 	}
 
 	@Override
-	public void onConnect() {
+	public void onConnect(final boolean shouldSignIn) {
 		// iterate over all the registered callbacks
 		for (final MeteorCallback callback : mCallbacks) {
 			// if the callback exists
@@ -58,7 +58,7 @@ public class CallbackProxy implements MeteorCallback {
 					@Override
 					public void run() {
 						// run the proxied method with the same parameters
-						callback.onConnect();
+						callback.onConnect(shouldSignIn);
 					}
 
 				});

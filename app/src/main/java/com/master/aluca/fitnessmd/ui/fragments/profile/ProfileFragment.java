@@ -36,6 +36,7 @@ import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IDataRefreshCallback;
 import com.master.aluca.fitnessmd.common.util.ProfilePhotoUtils;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
 import java.text.SimpleDateFormat;
@@ -64,6 +65,9 @@ public class ProfileFragment extends Fragment {
 
 
     private DBHelper mDB;
+    private WebserverManager webserverManager;
+
+
 
     int personalBestSteps, personalBestWeight;
     int averageSteps, averageWeight;
@@ -149,6 +153,9 @@ public class ProfileFragment extends Fragment {
         Log.d(LOG_TAG,"ProfileFragment");
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getActivity());
         sharedPreferencesManager.registerCallback(mCallback);
+        webserverManager = WebserverManager.getInstance(getActivity());
+
+
         if(mDB == null) {
             mDB = new DBHelper(getActivity()).openWritable();
         }
@@ -255,6 +262,7 @@ public class ProfileFragment extends Fragment {
         });
 
         initUserData();
+        syncData();
     }
 
 
@@ -262,10 +270,10 @@ public class ProfileFragment extends Fragment {
     private void initUserData() {
         Log.d(LOG_TAG,"initUserData");
 
-        String name = sharedPreferencesManager.getEmail();
+        String name = sharedPreferencesManager.getUserName();
         if (name != null) {
             Log.d(LOG_TAG, "name : " + name.toString());
-            tvName.setText(name.substring(0,name.indexOf("@")));
+            tvName.setText(name);
         } else {
             tvName.setText("Name Not set");
         }
@@ -298,7 +306,7 @@ public class ProfileFragment extends Fragment {
     public void syncData() {
         SimpleDateFormat s = new SimpleDateFormat("d MMMM yyyy");
         String day = null;
-        StepsDayReport personalBestReport = mDB.getBestSteps();
+        StepsDayReport personalBestReport = webserverManager.getBestSteps();
         int steps = personalBestReport.getSteps();
         tvPersonalBestSteps.setText(String.valueOf(steps) + " steps");
 
@@ -306,7 +314,7 @@ public class ProfileFragment extends Fragment {
         tvPersonalBestStepsDate.setText(day);
 
 
-        WeightDayReport weightBestReport = mDB.getBestWeight();
+        WeightDayReport weightBestReport = webserverManager.getBestWeight();
         float weight = weightBestReport.getWeight();
         tvPersonalBestWeight.setText(String.valueOf(weight) + " kg");
 
@@ -314,11 +322,11 @@ public class ProfileFragment extends Fragment {
         Log.d(LOG_TAG,"day : " + day);
         tvPersonalBestWeightDate.setText(day);
 
-        StepsDayReport averageStepsRaport = mDB.getAverageSteps();
+        StepsDayReport averageStepsRaport = webserverManager.getAverageSteps();
         int averageSteps = averageStepsRaport.getSteps();
         tvAverageSteps.setText(String.valueOf(averageSteps) + " steps");
 
-        WeightDayReport averageWeightRaport = mDB.getAverageWeight();
+        WeightDayReport averageWeightRaport = webserverManager.getAverageWeight();
         float averageWeight = averageWeightRaport.getWeight();
         tvAverageWeight.setText(String.valueOf(averageWeight) + " kg");
 

@@ -1,13 +1,14 @@
 package com.master.aluca.fitnessmd.ui.auth;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
@@ -37,18 +38,15 @@ public class LoginActivity extends Activity{
 
     private static final int REQUEST_SIGNUP = 0;
 
-
-
     private static boolean animPlayed = false;
-
-
-    Dialog reset;
 
     private WebserverManager mWebserverManager;
 
     private SharedPreferencesManager sharedPreferencesManager;
 
     ProgressDialog progressDialog = null;
+
+    private static Handler mActivityHandler = null;
 
 
 
@@ -57,44 +55,36 @@ public class LoginActivity extends Activity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         Log.d(LOG_TAG, "onCreate");
-
         _emailText = (EditText) findViewById(R.id.input_email_login);
         _passwordText = (EditText) findViewById(R.id.input_password_login);
         _loginButton = (Button) findViewById(R.id.btn_login);
         _signupLink = (TextView) findViewById(R.id.link_signup);
 
         progressDialog = new ProgressDialog(LoginActivity.this);
-
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
-        mWebserverManager =  WebserverManager.getInstance(this);
-
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Constants.LOGIN_RESULT_INTENT);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
-
-        IntentFilter broadcastFilter = new IntentFilter();
-        broadcastFilter.addAction(Constants.METEOR_CLIENT_CONNECTED);
-        registerReceiver(mReceiver, broadcastFilter);
+        
 
         boolean isLoggedIn = sharedPreferencesManager.getIsUserLoggedIn();
-        boolean isMeteorLoggedIn = mWebserverManager.isLoggedIn();
         Log.d(LOG_TAG, "sharedPrefs isLoggedIn : " + isLoggedIn);
-        Log.d(LOG_TAG, "isMeteorLoggedIn : " + isMeteorLoggedIn);
 
-        if (isLoggedIn || isMeteorLoggedIn) {
+        if (isLoggedIn) {
             Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intentMainActiv);
             finish();
             overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+        } else {
+            setListeners();
+            if (!animPlayed) {
+                startAnimations();
+                animPlayed = true;
+            }
+            mWebserverManager =  WebserverManager.getInstance(this);
+            mActivityHandler = new ActivityHandler();
+            mWebserverManager.registerCallback(mActivityHandler);
         }
-
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Connecting...");
-        progressDialog.show();
     }
 
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    /*private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -102,23 +92,7 @@ public class LoginActivity extends Activity{
             Log.d(LOG_TAG, "action : " + action.toString());
             if (action.equals(Constants.LOGIN_RESULT_INTENT)) {
                 if(intent.getBooleanExtra(Constants.LOGIN_RESULT_BUNDLE_KEY, false)) {
-                    progressDialog.dismiss();
-                    _loginButton.setEnabled(false);
-
-                    Log.d(LOG_TAG, "Login sucess");
-                    // TODO - do I still need this if I use meteor?
-                    // probably yes, because meteor works only with internet connection
-                    // i should use the value from sharedPrefs only to open the application
-                    // and the value from meteor to make requests to the webserver
-                    //sharedPreferencesManager.setLoggedIn(true);
-                    String email = _emailText.getText().toString();
-                    sharedPreferencesManager.setUserName(email, sharedPreferencesManager.getUserNameByEmail(email));
-                    sharedPreferencesManager.setEmail(email);
-                    Intent intentMainActivity = new Intent(getApplicationContext(), MainActivity.class);
-                    startActivity(intentMainActivity);
-                    finish();
-                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                    progressDialog.dismiss();
+                    
                 } else {
                     String reason = intent.getStringExtra(Constants.LOGIN_RESULT_EXTRA_BUNDLE_KEY);
                     if( reason!= null) {
@@ -126,32 +100,91 @@ public class LoginActivity extends Activity{
                     } else {
                         Toast.makeText(getBaseContext(), "Login error", Toast.LENGTH_LONG).show();
                     }
-                    _loginButton.setEnabled(true);
-                    Log.d(LOG_TAG, "Login error");
-                    progressDialog.dismiss();
+                    
                 }
             } else if (action.equalsIgnoreCase(Constants.METEOR_CLIENT_CONNECTED)) {
-                if (intent.getBooleanExtra(Constants.METEOR_CONNECTED_BUNDLE_KEY, false)) {
-
-                    Log.d(LOG_TAG, "METEOR connected success");
+                if (progressDialog.isShowing()) {
                     progressDialog.dismiss();
-                    Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
-                    startActivity(intentMainActiv);
-                    finish();
-                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                }
+                if (intent.getBooleanExtra(Constants.METEOR_CONNECTED_BUNDLE_KEY, false)) {
+                    Log.d(LOG_TAG, "METEOR connected success");
+                    if (sharedPreferencesManager.getIsUserLoggedIn()) {
+                        Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intentMainActiv);
+                        finish();
+                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    }
+
                 } else {
                     Log.d(LOG_TAG, "METEOR connected error");
-                    progressDialog.dismiss();
-                    if (!animPlayed) {
-                        startAnimations();
-                        animPlayed = true;
-                    }
-                    setListeners();
                 }
             }
         }
 
-    };
+    };*/
+
+
+    public class ActivityHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case Constants.LOGIN_RESULT_INTENT:
+                    Log.d(LOG_TAG, "msg LOGIN_RESULT_INTENT");
+                    Log.d(LOG_TAG, "msg.what : " + msg.what);
+                    Log.d(LOG_TAG, "msg.arg1 : " + msg.arg1);
+                    Log.d(LOG_TAG, "msg.arg2 : " + msg.arg2);
+                    if (msg.obj != null) {
+                        Log.d(LOG_TAG, "msg.obj : " + String.valueOf(msg.obj.toString()));
+                    }
+                    if (msg.arg1 > 0) {
+                        if (progressDialog.isShowing()) {
+                            progressDialog.dismiss();
+                        }
+                        _loginButton.setEnabled(false);
+
+                        Log.d(LOG_TAG, "Login sucess");
+                        String email = _emailText.getText().toString();
+
+                        Intent intentMainActivity = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intentMainActivity);
+                        finish();
+                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    } else {
+                        _loginButton.setEnabled(true);
+                        Log.d(LOG_TAG, "Login error");
+                        if (progressDialog.isShowing()) {
+                            progressDialog.dismiss();
+                        }
+                        if (msg.obj!= null) {
+                            Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    break;
+                case Constants.METEOR_CLIENT_STATE: {
+                    Log.d(LOG_TAG, "msg METEOR_CLIENT_STATE");
+                    Log.d(LOG_TAG, "msg.what : " + msg.what);
+                    Log.d(LOG_TAG, "msg.arg1 : " + msg.arg1);
+                    Log.d(LOG_TAG, "msg.arg2 : " + msg.arg2);
+                    if (msg.obj != null) {
+                        Log.d(LOG_TAG, "msg.obj : " + String.valueOf(msg.obj.toString()));
+                    }
+                    if (msg.arg1 > 0) {
+                        // should sign in automatically
+                        Log.d(LOG_TAG, "should log in automatically");
+
+                    } else {
+                        // should display login form
+                        Log.d(LOG_TAG, "should NOT log in automatically");
+                    }
+                }
+                default:
+                    break;
+            }
+
+            super.handleMessage(msg);
+        }
+    }
+
 
     private void startAnimations() {
         Log.d(LOG_TAG, "StartAnimations");
@@ -160,8 +193,6 @@ public class LoginActivity extends Activity{
         LinearLayout l = (LinearLayout) findViewById(R.id.lin_lay);
         l.clearAnimation();
         l.startAnimation(anim);
-
-
 
         anim = AnimationUtils.loadAnimation(this, R.anim.translate);
         anim.reset();
@@ -213,10 +244,12 @@ public class LoginActivity extends Activity{
 
     public void login() {
         Log.d(LOG_TAG, "Login");
+        if (!progressDialog.isShowing()) {
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage("Connecting...");
+            progressDialog.show();
+        }
 
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Connecting...");
-        progressDialog.show();
         _loginButton.setEnabled(false);
         mWebserverManager.requestLogin(_emailText, _passwordText);
     }
@@ -248,7 +281,6 @@ public class LoginActivity extends Activity{
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         super.onDestroy();
     }
 

@@ -19,7 +19,7 @@ package com.master.aluca.fitnessmd.library;
 /** Callback for asynchronous events caused by a WebSocket connection or received from a DDP server */
 public interface MeteorCallback extends DdpCallback {
 
-	void onConnect();
+	void onConnect(boolean shouldSignIn);
 
 	void onDisconnect();
 

@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.Chronometer.OnChronometerTickListener;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.master.aluca.fitnessmd.R;
@@ -171,20 +172,32 @@ public class PedometerFragment extends Fragment {
                 setKm();
                 setKCal();
             } else if (intent.getAction().equals(Constants.CONNECTED_DEVICE_DETAILS_INTENT)) {
+                Log.d(LOG_TAG, "CONNECTED_DEVICE_DETAILS_INTENT received");
                 //startTimer();
 
                 //TODO  - cand iesi din aplicatie si intri iar, timerul ramane setat pe 0 si nu mai porneste.
 
-                if(!sharedPreferencesManager.getChronometerRunning()) {
+                /*if(!sharedPreferencesManager.getChronometerRunning()) {
                     sharedPreferencesManager.setChronometerBase(SystemClock.elapsedRealtime());
                 }
                 timeElapsed.setBase(sharedPreferencesManager.getChronometerBase());
                 timeElapsed.start();
-                sharedPreferencesManager.setChronometerRunning(true);
+                sharedPreferencesManager.setChronometerRunning(true);*/
+                Log.d(LOG_TAG, "startTimer : " + mState);
+                if(mState == Constants.STOPWATCH_STOPPED || mState == Constants.STOPWATCH_RESET) {
+                    doStart();
+                }
             } else if (intent.getAction().equals(Constants.DEVICE_CONNECTION_LOST)) {
+                Log.d(LOG_TAG, "DEVICE_CONNECTION_LOST received");
+                Toast.makeText(getActivity().getApplicationContext(),"Device connection lost",Toast.LENGTH_LONG).show();
                 sharedPreferencesManager.setChronometerBase(SystemClock.elapsedRealtime());
                 sharedPreferencesManager.setChronometerRunning(false);
-                timeElapsed.stop();
+                if(mState == Constants.STOPWATCH_RUNNING) {
+                    long curTime = SystemClock.elapsedRealtime();
+                    mAccumulatedTime += (curTime - mStartTime);
+                    doStop();
+                }
+                //timeElapsed.stop();
             }
         }
     };
@@ -203,7 +216,7 @@ public class PedometerFragment extends Fragment {
         mArcProgress.setProgress(sharedPreferencesManager.getStepsForCurrentDay());
 
         timeElapsed = (Chronometer) view.findViewById(R.id.chronometer);
-        timeElapsed.setOnChronometerTickListener(new OnChronometerTickListener() {
+        /*timeElapsed.setOnChronometerTickListener(new OnChronometerTickListener() {
             @Override
             public void onChronometerTick(Chronometer chronometer) {
                 Log.d(LOG_TAG,"onChronoTick");
@@ -216,7 +229,7 @@ public class PedometerFragment extends Fragment {
                 String ss = seconds < 10 ? "0" + seconds : seconds + "";
                 chronometer.setText(hh + ":" + mm + ":" + ss);
             }
-        });
+        });*/
 
         startTimer = (Button) view.findViewById(R.id.startTimer);
         startTimer.setOnClickListener(new OnClickListener() {
@@ -296,12 +309,12 @@ public class PedometerFragment extends Fragment {
         if (hours >= 10) {
             format = TWO_DIGITS;
             mHours = String.format(format, hours);
-        } else if (hours > 0) {
+        } else if (hours >= 0) {
             format = ONE_DIGIT;
             mHours = String.format(format, hours);
-        } else {
-            mHours = null;
-        }
+        }/* else {
+            mHours = 0;
+        }*/
 
         if (minutes >= 10 || hours > 0) {
             format = TWO_DIGITS;
@@ -403,9 +416,12 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
 
     private void writeToSharedPref() {
         Log.d(LOG_TAG, "writeToSharedPref()");
-        sharedPreferencesManager.saveSWStartTime(mStartTime);
-        sharedPreferencesManager.saveSWAccumTime(mAccumulatedTime);
-        sharedPreferencesManager.saveSWState(mState);
+        String email = sharedPreferencesManager.getEmail();
+        sharedPreferencesManager.saveSWStartTime(Constants.SHARED_PREFS_SW_START_TIME+email, mStartTime);
+        sharedPreferencesManager.saveSWAccumTime(Constants.SHARED_PREFS_SW_ACCUM_TIME+email, mAccumulatedTime);
+        sharedPreferencesManager.saveSWState(Constants.SHARED_PREFS_SW_STATE+email, mState);
+        sharedPreferencesManager.setStepsForCurrentDay(Constants.SHARED_PREFS_CURR_DAY_STEPS+email, getStepsForCurrentDay());
+        Log.d(LOG_TAG, "writeToSharedPref() getStepsForCurrentDay() : " + getStepsForCurrentDay());
     }
 
     private void readFromSharedPref() {
@@ -414,5 +430,11 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
         mStartTime = sharedPreferencesManager.getSWStartTime();
         mAccumulatedTime = sharedPreferencesManager.getSWAccumTime();
         mState = sharedPreferencesManager.getSWState();
+        totalSteps = sharedPreferencesManager.getStepsForCurrentDay();
+        mArcProgress.setProgress(totalSteps);
+        Log.d(LOG_TAG, "mStartTime : " + mStartTime);
+        Log.d(LOG_TAG, "mAccumulatedTime : " + mAccumulatedTime);
+        Log.d(LOG_TAG, "mState : " + mState);
+        Log.d(LOG_TAG, "totalSteps : " + totalSteps);
     }
 }

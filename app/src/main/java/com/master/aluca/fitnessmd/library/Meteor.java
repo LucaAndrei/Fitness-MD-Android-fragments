@@ -633,6 +633,7 @@ public class Meteor {
 
 				// delete the last login token which is now invalid
 				SharedPreferencesManager.getInstance(mContext).saveServerLoginToken(null);
+				SharedPreferencesManager.getInstance(mContext).setLoggedIn(false);
 
 				if (listener != null) {
 					mCallbackProxy.forResultListener(listener).onSuccess(result);
@@ -794,7 +795,8 @@ public class Meteor {
 				@Override
 				public void onSuccess(final String result) {
 					Log.d(LOG_TAG, "loginWithToken : onSuccess " + result);
-					announceSessionReady();
+					announceSessionReady(true);
+					SharedPreferencesManager.getInstance(mContext).setLoggedIn(true);
 				}
 
 				@Override
@@ -805,16 +807,19 @@ public class Meteor {
 
 					// discard the token which turned out to be invalid
 					SharedPreferencesManager.getInstance(mContext).saveServerLoginToken(null);
+					SharedPreferencesManager.getInstance(mContext).setLoggedIn(false);
 
 
-					announceSessionReady();
+
+					announceSessionReady(false);
 				}
 
 			});
 		}
 		// if we didn't find any login token
 		else {
-			announceSessionReady();
+			announceSessionReady(false);
+			SharedPreferencesManager.getInstance(mContext).setLoggedIn(false);
 		}
 	}
 
@@ -822,11 +827,11 @@ public class Meteor {
 	 * Announces that the new session is now ready to use
 	 *
 	 */
-	private void announceSessionReady() {
+	private void announceSessionReady(boolean shouldSignIn) {
 		// run the callback that waits for the connection to open
 
 		Log.d(LOG_TAG, "announceSessionReady");
-		mCallbackProxy.onConnect();
+		mCallbackProxy.onConnect(shouldSignIn);
 
 		// try to dispatch queued messages now
 		for (String queuedMessage : mQueuedMessages) {

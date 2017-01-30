@@ -44,10 +44,13 @@ public class Constants {
     public static final String SHARED_PREFS_WEIGHT_KEY = "SHARED_PREFS_WEIGHT";
     public static final String SHARED_PREFS_HEIGHT_KEY = "SHARED_PREFS_HEIGHT";
     public static final String SHARED_PREFS_PAIR_DEVICE_KEY = "SHARED_PREFS_PAIR_DEVICE";
-    public static final String SHARED_PREFS_EMAIL_KEY = "SHARED_PREFS_EMAIL";
+    
     public static final String SHARED_PREFS_HAS_PROFILE_PIC = "SHARED_PREFS_HAS_PROFILE_PIC";
     public static final String SHARED_PREFS_PROFILE_PIC_URI = "SHARED_PREFS_PROFILE_PIC_URI";
     public static final String SHARED_PREFS_CURR_DAY_STEPS = "SHARED_PREFS_CURR_DAY_STEPS";
+
+    public static final String SHARED_PREFS_EMAIL_KEY = "SHARED_PREFS_EMAIL";
+    public static final String SHARED_PREFS_PASSWORD_KEY = "SHARED_PREFS_PASSWORD";
 
     public static final String SHARED_PREFS_ALWAYS_ENABLE = "SHARED_PREFS_ALWAYS_ENABLE_BT";
 
@@ -118,12 +121,10 @@ public class Constants {
 
 
 
-    public static final String LOGIN_RESULT_INTENT = "login_result_intent";
     public static final String LOGIN_RESULT_BUNDLE_KEY = "login_intent_bundle_key";
     public static final String LOGIN_RESULT_EXTRA_BUNDLE_KEY = "login_intent_extra_bundle_key";
 
 
-    public static final String SIGNUP_RESULT_INTENT = "signup_result_intent";
     public static final String SIGNUP_RESULT_BUNDLE_KEY = "signup_intent_bundle_key";
     public static final String SIGNUP_RESULT_EXTRA_BUNDLE_KEY = "signup_intent_extra_bundle_key";
 
@@ -131,7 +132,6 @@ public class Constants {
     public static final String ADVICES_SUBSCRIPTION_READY_BUNDLE_KEY = "advice_subscription_bundle_key";
 
     public static final String LOGOUT_INTENT = "logout_intent";
-    public static final String METEOR_CLIENT_CONNECTED = "meteor_client_connected_intent";
     public static final String METEOR_CONNECTED_BUNDLE_KEY = "meteor_client_connected_bundle_key";
 
     public static final String SHARED_PREFS_SW_START_TIME = "shared_prefs_sw_start_time";
@@ -148,6 +148,10 @@ public class Constants {
 
     private static final String TWO_DIGITS = "%02d";
     private static final String ONE_DIGIT = "%01d";
+    public static final int LOGIN_AUTOMATICALLY = 111;
+    public static final int LOGIN_RESULT_INTENT = 222;
+    public static final int SIGNUP_RESULT_INTENT = 333;
+    public static final int METEOR_CLIENT_STATE = 444;
 
 
     public static void displayToastMessage(Context context, String message) {

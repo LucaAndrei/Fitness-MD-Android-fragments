@@ -41,7 +41,6 @@ import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.util.AlertMessage;
 import com.master.aluca.fitnessmd.common.util.ProfilePhotoUtils;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
@@ -87,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextStatus = null;
 
     private boolean alwaysEnableBT;
-    private AlertMessage mAlertMessage = new AlertMessage(MainActivity.this);
     private SharedPreferencesManager sharedPreferencesManager;
 
     private ActivityHandler mActivityHandler;
@@ -134,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
         mTextStatus.setText(getResources().getString(R.string.bt_state_init));
 
 
-        Log.d(LOG_TAG, "onCreate()");
         /*fitnessMDMeteor = FitnessMDMeteor.createInstance(MainActivity.this, "ws://128.224.108.234:3000/websocket");
         fitnessMDMeteor.connect();*/
     }
