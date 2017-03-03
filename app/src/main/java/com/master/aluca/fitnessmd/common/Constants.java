@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common;
 
 import android.content.Context;
@@ -10,10 +19,6 @@ import android.widget.Toast;
 
 import java.lang.reflect.Field;
 import java.util.Calendar;
-
-/**
- * Created by andrei on 10/31/2016.
- */
 
 public class Constants {
 
@@ -44,7 +49,7 @@ public class Constants {
     public static final String SHARED_PREFS_WEIGHT_KEY = "SHARED_PREFS_WEIGHT";
     public static final String SHARED_PREFS_HEIGHT_KEY = "SHARED_PREFS_HEIGHT";
     public static final String SHARED_PREFS_PAIR_DEVICE_KEY = "SHARED_PREFS_PAIR_DEVICE";
-    
+
     public static final String SHARED_PREFS_HAS_PROFILE_PIC = "SHARED_PREFS_HAS_PROFILE_PIC";
     public static final String SHARED_PREFS_PROFILE_PIC_URI = "SHARED_PREFS_PROFILE_PIC_URI";
     public static final String SHARED_PREFS_CURR_DAY_STEPS = "SHARED_PREFS_CURR_DAY_STEPS";
@@ -87,7 +92,6 @@ public class Constants {
 
     public static final String SAVED_DEVICE_ADDRESS_KEY = "saved_device_address";
     public static final String SAVED_DEVICE_NAME_KEY = "saved_device_name";
-    public static final int MESSAGE_FIRST_ACCEL_READ = 300;
     public static final String IS_USER_LOGGED_IN = "is_user_logged_in";
     public static final String STEP_INCREMENT_INTENT = "step_increment_intent";
     public static final String END_OF_DAY = "end_of_day_intent";
@@ -152,6 +156,22 @@ public class Constants {
     public static final int LOGIN_RESULT_INTENT = 222;
     public static final int SIGNUP_RESULT_INTENT = 333;
     public static final int METEOR_CLIENT_STATE = 444;
+
+
+
+    /*
+     *
+     *
+     *  Bluetooth constants
+     *  Prefix 10x
+     *
+     */
+    public static final int CONNECTION_STATE = 101;
+    public static final int READ = 102;
+    public static final int NOT_CONNECTED = 103;           // we're doing nothing
+    public static final int CONNECTING = 104;     // now initiating an outgoing connection
+    public static final int CONNECTED = 105;      // now connected to a remote device
+
 
 
     public static void displayToastMessage(Context context, String message) {

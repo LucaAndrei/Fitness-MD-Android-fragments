@@ -1,15 +1,21 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common.bluetooth;
 
-
 import android.content.Context;
-import android.content.SharedPreferences;
 
-import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 
-public class ConnectionInfo {
 
-    // Constants
+// Holds information about a saved device
+public class ConnectionInfo {
 
     // Instance
     private static ConnectionInfo mInstance = null;
@@ -20,6 +26,7 @@ public class ConnectionInfo {
     private String mDeviceAddress = null;
     // Name of the connected device
     private String mDeviceName = null;
+    private boolean deviceConnected;
 
 
     private ConnectionInfo(Context c) {
@@ -62,5 +69,13 @@ public class ConnectionInfo {
         mDeviceAddress = deviceAddress;
         SharedPreferencesManager.getInstance(mContext).saveDevice(deviceName, deviceAddress);
 
+    }
+
+    public boolean getDeviceConnected() {
+        return deviceConnected;
+    }
+
+    public void setDeviceConnected(boolean deviceConnected) {
+        this.deviceConnected = deviceConnected;
     }
 }

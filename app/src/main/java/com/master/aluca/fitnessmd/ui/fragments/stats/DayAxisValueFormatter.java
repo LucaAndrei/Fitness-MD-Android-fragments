@@ -1,8 +1,14 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui.fragments.stats;
 
-/**
- * Created by aluca on 11/4/16.
- */
 import android.util.Log;
 
 import com.github.mikephil.charting.components.AxisBase;
@@ -12,9 +18,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-/**
- * Created by philipp on 02/06/16.
- */
 public class DayAxisValueFormatter implements IAxisValueFormatter {
     private static final String LOG_TAG = "Fitness_Statistics_DayX";
 

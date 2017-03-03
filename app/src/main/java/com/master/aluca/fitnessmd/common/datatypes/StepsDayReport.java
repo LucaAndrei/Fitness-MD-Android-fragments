@@ -1,8 +1,14 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common.datatypes;
 
-/**
- * Created by aluca on 11/16/16.
- */
 public class StepsDayReport {
     private int steps;
     private long day;

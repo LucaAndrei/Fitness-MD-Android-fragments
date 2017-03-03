@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui.fragments.doctor;
 
 import android.app.Activity;
@@ -33,15 +42,10 @@ import com.master.aluca.fitnessmd.ui.DietActivity;
 import java.util.Calendar;
 import java.util.Locale;
 
-
-/**
- * Created by aluca on 11/3/16.
- */
 public class DoctorFragment extends Fragment {
 
     private static final String LOG_TAG = "Fitness_DoctorFragment";
 
-    private Context mContext = null;
     private Activity mActivity;
     private SharedPreferencesManager sharedPreferencesManager;
     private TextView tvDrHeightUM, tvDrAgeUM, tvDrWeightUM;

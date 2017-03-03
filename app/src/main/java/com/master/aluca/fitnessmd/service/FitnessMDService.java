@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.service;
 
 import android.app.ProgressDialog;
@@ -9,23 +18,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Chronometer;
 import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.bluetooth.BluetoothManager;
-import com.master.aluca.fitnessmd.common.bluetooth.BluetoothMessageType;
-import com.master.aluca.fitnessmd.common.bluetooth.BluetoothState;
 import com.master.aluca.fitnessmd.common.bluetooth.ConnectionInfo;
-import com.master.aluca.fitnessmd.common.bluetooth.DBHelper;
-import com.master.aluca.fitnessmd.common.bluetooth.DBHelper.ErrorCodes;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IStepNotifier;
@@ -36,13 +39,8 @@ import com.master.aluca.fitnessmd.receivers.AlarmReceiver;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Created by aluca on 11/7/16.
- */
 public class FitnessMDService extends Service {
     /*
 
@@ -87,8 +85,6 @@ public class FitnessMDService extends Service {
 
     private BluetoothManager mBtManager;
 
-    private static AtomicBoolean isFirstReading = new AtomicBoolean(true);
-
     private ArrayList<StepsDayReport> mNotPushedToServerData = new ArrayList<>();
 
 
@@ -99,7 +95,6 @@ public class FitnessMDService extends Service {
     private boolean isConnectedToWifi = false;
     private boolean isConnectedToNetworkData = false;
 
-    private DBHelper mDB;
     private int calories;
     private long timeActive;
     private long timeServiceStarted;
@@ -108,11 +103,6 @@ public class FitnessMDService extends Service {
     private SharedPreferencesManager sharedPreferencesManager;
 
     ProgressDialog progressDialog = null;
-
-
-
-
-
 
     public class FitnessMD_Binder extends Binder {
 
@@ -136,12 +126,10 @@ public class FitnessMDService extends Service {
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         intentFilter.addAction(Constants.END_OF_DAY);
         intentFilter.addAction(Constants.CONNECTED_DEVICE_DETAILS_INTENT);
+        intentFilter.addAction(Constants.DEVICE_CONNECTION_LOST);
+
         registerReceiver(mReceiver, intentFilter);
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
-
-        if(mDB == null) {
-            mDB = new DBHelper(mContext).openWritable();
-        }
 
         alarm = new AlarmReceiver();
 
@@ -320,47 +308,44 @@ public class FitnessMDService extends Service {
 
             switch (msg.what) {
                 // Bluetooth state changed
-                case BluetoothMessageType.CONNECTION_STATE:
+                case Constants.CONNECTION_STATE:
                     // Bluetooth state Changed
                     String state = "null";
-                    if (msg.arg1 == BluetoothState.NOT_CONNECTED) {
+                    if (msg.arg1 == Constants.NOT_CONNECTED) {
                         state = "NOT_CONNECTED";
-                    } else if (msg.arg1 == BluetoothState.CONNECTED) {
+                    } else if (msg.arg1 == Constants.CONNECTED) {
                         state = "CONNECTED";
-                    } else if (msg.arg1 == BluetoothState.CONNECTING) {
+                    } else if (msg.arg1 == Constants.CONNECTING) {
                         state = "CONNECTING";
                     }
 
                     Log.d(LOG_TAG, "Service - CONNECTION_STATE: " + state);
                     if (mActivityHandler != null) {
                         switch (msg.arg1) {
-                            case BluetoothState.NOT_CONNECTED:
+                            case Constants.NOT_CONNECTED:
                                 mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_INITIALIZED).sendToTarget();
                                 break;
-                            case BluetoothState.CONNECTING:
+                            case Constants.CONNECTING:
                                 mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_CONNECTING).sendToTarget();
                                 break;
-                            case BluetoothState.CONNECTED:
+                            case Constants.CONNECTED:
                                 mActivityHandler.obtainMessage(Constants.MESSAGE_BT_STATE_CONNECTED).sendToTarget();
                                 break;
                         }
                     }
                     break;
                 // Received packets from remote
-                case BluetoothMessageType.READ:
+                case Constants.READ:
                     Log.d(LOG_TAG, "Service - MESSAGE_READ: ");
-                    if (isFirstReading.get()) {
-                        isFirstReading.set(false);
-                        mActivityHandler.obtainMessage(Constants.MESSAGE_FIRST_ACCEL_READ);
-                    }
                     byte[] buffer = (byte[]) msg.obj;
-                    int nrOfBytes = msg.arg1;
-                    Log.d(LOG_TAG, "nrOfBytes : " + nrOfBytes);
+                    Log.d(LOG_TAG, "nrOfBytes : " + msg.arg1);
                     int numberOfSteps = 0;
                     for (int i = 0; i < buffer.length; i++) {
                         Log.d(LOG_TAG, "buffer[" + i + "] : " + buffer[i]);
                         numberOfSteps += buffer[i];
                     }
+
+                    mCallback.onStepIncrement(numberOfSteps);
 
                     Intent intent1 = new Intent(Constants.STEP_INCREMENT_INTENT);
                     intent1.putExtra(Constants.STEP_INCREMENT_BUNDLE_KEY, numberOfSteps);
@@ -419,8 +404,8 @@ public class FitnessMDService extends Service {
                     isConnectedToWifi = false;
                     isConnectedToNetworkData = true;
                     pushDataToServer(false);
-                } else if (status == NetworkUtil.NETWORK_STAUS_WIFI) {
-                    Log.d(LOG_TAG, "NETWORK_STAUS_WIFI");
+                } else if (status == NetworkUtil.NETWORK_STATUS_WIFI) {
+                    Log.d(LOG_TAG, "NETWORK_STATUS_WIFI");
                     getWeightFromServer();
                     isConnectedToWifi = true;
                     isConnectedToNetworkData = false;
@@ -433,7 +418,7 @@ public class FitnessMDService extends Service {
                 }
             } else if (action.equals(Constants.END_OF_DAY)) {
                 Log.d(LOG_TAG, "save to db intent received");
-                Log.d(LOG_TAG, "weight : " + mDB.getAverageWeight().getWeight());
+                /*Log.d(LOG_TAG, "weight : " + mDB.getAverageWeight().getWeight());
                 long dayForReport = intent.getLongExtra(Constants.END_OF_DAY_BUNDLE_KEY, -1);
                 int steps = 110;//getSteps();
                 float weight = getWeight();
@@ -461,7 +446,7 @@ public class FitnessMDService extends Service {
                 } else {
                     Log.d(LOG_TAG, "user not connected to internet");
                     mNotPushedToServerData.add(new StepsDayReport(steps, dayForReport, timeActive));
-                }
+                }*/
 
                 //NetworkUtil.setMobileDataEnabled(context, true);
             } else if (action.equals(Constants.CONNECTED_DEVICE_DETAILS_INTENT)) {
@@ -471,14 +456,15 @@ public class FitnessMDService extends Service {
                 String deviceAddress = bundle.getString(Constants.CONNECTED_DEVICE_ADDRESS_BUNDLE_KEY);
                 String deviceName = bundle.getString(Constants.CONNECTED_DEVICE_NAME_BUNDLE_KEY);
 
-                long startTime = System.currentTimeMillis();
-
                 if(deviceName != null && deviceAddress != null) {
                     // Remember device's address and name
                     mConnectionInfo.saveDevice(deviceName, deviceAddress);
+                    mConnectionInfo.setDeviceConnected(true);
                     Toast.makeText(getApplicationContext(),
                             "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
                 }
+            } else if (action.equals(Constants.DEVICE_CONNECTION_LOST)) {
+                mConnectionInfo.setDeviceConnected(false);
             }
         }
     };
@@ -490,14 +476,18 @@ public class FitnessMDService extends Service {
         return mConnectionInfo.getSavedDeviceName();
     }
 
+    public boolean isDeviceConnected() {
+        return mConnectionInfo.getDeviceConnected();
+    }
+
     private void pushDataToServer(boolean isWifi) {
         Log.d(LOG_TAG, "pushDataToServer isWifi : " + isWifi);
         if(mNotPushedToServerData.size() > 0) {
             Iterator<StepsDayReport> iterator = mNotPushedToServerData.iterator();
             while(iterator.hasNext()) {
                 StepsDayReport dayReport = iterator.next();
-                if (mWebserverManager.sendPedometerData(dayReport.getDay(), dayReport.getSteps(), dayReport.getTimeActive())) {
-                    if (mDB.setActivityReportPushedToServer(dayReport.getDay()) != 1){
+                if (WebserverManager.getInstance(this).sendPedometerData(dayReport.getDay(), dayReport.getSteps(), dayReport.getTimeActive())) {
+                    /*if (mDB.setActivityReportPushedToServer(dayReport.getDay()) != 1){
                         if(isWifi) {
                             Log.d(LOG_TAG, "NETWORK_STATUS_WIFI setActivityReportPushedToServer : " + (new Date(dayReport.getDay())) + " ERROR");
                         } else {
@@ -505,11 +495,11 @@ public class FitnessMDService extends Service {
                         }
                     } else {
                         if (isWifi) {
-                            Log.d(LOG_TAG, "NETWORK_STAUS_WIFI setActivityReportPushedToServer : " + (new Date(dayReport.getDay())) + " OK");
+                            Log.d(LOG_TAG, "NETWORK_STATUS_WIFI setActivityReportPushedToServer : " + (new Date(dayReport.getDay())) + " OK");
                         } else {
                             Log.d(LOG_TAG, "NETWORK_STATUS_MOBILE setActivityReportPushedToServer : " + (new Date(dayReport.getDay())) + " OK");
                         }
-                    }
+                    }*/
                     iterator.remove();
                 } else {
                     Log.d(LOG_TAG, "could not push to web server");
@@ -520,19 +510,19 @@ public class FitnessMDService extends Service {
 
     public void eraseAllData() {
         Log.d(LOG_TAG, "eraseAllData");
-        int numberOfRowsAffected = mDB.eraseAllData();
+        /*int numberOfRowsAffected = mDB.eraseAllData();
         if (numberOfRowsAffected != ErrorCodes.GENERAL_ERROR) {
             Log.d(LOG_TAG, "eraseAllData SUCCESS : " + numberOfRowsAffected);
         } else {
             Log.d(LOG_TAG, "eraseAllData ERROR : " + numberOfRowsAffected);
-        }
+        }*/
     }
 
     public boolean getWeightFromServer() {
         boolean oRet = false;
-        if (mWebserverManager == null)
-            mWebserverManager = WebserverManager.getInstance(this);
-        WeightDayReport weightDayReport = mWebserverManager.getWeightFromServer();
+//        if (mWebserverManager == null)
+//            mWebserverManager = WebserverManager.getInstance(this);
+        WeightDayReport weightDayReport = WebserverManager.getInstance(this).getWeightFromServer();
         float weight = weightDayReport.getWeight();
         long day = weightDayReport.getDay();
         if (weight != -1) {
@@ -548,5 +538,11 @@ public class FitnessMDService extends Service {
             Log.d(LOG_TAG, "getWeightFromServer error");
         }
         return oRet;
+    }
+
+    public void sendStepsToServer(long startOfCurrentDay, int totalSteps, int hourIndex) {
+//        if (mWebserverManager == null)
+//            mWebserverManager = WebserverManager.getInstance(this);
+        WebserverManager.getInstance(this).sendStepsToServer(startOfCurrentDay, totalSteps, hourIndex);
     }
 }

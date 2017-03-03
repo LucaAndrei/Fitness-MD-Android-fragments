@@ -1,18 +1,21 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common.util;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.util.Log;
-import android.widget.EditText;
 
 import com.master.aluca.fitnessmd.common.Constants;
 
-
-/**
- * Created by aluca on 11/8/16.
- */
 public class SharedPreferencesManager {
 
     private static final String LOG_TAG = "Fitness_SharedPrefsMgr";
@@ -107,8 +110,8 @@ public class SharedPreferencesManager {
         mSWState = sharedPreferences.getInt(Constants.SHARED_PREFS_SW_STATE + mEmail, Constants.STOPWATCH_RESET);
     }
 
-    public String getUserName() {
-        return mUserName;
+    public String getUserName(String email) {
+        return sharedPreferences.getString(Constants.SHARED_PREFS_NAME_KEY+email, null);
     }
 
     public void setUserName(String email, String name) {
@@ -278,26 +281,6 @@ public class SharedPreferencesManager {
         sharedPreferencesEditor.commit();
         mStepsForCurrentDay = steps;
     }
-
-    public void setChronometerBase(long chronometerBase) {
-        sharedPreferencesEditor.putLong(Constants.CHRONOMETER_SHARED_PREFS, chronometerBase);
-        sharedPreferencesEditor.commit();
-        mChronometerBase = chronometerBase;
-    }
-    public long getChronometerBase() {
-        return mChronometerBase;
-    }
-
-    public void setChronometerRunning(boolean chronometerRunning) {
-        sharedPreferencesEditor.putBoolean(Constants.CHRONOMETER_RUNNING_SHARED_PREFS, chronometerRunning);
-        sharedPreferencesEditor.commit();
-        mChronometerRunning = chronometerRunning;
-    }
-
-    public boolean getChronometerRunning() {
-        return mChronometerRunning;
-    }
-
     public void resetStartOfCurrentDay(long startOfCurrentDay) {
         sharedPreferencesEditor.putLong(Constants.START_OF_CURRENT_DAY, startOfCurrentDay);
         sharedPreferencesEditor.commit();
@@ -350,7 +333,7 @@ public class SharedPreferencesManager {
     }
 
     public void addEmail(String email) {
-        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_EMAIL_KEY+email, email);
+        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_EMAIL_KEY + email, email);
         sharedPreferencesEditor.commit();
     }
 

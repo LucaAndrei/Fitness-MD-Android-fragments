@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui.fragments.profile;
 
 import android.app.Activity;
@@ -5,20 +14,14 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.support.v4.app.Fragment;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager.OnActivityResultListener;
-import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,7 +33,6 @@ import android.widget.TextView;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.bluetooth.DBHelper;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IDataRefreshCallback;
@@ -42,12 +44,7 @@ import com.master.aluca.fitnessmd.service.FitnessMDService;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.NoSuchElementException;
 
-
-/**
- * Created by aluca on 11/3/16.
- */
 public class ProfileFragment extends Fragment {
 
     private static final String LOG_TAG = "Fitness_ProfileFragment";
@@ -64,7 +61,6 @@ public class ProfileFragment extends Fragment {
     private static Bitmap rotateImage = null;
 
 
-    private DBHelper mDB;
     private WebserverManager webserverManager;
 
 
@@ -154,11 +150,6 @@ public class ProfileFragment extends Fragment {
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getActivity());
         sharedPreferencesManager.registerCallback(mCallback);
         webserverManager = WebserverManager.getInstance(getActivity());
-
-
-        if(mDB == null) {
-            mDB = new DBHelper(getActivity()).openWritable();
-        }
 
         setup(view);
     }
@@ -270,7 +261,7 @@ public class ProfileFragment extends Fragment {
     private void initUserData() {
         Log.d(LOG_TAG,"initUserData");
 
-        String name = sharedPreferencesManager.getUserName();
+        String name = sharedPreferencesManager.getUserName(sharedPreferencesManager.getEmail());
         if (name != null) {
             Log.d(LOG_TAG, "name : " + name.toString());
             tvName.setText(name);

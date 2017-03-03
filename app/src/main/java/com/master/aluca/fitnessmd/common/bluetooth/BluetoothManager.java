@@ -1,17 +1,32 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common.bluetooth;
 
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -19,18 +34,18 @@ import com.master.aluca.fitnessmd.common.Constants;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.UUID;
 
 /**
- * Created by aluca on 11/7/16.
+ *
+ *  Methods and helpers for the bluetooth connection with the Arduino device
+ *
  */
 public class BluetoothManager {
 
     public static final String LOG_TAG = "Fitness_BTManager";
 
-    // Member fields
     private final BluetoothAdapter mAdapter;
     private final Handler mHandler;
     private int mState;
@@ -49,7 +64,6 @@ public class BluetoothManager {
 
     private AsyncTask<Void,Void,Void> pairWithDevice;
 
-
     /**
      * Constructor. Prepares a new BluetoothManager session.
      * @param context  The UI Activity Context
@@ -58,17 +72,17 @@ public class BluetoothManager {
     public BluetoothManager(Context context, Handler handler) {
         Log.d(LOG_TAG, "BluetoothManager constructor");
         mAdapter = BluetoothAdapter.getDefaultAdapter();
-        mState = BluetoothState.NOT_CONNECTED;
+        mState = Constants.NOT_CONNECTED;
         mHandler = handler;
         mContext = context;
     }
 
     private String getStateAsString() {
-        if (mState == BluetoothState.NOT_CONNECTED) {
+        if (mState == Constants.NOT_CONNECTED) {
             return "NOT_CONNECTED";
-        } else if (mState == BluetoothState.CONNECTED) {
+        } else if (mState == Constants.CONNECTED) {
             return "CONNECTED";
-        } else if (mState == BluetoothState.CONNECTING) {
+        } else if (mState == Constants.CONNECTING) {
             return "CONNECTING";
         }
         return "";
@@ -81,24 +95,24 @@ public class BluetoothManager {
     private synchronized void setConnectionState(int state) {
         String previousState = "null";
         String newState = "null";
-        if (mState == BluetoothState.NOT_CONNECTED) {
+        if (mState == Constants.NOT_CONNECTED) {
             previousState = "NOT_CONNECTED";
-        } else if (mState == BluetoothState.CONNECTED) {
+        } else if (mState == Constants.CONNECTED) {
             previousState = "CONNECTED";
-        } else if (mState == BluetoothState.CONNECTING) {
+        } else if (mState == Constants.CONNECTING) {
             previousState = "CONNECTING";
         }
-        if (state == BluetoothState.NOT_CONNECTED) {
+        if (state == Constants.NOT_CONNECTED) {
             newState = "NOT_CONNECTED";
-        } else if (state == BluetoothState.CONNECTED) {
+        } else if (state == Constants.CONNECTED) {
             newState = "CONNECTED";
-        } else if (state == BluetoothState.CONNECTING) {
+        } else if (state == Constants.CONNECTING) {
             newState = "CONNECTING";
         }
         Log.d(LOG_TAG, "setConnectionState() " + previousState + " -> " + newState);
         mState = state;
         // Give the new state to the Handler so the UI Activity can update
-        mHandler.obtainMessage(BluetoothMessageType.CONNECTION_STATE, state, -1).sendToTarget();
+        mHandler.obtainMessage(Constants.CONNECTION_STATE, state, -1).sendToTarget();
     }
 
     /**
@@ -131,7 +145,7 @@ public class BluetoothManager {
         intent.putExtras(bundle);
         mContext.sendBroadcast(intent);
 
-        setConnectionState(BluetoothState.CONNECTED);
+        setConnectionState(Constants.CONNECTED);
     }
 
     /**
@@ -141,11 +155,11 @@ public class BluetoothManager {
     public synchronized void pairDevice(BluetoothDevice device) {
         Log.d(LOG_TAG, "Connecting to: " + device + " mState : " + getStateAsString());
 
-        if (mState == BluetoothState.CONNECTED)
+        if (mState == Constants.CONNECTED)
             return;
 
         // Cancel any thread attempting to make a connection
-        if (mState == BluetoothState.CONNECTING) {
+        if (mState == Constants.CONNECTING) {
             if (pairWithDevice != null) {
                 pairWithDevice.cancel(true);
                 pairWithDevice = null;
@@ -162,7 +176,7 @@ public class BluetoothManager {
 
         pairWithDevice = new PairWithDeviceTask();
         pairWithDevice.execute();
-        setConnectionState(BluetoothState.CONNECTING);
+        setConnectionState(Constants.CONNECTING);
     }
 
     /**
@@ -178,7 +192,7 @@ public class BluetoothManager {
             mCommuncationWithDevice.cancel();
             mCommuncationWithDevice = null;
         }
-        setConnectionState(BluetoothState.NOT_CONNECTED);
+        setConnectionState(Constants.NOT_CONNECTED);
     }
 
     /**
@@ -203,7 +217,7 @@ public class BluetoothManager {
         protected Void doInBackground(Void... params) {
             Log.d(LOG_TAG, "PairWithDeviceTask doInBackground");
             try {
-                if(mmSocket == null || mState != BluetoothState.CONNECTED) {
+                if(mmSocket == null || mState != Constants.CONNECTED) {
                     Log.d(LOG_TAG, "PairWithDeviceTask create&connect socket");
                     mmSocket = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID);
                     mAdapter.cancelDiscovery();
@@ -215,7 +229,7 @@ public class BluetoothManager {
                 Log.d(LOG_TAG, "PairWithDeviceTask catch exception");
                 //Constants.displayToastMessage(mContext, "Unable to connect device"); -> http://stackoverflow.com/questions/16830255/how-to-display-toast-in-asynctask-in-android
                 // Close the socket
-                setConnectionState(BluetoothState.NOT_CONNECTED);
+                setConnectionState(Constants.NOT_CONNECTED);
                 try {
                     Log.d(LOG_TAG, "PairWithDeviceTask close socket");
                     mmSocket.close();
@@ -233,12 +247,11 @@ public class BluetoothManager {
         {
             super.onPostExecute(result);
             Log.d(LOG_TAG, "PairWithDeviceTask onPostExecute");
-            if (mState == BluetoothState.NOT_CONNECTED) {
+            if (mState == Constants.NOT_CONNECTED) {
                 Log.d(LOG_TAG, "PairWithDeviceTask call connectionFailed");
                 Constants.displayToastMessage(mContext, "Device connection was lost");
             } else {
                 Log.d(LOG_TAG, "PairWithDeviceTask initiate communication with device");
-                // Start the connected thread
                 initiateCommunicationWithDevice(mmSocket);
             }
             Log.d(LOG_TAG, "PairWithDeviceTask dismiss progress dialog");
@@ -256,7 +269,7 @@ public class BluetoothManager {
                 Log.e(LOG_TAG, "close() of connect socket failed", e);
             }
         }
-    }	// End of class ConnectThread
+    }
 
     /**
      * This thread runs during a connection with a remote device.
@@ -270,7 +283,6 @@ public class BluetoothManager {
             Log.d(LOG_TAG, "CommunicationWithDevice constructor");
             mmSocket = socket;
 
-            // Get the BluetoothSocket input and output streams
             try {
                 Log.d(LOG_TAG, "CommunicationWithDevice get input/output stream");
                 mmInStream = socket.getInputStream();
@@ -283,7 +295,6 @@ public class BluetoothManager {
             Log.d(LOG_TAG, "CommunicationWithDevice run");
             int bytes;
 
-            // Keep listening to the InputStream while connected
             while (true) {
                 try {
                     Log.d(LOG_TAG,"true. read !!!");
@@ -299,11 +310,11 @@ public class BluetoothManager {
                     Log.d(LOG_TAG,"===========================================");
 
                     // Send the obtained bytes to the main thread
-                    mHandler.obtainMessage(BluetoothMessageType.READ, bytes, -1, buffer).sendToTarget();
+                    mHandler.obtainMessage(Constants.READ, bytes, -1, buffer).sendToTarget();
 
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "CommunicationWithDevice disconnected - device connection lost", e);
-                    //Constants.displayToastMessage(mContext, "Device connection was lost");
+                    Toast.makeText(mContext, "Device connection was lost",Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(Constants.DEVICE_CONNECTION_LOST);
                     mContext.sendBroadcast(intent);
                     break;
@@ -339,6 +350,6 @@ public class BluetoothManager {
             }
         }
 
-    }	// End of class ConnectedThread
+    }
 
 }

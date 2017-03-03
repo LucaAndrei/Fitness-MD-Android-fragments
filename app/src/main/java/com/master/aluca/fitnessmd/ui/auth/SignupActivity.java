@@ -1,18 +1,20 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui.auth;
 
-/**
- * Created by andrei on 10/29/2016.
- */
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -27,17 +29,13 @@ import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.MainActivity;
 
-import butterknife.ButterKnife;
-import butterknife.Bind;
 
 public class SignupActivity extends Activity {
     private static final String LOG_TAG = "Fitness_Signup";
 
-    @Bind(R.id.input_name) EditText _nameText;
-    @Bind(R.id.input_email) EditText _emailText;
-    @Bind(R.id.input_password) EditText _passwordText;
-    @Bind(R.id.btn_signup) Button _signupButton;
-    @Bind(R.id.link_login) TextView _loginLink;
+    EditText _nameText, _emailText, _passwordText;
+    Button _signupButton;
+    TextView _loginLink;
 
     private WebserverManager mWebserverManager;
     private SharedPreferencesManager sharedPreferencesManager;
@@ -50,7 +48,12 @@ public class SignupActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
         Log.d(LOG_TAG, "onCreate");
-        ButterKnife.bind(this);
+
+        _nameText = (EditText) findViewById(R.id.input_name);
+        _emailText = (EditText) findViewById(R.id.input_email);
+        _passwordText = (EditText) findViewById(R.id.input_password);
+        _signupButton = (Button) findViewById(R.id.btn_signup);
+        _loginLink = (TextView) findViewById(R.id.link_login);
 
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
 

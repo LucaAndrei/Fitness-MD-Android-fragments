@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.receivers;
 
 import android.app.AlarmManager;
@@ -16,9 +25,6 @@ import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import java.util.Calendar;
 import java.util.Date;
 
-/**
- * Created by aluca on 11/14/16.
- */
 public class AlarmReceiver extends BroadcastReceiver {
 
     private static final String LOG_TAG = "Fitness_AlarmReceiver";

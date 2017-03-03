@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui;
 
 import android.app.Activity;
@@ -10,29 +19,22 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.design.widget.TabLayout;
-import android.support.design.widget.TabLayout.ViewPagerOnTabSelectedListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -44,7 +46,6 @@ import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.util.ProfilePhotoUtils;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
-import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
 import com.master.aluca.fitnessmd.library.Meteor;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 import com.master.aluca.fitnessmd.ui.fragments.doctor.DoctorFragment;
@@ -60,14 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-
-//import fitnessmd.aluca.master.com.fitnessmd_ddplibrary.FitnessMDMeteor;
-//import fitnessmd.aluca.master.com.fitnessmd_ddplibrary.Meteor;
-
-/*import fitnessmd.aluca.master.com.fitnesscompat.fragments.OneFragment;
-import fitnessmd.aluca.master.com.fitnesscompat.fragments.ThreeFragment;
-import fitnessmd.aluca.master.com.fitnesscompat.fragments.TwoFragment;*/
 
 public class MainActivity extends AppCompatActivity {
 
@@ -324,9 +317,6 @@ public class MainActivity extends AppCompatActivity {
                         frg.drawAccelData(co.mAccelData);
                     }
                     break;*/
-                case Constants.MESSAGE_FIRST_ACCEL_READ:
-
-
                 default:
                     break;
             }

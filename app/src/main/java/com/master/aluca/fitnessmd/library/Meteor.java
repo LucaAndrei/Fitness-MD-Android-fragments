@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.library;
 
 /*
@@ -601,7 +610,16 @@ public class Meteor {
 	/**
 	 * Sign in the user with the given email address and password
 	 *
-	 * Please note that this requires the `accounts-password` package
+	 * Please note that this requires the `accounts-password` /*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
+package
 	 *
 	 * @param email the email address to sign in with
 	 * @param password the password to sign in with
@@ -655,7 +673,16 @@ public class Meteor {
 	 *
 	 * This method will automatically login as the new user on success
 	 *
-	 * Please note that this requires the `accounts-password` package
+	 * Please note that this requires the `accounts-password` /*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
+package
 	 *
 	 * @param username the username to register with (either this or `email` is required)
 	 * @param email the email address to register with (either this or `username` is required)
@@ -846,5 +873,22 @@ public class Meteor {
 	 */
 	public Database getDatabase() {
 		return (Database) mDataStore;
+	}
+
+	public void sendStepsToServer(long startOfCurrentDay, int totalSteps, int hourIndex, final ResultListener listener) {
+		if(startOfCurrentDay <= 0) {
+			throw new IllegalArgumentException("You must provide a valid date");
+		}
+		if (totalSteps < 0) {
+			throw new IllegalArgumentException("You must provide a valid number of steps");
+		}
+
+		final Map<String, Object> stepsForDay = new Fields();
+        stepsForDay.put("userId", mLoggedInUserId);
+		stepsForDay.put("startOfDay",startOfCurrentDay);
+		stepsForDay.put("steps",totalSteps);
+        stepsForDay.put("hourIndex",hourIndex);
+
+		call("updateStepsForToday", new Object[]{stepsForDay}, listener);
 	}
 }

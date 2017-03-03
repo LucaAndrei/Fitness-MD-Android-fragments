@@ -1,6 +1,14 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common.webserver;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -22,32 +30,14 @@ import com.master.aluca.fitnessmd.library.listeners.SubscribeListener;
 import com.master.aluca.fitnessmd.library.listeners.UnsubscribeListener;
 import com.master.aluca.fitnessmd.ui.auth.AuthenticationLogic;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-/*
-import im.delight.android.ddp.Meteor;
-import im.delight.android.ddp.MeteorCallback;
-import im.delight.android.ddp.FitnessMDMeteor;
-import im.delight.android.ddp.ResultListener;
-import im.delight.android.ddp.SubscribeListener;
-import im.delight.android.ddp.db.Collection;
-import im.delight.android.ddp.db.memory.InMemoryDatabase;
-*/
-/**
- * Created by aluca on 11/15/16.
- */
 
 public class WebserverManager implements MeteorCallback{
-    private static final String LOG_TAG = "Fitness_MeteorWebMgr";
+    private static final String LOG_TAG = "Fitness_WebserverMgr";
     AuthenticationLogic mAuthLogicInstance;
 
     private Context mContext;
@@ -79,7 +69,8 @@ public class WebserverManager implements MeteorCallback{
         mContext = context;
 
         // create a new instance
-        FitnessMDMeteor.createInstance(context, "ws://192.168.1.4:3000/websocket");
+        //FitnessMDMeteor.createInstance(context, "ws://192.168.1.4:3000/websocket");
+        FitnessMDMeteor.createInstance(context, "ws://128.224.108.202:3000/websocket");
         // register the callback that will handle events and receive messages
 
         FitnessMDMeteor.getInstance().addCallback(this);
@@ -102,40 +93,46 @@ public class WebserverManager implements MeteorCallback{
             Log.d(LOG_TAG, "Login failed");
             dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Input is not valid");
         } else {
-            String emailFromSharedPrefs = sharedPreferencesManager.getEmail(_emailText.getText().toString());
-            String passwordFromSharedPrefs = sharedPreferencesManager.getPassword(_emailText.getText().toString());
-            if (emailFromSharedPrefs != null && _emailText.getText().toString().equalsIgnoreCase(emailFromSharedPrefs)) {
-                // emails OK
-                if (passwordFromSharedPrefs != null && _passwordText.getText().toString().equalsIgnoreCase(passwordFromSharedPrefs)) {
-                    // password OK
-                    sharedPreferencesManager.setLoggedIn(true);
-                    sharedPreferencesManager.setUserName(_emailText.getText().toString(), sharedPreferencesManager.getUserName());
-                    sharedPreferencesManager.setEmail(_emailText.getText().toString());
-                    dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Login successfully");
+            // try to login on server
+            if (FitnessMDMeteor.getInstance().isConnected()) {
+                Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected()");
+                if (!FitnessMDMeteor.getInstance().isLoggedIn()) {
+                    Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().loginWithEmail()");
+                    FitnessMDMeteor.getInstance().loginWithEmail(_emailText.getText().toString(), _passwordText.getText().toString(),
+                            new ResultListener() {
+                                @Override
+                                public void onSuccess(String s) {
+                                    Log.d(LOG_TAG, "Meteor Login SUCCESS");
+                                    sharedPreferencesManager.setLoggedIn(true);
+                                    sharedPreferencesManager.setUserName(_emailText.getText().toString(),
+                                            sharedPreferencesManager.getUserName(_emailText.getText().toString()));
+                                    sharedPreferencesManager.setEmail(_emailText.getText().toString());
 
-                    // try to login on server
+                                    dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Login successfully");
+                                }
 
-                    if (FitnessMDMeteor.getInstance().isConnected()) { 
-                        if (!FitnessMDMeteor.getInstance().isLoggedIn()) {
-                            FitnessMDMeteor.getInstance().loginWithEmail(emailFromSharedPrefs, passwordFromSharedPrefs,
-                                new ResultListener() {
-                                    @Override
-                                    public void onSuccess(String s) {
-                                        Log.d(LOG_TAG, "Meteor Login SUCCESS");
-                                    }
-
-                                    @Override
-                                    public void onError(String error, String reason, String details) {
-                                        Log.d(LOG_TAG, "Meteor Login ERROR");
-                                    }
-                                });
-                        }
-                    }
+                                @Override
+                                public void onError(String error, String reason, String details) {
+                                    Log.d(LOG_TAG, "Meteor Login ERROR");
+                                }
+                            });
                 } else {
-                    dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Password does not match");
+                    dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Log in successful");
                 }
-            }  else {
-                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Email not registered");
+            } else {
+                Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected() false");
+                String emailFromSharedPrefs = sharedPreferencesManager.getEmail(_emailText.getText().toString());
+                String passwordFromSharedPrefs = sharedPreferencesManager.getPassword(_emailText.getText().toString());
+                if (emailFromSharedPrefs != null && _emailText.getText().toString().equalsIgnoreCase(emailFromSharedPrefs)) {
+                    // emails OK
+                    if (passwordFromSharedPrefs != null && _passwordText.getText().toString().equalsIgnoreCase(passwordFromSharedPrefs)) {
+                        // password OK
+                        sharedPreferencesManager.setLoggedIn(true);
+                        sharedPreferencesManager.setUserName(_emailText.getText().toString(), sharedPreferencesManager.getUserName(_emailText.getText().toString()));
+                        sharedPreferencesManager.setEmail(_emailText.getText().toString());
+                        dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Login successfully");
+                    }
+                }
             }
         }
     }
@@ -148,7 +145,7 @@ public class WebserverManager implements MeteorCallback{
         } else {
             if (sharedPreferencesManager.getEmail(emailText.getText().toString()) != null) {
                 // email already registered
-                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false);
+                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Email already registered");
                 return;
             } else {
                 // try to login to server
@@ -178,8 +175,13 @@ public class WebserverManager implements MeteorCallback{
                             }
                         });
                 } else {
-                    dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, 
-                        false, "Server could not be contacted. Do you have internet connection for account validation?");
+                    sharedPreferencesManager.addEmail(emailText.getText().toString());
+                    sharedPreferencesManager.addPassword(emailText.getText().toString(), passwordText.getText().toString());
+                    sharedPreferencesManager.setUserName(emailText.getText().toString(), nameText.getText().toString());
+                    sharedPreferencesManager.setEmail(emailText.getText().toString());
+
+                    sharedPreferencesManager.setLoggedIn(true);
+                    dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully");
                 }
             }
         }
@@ -470,5 +472,43 @@ public class WebserverManager implements MeteorCallback{
 
     public void registerCallback(Handler mActivityHandler) {
         handlerList.add(mActivityHandler);
+    }
+
+    public void sendStepsToServer(long startOfCurrentDay, int totalSteps, int hourIndex) {
+        if (FitnessMDMeteor.getInstance().isConnected()) {
+            if (!FitnessMDMeteor.getInstance().isLoggedIn()) {
+                FitnessMDMeteor.getInstance().loginWithEmail(sharedPreferencesManager.getEmail(),
+                        sharedPreferencesManager.getPassword(sharedPreferencesManager.getEmail()),
+                        new ResultListener() {
+                            @Override
+                            public void onSuccess(String s) {
+                                Log.d(LOG_TAG, "Meteor Login SUCCESS -- send steps to server");
+
+                            }
+
+                            @Override
+                            public void onError(String error, String reason, String details) {
+                                Log.d(LOG_TAG, "Meteor Login ERROR -- send steps to server");
+                            }
+                        });
+            } else {
+                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Log in successful");
+                FitnessMDMeteor.getInstance().sendStepsToServer(startOfCurrentDay, totalSteps, hourIndex,
+                        new ResultListener() {
+                            @Override
+                            public void onSuccess(String s) {
+                                Log.d(LOG_TAG, "Send steps to server -- SUCCESS");
+
+                            }
+
+                            @Override
+                            public void onError(String error, String reason, String details) {
+                                Log.d(LOG_TAG, "Send steps to server -- ERROR");
+                            }
+                        });
+            }
+        } else {
+            Log.d(LOG_TAG, "Meteor not connected ERROR -- send steps to server");
+        }
     }
 }

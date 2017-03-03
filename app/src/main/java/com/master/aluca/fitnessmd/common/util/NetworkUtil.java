@@ -1,31 +1,29 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common.util;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
-import android.provider.MediaStore;
-import android.provider.MediaStore.Images.Media;
 import android.util.Log;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-/**
- * Created by aluca on 11/15/16.
- */
 public class NetworkUtil {
 
     private static final String LOG_TAG = "Fitness_NetworkUtil";
 
     public static final int NETWORK_STATUS_NOT_CONNECTED=0;
-    public static final int NETWORK_STAUS_WIFI=1;
+    public static final int NETWORK_STATUS_WIFI=1;
     public static final int NETWORK_STATUS_MOBILE=2;
 
     public static int getConnectivityStatusString(Context context) {
@@ -35,7 +33,7 @@ public class NetworkUtil {
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         if (null != activeNetwork) {
             if(activeNetwork.getType() == ConnectivityManager.TYPE_WIFI)
-                return NETWORK_STAUS_WIFI;
+                return NETWORK_STATUS_WIFI;
 
             if(activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE)
                 return NETWORK_STATUS_MOBILE;

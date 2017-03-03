@@ -1,14 +1,16 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui.auth;
 
 import android.util.Log;
 import android.widget.EditText;
-
-
-import java.util.List;
-
-/**
- * Created by andrei on 10/31/2016.
- */
 
 public class AuthenticationLogic {
     private static final String LOG_TAG="Fitness_AuthLogic";

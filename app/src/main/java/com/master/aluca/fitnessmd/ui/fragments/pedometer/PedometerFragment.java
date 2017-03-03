@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui.fragments.pedometer;
 
 import android.app.Activity;
@@ -19,7 +28,6 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Chronometer;
-import android.widget.Chronometer.OnChronometerTickListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +35,7 @@ import android.widget.Toast;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.ArcProgress;
 import com.master.aluca.fitnessmd.common.Constants;
+import com.master.aluca.fitnessmd.common.util.IStepNotifier;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
@@ -34,10 +43,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-
-/**
- * Created by aluca on 11/3/16.
- */
 public class PedometerFragment extends Fragment {
 
     private static final String LOG_TAG = "Fitness_PedometerFrag";
@@ -67,6 +72,8 @@ public class PedometerFragment extends Fragment {
 
     int mState = Constants.STOPWATCH_STOPPED;
 
+    Calendar calendar;
+
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -79,6 +86,16 @@ public class PedometerFragment extends Fragment {
             if (mService == null) {
                 Log.e(LOG_TAG, "unable to connect to service");
                 return;
+            } else {
+                if (mService.isDeviceConnected()) {
+                    Log.d(LOG_TAG, "Device connected");
+                    mService.registerCallback(mCallback);
+                    if (mState == Constants.STOPWATCH_RUNNING) {
+                        startUpdateThread();
+                    }
+                } else {
+                    Log.d(LOG_TAG, "Device is not connected");
+                }
             }
         }
 
@@ -87,6 +104,28 @@ public class PedometerFragment extends Fragment {
             Log.d(LOG_TAG, "on service disconnected");
             mService = null;
         }
+    };
+
+        /*
+        When the user sets Gender, Year of birth or Height from the Settings menu
+        the Profile tab does not get updated unless this callback is called.
+     */
+    private IStepNotifier mCallback = new IStepNotifier() {
+            @Override
+            public void onStepIncrement(int steps) {
+                Log.d(LOG_TAG, "IStepNotified STEP_INCREMENT_CALLBACK received");
+                totalSteps += steps;
+                Log.d(LOG_TAG, "IStepNotified totalSteps : " + totalSteps);
+                mArcProgress.setProgress(totalSteps);
+                setKm();
+                setKCal();
+                if (totalSteps % 10 == 0) {
+                    Log.d(LOG_TAG, "IStepNotified 10 steps");
+                    if (mService!= null) {
+                        mService.sendStepsToServer(sharedPreferencesManager.getStartOfCurrentDay(), totalSteps, 0);
+                    }
+                }
+            }
     };
 
 
@@ -171,18 +210,14 @@ public class PedometerFragment extends Fragment {
                 mArcProgress.setProgress(totalSteps);
                 setKm();
                 setKCal();
+                if (totalSteps % 10 == 0) {
+                    Log.d(LOG_TAG, "10 steps");
+                    if (mService!= null) {
+                        mService.sendStepsToServer(sharedPreferencesManager.getStartOfCurrentDay(), totalSteps, 0);
+                    }
+                }
             } else if (intent.getAction().equals(Constants.CONNECTED_DEVICE_DETAILS_INTENT)) {
                 Log.d(LOG_TAG, "CONNECTED_DEVICE_DETAILS_INTENT received");
-                //startTimer();
-
-                //TODO  - cand iesi din aplicatie si intri iar, timerul ramane setat pe 0 si nu mai porneste.
-
-                /*if(!sharedPreferencesManager.getChronometerRunning()) {
-                    sharedPreferencesManager.setChronometerBase(SystemClock.elapsedRealtime());
-                }
-                timeElapsed.setBase(sharedPreferencesManager.getChronometerBase());
-                timeElapsed.start();
-                sharedPreferencesManager.setChronometerRunning(true);*/
                 Log.d(LOG_TAG, "startTimer : " + mState);
                 if(mState == Constants.STOPWATCH_STOPPED || mState == Constants.STOPWATCH_RESET) {
                     doStart();
@@ -190,14 +225,11 @@ public class PedometerFragment extends Fragment {
             } else if (intent.getAction().equals(Constants.DEVICE_CONNECTION_LOST)) {
                 Log.d(LOG_TAG, "DEVICE_CONNECTION_LOST received");
                 Toast.makeText(getActivity().getApplicationContext(),"Device connection lost",Toast.LENGTH_LONG).show();
-                sharedPreferencesManager.setChronometerBase(SystemClock.elapsedRealtime());
-                sharedPreferencesManager.setChronometerRunning(false);
                 if(mState == Constants.STOPWATCH_RUNNING) {
                     long curTime = SystemClock.elapsedRealtime();
                     mAccumulatedTime += (curTime - mStartTime);
                     doStop();
                 }
-                //timeElapsed.stop();
             }
         }
     };
@@ -215,27 +247,43 @@ public class PedometerFragment extends Fragment {
         mArcProgress = (ArcProgress) view.findViewById(R.id.arc_progress_pedometer);
         mArcProgress.setProgress(sharedPreferencesManager.getStepsForCurrentDay());
 
-        timeElapsed = (Chronometer) view.findViewById(R.id.chronometer);
-        /*timeElapsed.setOnChronometerTickListener(new OnChronometerTickListener() {
-            @Override
-            public void onChronometerTick(Chronometer chronometer) {
-                Log.d(LOG_TAG,"onChronoTick");
-                long time = SystemClock.elapsedRealtime() - chronometer.getBase();
-                hours = (int) (time / 3600000);
-                minutes = (int) (time - hours * 3600000) / 60000;
-                seconds = (int) (time - hours * 3600000 - minutes * 60000) / 1000;
-                String hh = hours < 10 ? "0" + hours : hours + "";
-                String mm = minutes < 10 ? "0" + minutes : minutes + "";
-                String ss = seconds < 10 ? "0" + seconds : seconds + "";
-                chronometer.setText(hh + ":" + mm + ":" + ss);
-            }
-        });*/
+        calendar = Calendar.getInstance();
 
+
+
+        timeElapsed = (Chronometer) view.findViewById(R.id.chronometer);
+        final int[] contor = {0};
         startTimer = (Button) view.findViewById(R.id.startTimer);
         startTimer.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(LOG_TAG, "startTimer onClick() : " + mState);
+                contor[0]++;
+                if (mService!= null) {
+                    int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+                    int index = 0;
+
+                    if(hourOfDay >=0 && hourOfDay <= 3) {
+                        index = 0;
+                    } else if (hourOfDay > 3 && hourOfDay <=6) {
+                        index = 1;
+                    } else if (hourOfDay > 6 && hourOfDay <= 9) {
+                        index = 2;
+                    } else if (hourOfDay > 9 && hourOfDay <= 12) {
+                        index = 3;
+                    } else if (hourOfDay > 12 && hourOfDay <= 15) {
+                        index = 4;
+                    } else if (hourOfDay > 15 && hourOfDay <= 18) {
+                        index = 5;
+                    } else if (hourOfDay > 18 && hourOfDay <= 21) {
+                        index = 6;
+                    } else if (hourOfDay > 21 && hourOfDay <= 24) {
+                        index = 7;
+                    }
+                    Log.d(LOG_TAG, "hourOfDay : " + hourOfDay);
+                    Log.d(LOG_TAG, "index : " + index);
+                    mService.sendStepsToServer(sharedPreferencesManager.getStartOfCurrentDay(), contor[0]*10, index);
+                }
                 switch (mState) {
                     case Constants.STOPWATCH_RUNNING:
                         long curTime = SystemClock.elapsedRealtime();
@@ -292,7 +340,7 @@ public class PedometerFragment extends Fragment {
             pedometerView.postDelayed(mTimeUpdateThread, 10);
         }
     };
-    private String mHours, mMinutes, mSeconds, mHunderdths;
+    private String mHours, mMinutes, mSeconds;
 
     public void setTime(long time) {
         String format = null;
@@ -362,7 +410,7 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
             kph = Math.round(kph * 10d) / 10d;
             caloriesBurned = (kph3 - kph2 + kph + 1.4577) * sharedPreferencesManager.getWeight() * timeActiveInHours;
         }
-        tvKCal.setText("" + (int)caloriesBurned);
+        tvKCal.setText("" + (int) caloriesBurned);
     }
 
     /*
@@ -395,9 +443,6 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
         Log.d(LOG_TAG, "onResume() mState : " + mState);
         startTimer.setText(mState == Constants.STOPWATCH_RUNNING ? "STOP" : "START");
         setTime(mAccumulatedTime);
-        if (mState == Constants.STOPWATCH_RUNNING) {
-            startUpdateThread();
-        }
         super.onResume();
     }
 
@@ -418,9 +463,9 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
         Log.d(LOG_TAG, "writeToSharedPref()");
         String email = sharedPreferencesManager.getEmail();
         sharedPreferencesManager.saveSWStartTime(Constants.SHARED_PREFS_SW_START_TIME+email, mStartTime);
-        sharedPreferencesManager.saveSWAccumTime(Constants.SHARED_PREFS_SW_ACCUM_TIME+email, mAccumulatedTime);
-        sharedPreferencesManager.saveSWState(Constants.SHARED_PREFS_SW_STATE+email, mState);
-        sharedPreferencesManager.setStepsForCurrentDay(Constants.SHARED_PREFS_CURR_DAY_STEPS+email, getStepsForCurrentDay());
+        sharedPreferencesManager.saveSWAccumTime(Constants.SHARED_PREFS_SW_ACCUM_TIME + email, mAccumulatedTime);
+        sharedPreferencesManager.saveSWState(Constants.SHARED_PREFS_SW_STATE + email, mState);
+        sharedPreferencesManager.setStepsForCurrentDay(Constants.SHARED_PREFS_CURR_DAY_STEPS + email, getStepsForCurrentDay());
         Log.d(LOG_TAG, "writeToSharedPref() getStepsForCurrentDay() : " + getStepsForCurrentDay());
     }
 

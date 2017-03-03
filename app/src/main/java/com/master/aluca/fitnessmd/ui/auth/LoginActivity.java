@@ -1,15 +1,20 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui.auth;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -62,7 +67,7 @@ public class LoginActivity extends Activity{
 
         progressDialog = new ProgressDialog(LoginActivity.this);
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
-        
+
 
         boolean isLoggedIn = sharedPreferencesManager.getIsUserLoggedIn();
         Log.d(LOG_TAG, "sharedPrefs isLoggedIn : " + isLoggedIn);
@@ -84,46 +89,6 @@ public class LoginActivity extends Activity{
         }
     }
 
-    /*private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            Log.d(LOG_TAG, "action : " + action.toString());
-            if (action.equals(Constants.LOGIN_RESULT_INTENT)) {
-                if(intent.getBooleanExtra(Constants.LOGIN_RESULT_BUNDLE_KEY, false)) {
-                    
-                } else {
-                    String reason = intent.getStringExtra(Constants.LOGIN_RESULT_EXTRA_BUNDLE_KEY);
-                    if( reason!= null) {
-                        Toast.makeText(getBaseContext(), reason, Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(getBaseContext(), "Login error", Toast.LENGTH_LONG).show();
-                    }
-                    
-                }
-            } else if (action.equalsIgnoreCase(Constants.METEOR_CLIENT_CONNECTED)) {
-                if (progressDialog.isShowing()) {
-                    progressDialog.dismiss();
-                }
-                if (intent.getBooleanExtra(Constants.METEOR_CONNECTED_BUNDLE_KEY, false)) {
-                    Log.d(LOG_TAG, "METEOR connected success");
-                    if (sharedPreferencesManager.getIsUserLoggedIn()) {
-                        Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
-                        startActivity(intentMainActiv);
-                        finish();
-                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                    }
-
-                } else {
-                    Log.d(LOG_TAG, "METEOR connected error");
-                }
-            }
-        }
-
-    };*/
-
-
     public class ActivityHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -143,7 +108,6 @@ public class LoginActivity extends Activity{
                         _loginButton.setEnabled(false);
 
                         Log.d(LOG_TAG, "Login sucess");
-                        String email = _emailText.getText().toString();
 
                         Intent intentMainActivity = new Intent(getApplicationContext(), MainActivity.class);
                         startActivity(intentMainActivity);
@@ -171,6 +135,10 @@ public class LoginActivity extends Activity{
                     if (msg.arg1 > 0) {
                         // should sign in automatically
                         Log.d(LOG_TAG, "should log in automatically");
+                        Intent intentMainActivity = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intentMainActivity);
+                        finish();
+                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
 
                     } else {
                         // should display login form

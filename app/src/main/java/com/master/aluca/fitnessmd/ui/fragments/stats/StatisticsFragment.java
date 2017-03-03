@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.ui.fragments.stats;
 
 import android.app.Activity;
@@ -7,7 +16,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -16,7 +24,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.components.Legend.LegendForm;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.XAxis.XAxisPosition;
@@ -28,7 +35,6 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.master.aluca.fitnessmd.R;
-import com.master.aluca.fitnessmd.common.bluetooth.DBHelper;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
@@ -38,9 +44,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
-/**
- * Created by aluca on 11/7/16.
- */
 public class StatisticsFragment extends Fragment {
 
     private static final String LOG_TAG = "Fitness_Statistics";
@@ -50,7 +53,6 @@ public class StatisticsFragment extends Fragment {
     TextView tvStatsAverageSteps, tvStatsTotalSteps;
 
     private Activity mActivity;
-    private DBHelper mDB = null;
     private TextView tvDateToday;
 
     private FitnessMDService mService;
@@ -129,9 +131,6 @@ public class StatisticsFragment extends Fragment {
         }
 
         Log.d(LOG_TAG, "StatisticsFragment");
-        if(mDB == null) {
-            mDB = new DBHelper(getActivity()).openWritable();
-        }
 
         setup(view);
     }
@@ -192,8 +191,8 @@ public class StatisticsFragment extends Fragment {
 
     private void setData(int count, float range) {
 
-        ArrayList<StepsDayReport> stepsDayReports = mDB.getLastWeekReport(System.currentTimeMillis());
-        Log.d(LOG_TAG,"stepsDayReports.size : " + stepsDayReports.size());
+        /*ArrayList<StepsDayReport> stepsDayReports = mDB.getLastWeekReport(System.currentTimeMillis());
+        Log.d(LOG_TAG,"stepsDayReports.size : " + stepsDayReports.size());*/
 
 
         Log.d(LOG_TAG, "count : " + count + " >>> range : " + range);
@@ -248,13 +247,13 @@ public class StatisticsFragment extends Fragment {
     }
 
     private void setStatsAverageSteps() {
-        StepsDayReport averageStepsRaport = mDB.getAverageSteps();
+        /*StepsDayReport averageStepsRaport = mDB.getAverageSteps();
         int averageSteps = averageStepsRaport.getSteps();
-        tvStatsAverageSteps.setText(String.valueOf(averageSteps));
+        tvStatsAverageSteps.setText(String.valueOf(averageSteps));*/
     }
     private void setStatsTotalSteps() {
-        StepsDayReport averageStepsRaport = mDB.getTotalSteps();
+        /*StepsDayReport averageStepsRaport = mDB.getTotalSteps();
         int averageSteps = averageStepsRaport.getSteps();
-        tvStatsTotalSteps.setText(String.valueOf(averageSteps));
+        tvStatsTotalSteps.setText(String.valueOf(averageSteps));*/
     }
 }

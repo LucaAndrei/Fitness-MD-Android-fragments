@@ -1,3 +1,12 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common;
 
 import android.content.Context;
@@ -18,9 +27,6 @@ import android.view.View;
 
 import com.master.aluca.fitnessmd.R;
 
-/**
- * Created by bruce on 11/6/14.
- */
 public class ArcProgress extends View {
     private Paint paint;
     protected Paint textPaint;

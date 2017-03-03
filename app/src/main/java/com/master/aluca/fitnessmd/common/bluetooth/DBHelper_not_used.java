@@ -1,8 +1,14 @@
+/*********************************************************
+ *
+ * Copyright (c) 2017 Andrei Luca
+ * All rights reserved. You may not copy, distribute, publicly display,
+ * create derivative works from or otherwise use or modify this
+ * software without first obtaining a license from Andrei Luca
+ *
+ *********************************************************/
+
 package com.master.aluca.fitnessmd.common.bluetooth;
 
-/**
- * Created by aluca on 11/8/16.
- */
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -19,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 
-public class DBHelper {
+public class DBHelper_not_used {
 
     private static final String LOG_TAG  ="Fitness_Stat_DBHelper";
 
@@ -55,7 +61,7 @@ public class DBHelper {
     private WeightDayReport averageWeight;
 
     // Constructor
-    public DBHelper(Context context) {
+    public DBHelper_not_used(Context context) {
         this.mContext = context;
     }
 
@@ -64,7 +70,7 @@ public class DBHelper {
     // Public classes
     //----------------------------------------------------------------------------------
     // DB open (Writable)
-    public DBHelper openWritable() throws SQLException {
+    public DBHelper_not_used openWritable() throws SQLException {
         mDbHelper = new DatabaseHelper(mContext);
         mDb = mDbHelper.getWritableDatabase();
         return this;
