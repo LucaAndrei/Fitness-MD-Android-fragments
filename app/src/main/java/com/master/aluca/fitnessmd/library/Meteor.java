@@ -610,16 +610,7 @@ public class Meteor {
 	/**
 	 * Sign in the user with the given email address and password
 	 *
-	 * Please note that this requires the `accounts-password` /*********************************************************
- *
- * Copyright (c) 2017 Andrei Luca
- * All rights reserved. You may not copy, distribute, publicly display,
- * create derivative works from or otherwise use or modify this
- * software without first obtaining a license from Andrei Luca
- *
- *********************************************************/
-
-package
+	 * Please note that this requires the `accounts-password`
 	 *
 	 * @param email the email address to sign in with
 	 * @param password the password to sign in with
@@ -673,16 +664,7 @@ package
 	 *
 	 * This method will automatically login as the new user on success
 	 *
-	 * Please note that this requires the `accounts-password` /*********************************************************
- *
- * Copyright (c) 2017 Andrei Luca
- * All rights reserved. You may not copy, distribute, publicly display,
- * create derivative works from or otherwise use or modify this
- * software without first obtaining a license from Andrei Luca
- *
- *********************************************************/
-
-package
+	 * Please note that this requires the `accounts-password`
 	 *
 	 * @param username the username to register with (either this or `email` is required)
 	 * @param email the email address to register with (either this or `username` is required)

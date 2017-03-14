@@ -33,7 +33,7 @@ public class ConnectionInfo {
         mContext = c;
 
         mDeviceAddress = SharedPreferencesManager.getInstance(mContext).getSavedDeviceAddress();
-        mDeviceName = SharedPreferencesManager.getInstance(mContext).getSavedDeviceAddress();
+        mDeviceName = SharedPreferencesManager.getInstance(mContext).getSavedDeviceName();
     }
 
     /**

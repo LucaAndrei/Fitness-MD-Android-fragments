@@ -21,6 +21,7 @@ import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
 import com.master.aluca.fitnessmd.library.MeteorCallback;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryCollection;
@@ -53,6 +54,9 @@ public class WebserverManager implements MeteorCallback{
     private ArrayList<Handler> handlerList = new ArrayList<>();
 
 
+    private UsersDB mDB;
+
+
 
     public static WebserverManager getInstance(Context context) {
         Log.d(LOG_TAG, "WebserverManager getInstance :" + String.valueOf(sWebserverManager));
@@ -67,6 +71,7 @@ public class WebserverManager implements MeteorCallback{
         mAuthLogicInstance = AuthenticationLogic.getInstance();
         sharedPreferencesManager = SharedPreferencesManager.getInstance(context);
         mContext = context;
+        mDB = UsersDB.getInstance(context);
 
         // create a new instance
         //FitnessMDMeteor.createInstance(context, "ws://192.168.1.4:3000/websocket");
@@ -143,7 +148,9 @@ public class WebserverManager implements MeteorCallback{
             Log.d(LOG_TAG, "input not valid");
             dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Input is not valid");
         } else {
-            if (sharedPreferencesManager.getEmail(emailText.getText().toString()) != null) {
+            boolean addSuccess = mDB.addUser(emailText.getText().toString(), passwordText.getText().toString(), nameText.getText().toString());
+            Log.d(LOG_TAG,"addSuccess : " + addSuccess);
+            /*if (sharedPreferencesManager.getEmail(emailText.getText().toString()) != null) {
                 // email already registered
                 dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Email already registered");
                 return;
@@ -183,7 +190,7 @@ public class WebserverManager implements MeteorCallback{
                     sharedPreferencesManager.setLoggedIn(true);
                     dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully");
                 }
-            }
+            }*/
         }
 
     }
