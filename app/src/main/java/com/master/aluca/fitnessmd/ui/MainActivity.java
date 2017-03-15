@@ -44,7 +44,7 @@ import android.widget.Toast;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.util.ProfilePhotoUtils;
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.library.Meteor;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTextStatus = null;
 
     private boolean alwaysEnableBT;
-    private SharedPreferencesManager sharedPreferencesManager;
+    private UsersDB mDB;
 
     private ActivityHandler mActivityHandler;
 
@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);*/
 
         viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager.setOffscreenPageLimit(6);
         setupViewPager(viewPager);
 
         tabLayout = (TabLayout) findViewById(R.id.tabs);
@@ -107,8 +108,8 @@ public class MainActivity extends AppCompatActivity {
         loadSharedPrefs();
 
         mActivityHandler = new ActivityHandler();
-        sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
-        alwaysEnableBT = sharedPreferencesManager.getAlwaysEnableBT();
+        mDB = UsersDB.getInstance(getApplicationContext());
+        alwaysEnableBT = mDB.getConnectedUser().getAlwaysEnableBT();
 
         // Setup views
         mImageBT = (ImageView) findViewById(R.id.status_title);
@@ -160,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
+            Log.d(LOG_TAG, "getItem : " + position);
             return mFragmentList.get(position);
         }
 
@@ -225,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
                         if (alwaysEnable.isChecked()) {
                             checkBoxResult = true;
                         }
-                        sharedPreferencesManager.setAlwaysEnableBT(checkBoxResult);
+                        mDB.updateAlwaysEnableBT(checkBoxResult);
                         mService.enableBluetooth();
 
                         return;
@@ -354,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
                     Uri uri = Uri.parse(url);
                     photo = ProfilePhotoUtils.rotatePhoto(getContentResolver(), uri);
                     //mTabMenu.setProfilePicture("Profile", photo);
-                    sharedPreferencesManager.setProfilePictureURI(uri.toString());
+                    mDB.updateProfilePictureURI(uri.toString());
                     break;
                 case Constants.GET_GALLERY_IMAGE:
                     Log.d(LOG_TAG, "GET_GALLERY_IMAGE");
@@ -363,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(LOG_TAG, "Uri : " + data.getData());
                     Bitmap image = ProfilePhotoUtils.getProfilePicFromGallery(getContentResolver(), mImageUri);
                     //mTabMenu.setProfilePicture("Profile",image);
-                    sharedPreferencesManager.setProfilePictureURI(mImageUri.toString());
+                    mDB.updateProfilePictureURI(mImageUri.toString());
 
             }    // End of switch(requestCode)
         } else Log.d(LOG_TAG,"resultCode is 0 ");

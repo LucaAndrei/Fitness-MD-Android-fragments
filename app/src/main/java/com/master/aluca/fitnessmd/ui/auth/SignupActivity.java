@@ -25,7 +25,6 @@ import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.MainActivity;
 
@@ -38,7 +37,6 @@ public class SignupActivity extends Activity {
     TextView _loginLink;
 
     private WebserverManager mWebserverManager;
-    private SharedPreferencesManager sharedPreferencesManager;
     private static Handler mActivityHandler = null;
 
     ProgressDialog progressDialog = null;
@@ -54,8 +52,6 @@ public class SignupActivity extends Activity {
         _passwordText = (EditText) findViewById(R.id.input_password);
         _signupButton = (Button) findViewById(R.id.btn_signup);
         _loginLink = (TextView) findViewById(R.id.link_login);
-
-        sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
 
         progressDialog = new ProgressDialog(SignupActivity.this);
 
@@ -141,6 +137,7 @@ public class SignupActivity extends Activity {
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
+        mWebserverManager.removeCallback();
         super.onDestroy();
     }
 

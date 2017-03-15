@@ -28,7 +28,7 @@ import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.MainActivity;
 
@@ -47,7 +47,7 @@ public class LoginActivity extends Activity{
 
     private WebserverManager mWebserverManager;
 
-    private SharedPreferencesManager sharedPreferencesManager;
+    private UsersDB mDB;
 
     ProgressDialog progressDialog = null;
 
@@ -66,11 +66,11 @@ public class LoginActivity extends Activity{
         _signupLink = (TextView) findViewById(R.id.link_signup);
 
         progressDialog = new ProgressDialog(LoginActivity.this);
-        sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
+        mDB = UsersDB.getInstance(getApplicationContext());
 
 
-        boolean isLoggedIn = sharedPreferencesManager.getIsUserLoggedIn();
-        Log.d(LOG_TAG, "sharedPrefs isLoggedIn : " + isLoggedIn);
+        boolean isLoggedIn = mDB.getIsUserLoggedIn();
+        Log.d(LOG_TAG, "mDB isLoggedIn : " + isLoggedIn);
 
         if (isLoggedIn) {
             Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
@@ -229,7 +229,6 @@ public class LoginActivity extends Activity{
         if (requestCode == REQUEST_SIGNUP) {
             if (resultCode == RESULT_OK) {
                 Log.d(LOG_TAG, "onActivityResult RESULT_OK");
-                //sharedPreferencesManager.setLoggedIn(true);
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(intent);
                 finish();
@@ -249,6 +248,9 @@ public class LoginActivity extends Activity{
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
+        if (mWebserverManager != null) {
+            mWebserverManager.removeCallback();
+        }
         super.onDestroy();
     }
 

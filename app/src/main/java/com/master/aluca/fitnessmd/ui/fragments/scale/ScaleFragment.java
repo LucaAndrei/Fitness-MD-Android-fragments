@@ -30,7 +30,7 @@ import android.widget.TextView;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.ArcProgress;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
 import java.text.SimpleDateFormat;
@@ -41,7 +41,7 @@ public class ScaleFragment extends Fragment {
     private static final String LOG_TAG = "Fitness_ScaleFragment";
 
     private Activity mActivity;
-    private SharedPreferencesManager sharedPreferencesManager;
+    private UsersDB mDB;
     static TextView tvDate, tvLastMeasurement;
     private ArcProgress mArcProgressScale;
 
@@ -121,7 +121,7 @@ public class ScaleFragment extends Fragment {
         }
 
         Log.d(LOG_TAG,"ScaleFragment");
-        sharedPreferencesManager = SharedPreferencesManager.getInstance(getActivity());
+        mDB = UsersDB.getInstance(getActivity());
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Constants.WEIGHT_RECEIVED_INTENT);
@@ -179,10 +179,10 @@ public class ScaleFragment extends Fragment {
         tvDate = (TextView) view.findViewById(R.id.tvDate);
         tvLastMeasurement = (TextView) view.findViewById(R.id.tvLastMeasurement);
         mArcProgressScale = (ArcProgress) view.findViewById(R.id.arc_progress_scale);
-        float weightGoal = sharedPreferencesManager.getWeightGoal();
+        float weightGoal = mDB.getConnectedUser().getWeightGoal();
         mArcProgressScale.setBottomText("Goal: " + weightGoal + " kg");
 
-        float weight = sharedPreferencesManager.getWeight();
+        float weight = mDB.getConnectedUser().getWeight();
         mArcProgressScale.setProgressWeight(weight);
 
         SimpleDateFormat s = new SimpleDateFormat("d MMMM yyyy");

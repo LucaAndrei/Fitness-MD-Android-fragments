@@ -37,7 +37,7 @@ import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IDataRefreshCallback;
 import com.master.aluca.fitnessmd.common.util.ProfilePhotoUtils;
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
@@ -50,7 +50,7 @@ public class ProfileFragment extends Fragment {
     private static final String LOG_TAG = "Fitness_ProfileFragment";
 
     private Activity mActivity;
-    private SharedPreferencesManager sharedPreferencesManager;
+    private UsersDB mDB;
     static TextView tvName, tvGender, tvAge, tvHeight;
     TextView tvPersonalBestSteps, tvPersonalBestWeight;
     TextView tvPersonalBestStepsDate, tvPersonalBestWeightDate;
@@ -147,8 +147,8 @@ public class ProfileFragment extends Fragment {
         }
 
         Log.d(LOG_TAG,"ProfileFragment");
-        sharedPreferencesManager = SharedPreferencesManager.getInstance(getActivity());
-        sharedPreferencesManager.registerCallback(mCallback);
+        mDB = UsersDB.getInstance(getActivity());
+        mDB.registerCallback(mCallback);
         webserverManager = WebserverManager.getInstance(getActivity());
 
         setup(view);
@@ -178,13 +178,13 @@ public class ProfileFragment extends Fragment {
     };
 
     private void updateHeightTextView() {
-        int height = sharedPreferencesManager.getHeight();
+        int height = mDB.getConnectedUser().getHeight();
         Log.d(LOG_TAG, "height : " + height);
         tvHeight.setText(height + " cm");
     }
 
     private void updateAgeTextView() {
-        int yob = sharedPreferencesManager.getYearOfBirth();
+        int yob = mDB.getConnectedUser().getYearOfBirth();
         Log.d(LOG_TAG, "yob : " + yob);
         Calendar calendar = Calendar.getInstance();
         int currentYear = calendar.get(Calendar.YEAR);
@@ -195,7 +195,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void updateGenderTextView() {
-        String gender = sharedPreferencesManager.getGender();
+        String gender = mDB.getConnectedUser().getGender();
         if (gender != null) {
             Log.d(LOG_TAG, "gender : " + gender.toString());
             tvGender.setText(gender);
@@ -261,7 +261,7 @@ public class ProfileFragment extends Fragment {
     private void initUserData() {
         Log.d(LOG_TAG,"initUserData");
 
-        String name = sharedPreferencesManager.getUserName(sharedPreferencesManager.getEmail());
+        String name = mDB.getConnectedUser().getName();
         if (name != null) {
             Log.d(LOG_TAG, "name : " + name.toString());
             tvName.setText(name);
@@ -281,7 +281,7 @@ public class ProfileFragment extends Fragment {
     private void updateProfilePicture() {
         Log.d(LOG_TAG, "updateProfilePicture");
 
-        String profilePictureUri = sharedPreferencesManager.getProfilePictureURI();
+        String profilePictureUri = mDB.getConnectedUser().getProfilePictureURI();
         Log.d(LOG_TAG, "profilePictureUri : " + profilePictureUri);
         if (profilePictureUri != null) {
             Bitmap profilePhoto = ProfilePhotoUtils.getProfilePicFromGallery(getActivity().getContentResolver(), Uri.parse(profilePictureUri));

@@ -36,8 +36,8 @@ import android.widget.TextView;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
+import com.master.aluca.fitnessmd.common.webserver.UsersDB;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 import com.master.aluca.fitnessmd.ui.PairDeviceActivity;
 
@@ -49,7 +49,7 @@ public class SettingsFragment extends Fragment {
 
 
     private Activity mActivity;
-    private SharedPreferencesManager sharedPreferencesManager;
+    private UsersDB mDB;
     private WebserverManager webserverManager;
     Button btnGender;
     Button btnYoB;
@@ -137,7 +137,7 @@ public class SettingsFragment extends Fragment {
         }
 
         Log.d(LOG_TAG, "SettingsFragment");
-        sharedPreferencesManager = SharedPreferencesManager.getInstance(getActivity());
+        mDB = UsersDB.getInstance(getActivity());
         webserverManager = WebserverManager.getInstance(getActivity());
 
         IntentFilter intentFilter = new IntentFilter();
@@ -182,7 +182,7 @@ public class SettingsFragment extends Fragment {
                 builder.setTitle("Gender");
                 builder.setSingleChoiceItems(Constants.GENDERS, -1, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        sharedPreferencesManager.setGender(Constants.GENDERS[which].toString());
+                        mDB.updateGender(Constants.GENDERS[which].toString());
                         btnGender.setText(Html.fromHtml("Gender<br /><small><small>" + Constants.GENDERS[which] + "</small></small>"));
                         Intent genderChangedIntent = new Intent(Constants.GENDER_CHANGED_INTENT);
                         genderChangedIntent.putExtra(Constants.GENDER_CHANGED_INTENT_BUNDLE_KEY, Constants.GENDERS[which]);
@@ -207,7 +207,7 @@ public class SettingsFragment extends Fragment {
 
                 Constants.setNumberPickerTextColor(height_picker, getActivity().getResources().getColor(R.color.tab_menu_background));
 
-                int height = sharedPreferencesManager.getHeight();
+                int height = mDB.getConnectedUser().getHeight();
                 height_picker.setMinValue(Constants.HEIGHT_MIN_VALUE);
                 height_picker.setMaxValue(Constants.HEIGHT_MAX_VALUE);
                 height_picker.setValue(height);
@@ -219,7 +219,7 @@ public class SettingsFragment extends Fragment {
                             public void onClick(DialogInterface dialog, int which) {
                                 Log.d(LOG_TAG, "height OK click");
                                 int height = height_picker.getValue();
-                                sharedPreferencesManager.setHeight(height);
+                                mDB.updateHeight(height);
                                 btnHeight.setText(Html.fromHtml("Height<br /><small>" + height + " " + unitsOfMeasurement.getText().toString() + "</small>"));
                                 Intent heightChangedIntent = new Intent(Constants.HEIGHT_CHANGED_INTENT);
                                 heightChangedIntent .putExtra(Constants.HEIGHT_CHANGED_INTENT_BUNDLE_KEY, height);
@@ -249,7 +249,7 @@ public class SettingsFragment extends Fragment {
                 Constants.setNumberPickerTextColor(kg_picker, getActivity().getResources().getColor(R.color.tab_menu_background));
                 Constants.setNumberPickerTextColor(g_picker, getActivity().getResources().getColor(R.color.tab_menu_background));
 
-                float weight = sharedPreferencesManager.getWeight();
+                float weight = mDB.getConnectedUser().getWeight();
                 int weight_decimal_part = Math.round(weight%1 * 10);
 
                 kg_picker.setMinValue(Constants.WEIGHT_KG_MIN_VALUE);
@@ -267,7 +267,7 @@ public class SettingsFragment extends Fragment {
                             public void onClick(DialogInterface dialog, int which) {
                                 Log.d(LOG_TAG, "weight OK click");
                                 float weight = kg_picker.getValue() + g_picker.getValue()/10f;
-                                sharedPreferencesManager.setWeight(weight);
+                                mDB.updateWeight(weight);
                                 btnWeight.setText(Html.fromHtml("Weight<br /><small>" + weight + " kg</small>"));
 
                                 Intent weightChangedIntent = new Intent(Constants.WEIGHT_CHANGED_INTENT);
@@ -299,7 +299,7 @@ public class SettingsFragment extends Fragment {
 
                 final TextView unitsOfMeasurement = (TextView) theView.findViewById(R.id.unitsOfMeasurement);
 
-                int yob = sharedPreferencesManager.getYearOfBirth();
+                int yob = mDB.getConnectedUser().getYearOfBirth();
                 yob_picker.setMinValue(Constants.YOB_MIN_VALUE);
                 yob_picker.setMaxValue(Constants.YOB_MAX_VALUE);
                 yob_picker.setValue(yob);
@@ -311,7 +311,7 @@ public class SettingsFragment extends Fragment {
                             public void onClick(DialogInterface dialog, int which) {
                                 Log.d(LOG_TAG, "yob OK click");
                                 int yob = yob_picker.getValue();
-                                sharedPreferencesManager.setYearOfBirth(yob);
+                                mDB.updateYearOfBirth(yob);
                                 btnYoB.setText(Html.fromHtml("Year of birth<br /><small>" + yob + " " + unitsOfMeasurement.getText().toString() + "</small>"));
 
                                 Intent yobChangedIntent = new Intent(Constants.YOB_CHANGED_INTENT);
@@ -345,7 +345,6 @@ public class SettingsFragment extends Fragment {
             public void onClick(View v) {
                 Log.d(LOG_TAG, "btnLogout onClick");
                 webserverManager.requestLogout();
-                //sharedPreferencesManager.setLoggedIn(false);
                 //getActivity().finish();
             }
         });
@@ -357,13 +356,7 @@ public class SettingsFragment extends Fragment {
                 ProgressDialog mProgressDialog = new ProgressDialog(getActivity());
                 mProgressDialog.setMessage("Receiving data from server");
                 mProgressDialog.show();
-                if (mService.getWeightFromServer()) {
-                    Constants.displayToastMessage(getActivity(), "Success getting weight from server");
-                    mProgressDialog.dismiss();
-                } else {
-                    mProgressDialog.dismiss();
-                    Constants.displayToastMessage(getActivity(), "Error getting weight from server");
-                }
+                mProgressDialog.dismiss();
             }
         });
 
@@ -395,19 +388,19 @@ public class SettingsFragment extends Fragment {
 
     private void initUserData() {
         Log.d(LOG_TAG, "initUserData");
-
-        String gender = sharedPreferencesManager.getGender();
+        User connectedUser = mDB.getConnectedUser();
+        String gender = connectedUser.getGender();
         btnGender.setText(Html.fromHtml("Gender<br /><small><small>" + gender + "</small></small>"));
 
-        int height = sharedPreferencesManager.getHeight();
+        int height = connectedUser.getHeight();
         Log.d(LOG_TAG, "height : " + height);
         btnHeight.setText(Html.fromHtml("Height<br /><small>" + height + " cm</small>"));
 
-        float weight = sharedPreferencesManager.getWeight();
+        float weight = connectedUser.getWeight();
         Log.d(LOG_TAG, "weight : " + weight);
         btnWeight.setText(Html.fromHtml("Weight<br /><small>" + weight + " kg</small>"));
 
-        int yob = sharedPreferencesManager.getYearOfBirth();
+        int yob = connectedUser.getYearOfBirth();
         Log.d(LOG_TAG, "yob : " + yob);
         btnYoB.setText(Html.fromHtml("Year of birth<br /><small>" + yob + "</small>"));
     }

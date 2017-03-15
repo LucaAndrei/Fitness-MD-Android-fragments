@@ -34,7 +34,8 @@ import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.datatypes.User;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 import com.master.aluca.fitnessmd.ui.AdvicesActivity;
 import com.master.aluca.fitnessmd.ui.DietActivity;
@@ -47,7 +48,6 @@ public class DoctorFragment extends Fragment {
     private static final String LOG_TAG = "Fitness_DoctorFragment";
 
     private Activity mActivity;
-    private SharedPreferencesManager sharedPreferencesManager;
     private TextView tvDrHeightUM, tvDrAgeUM, tvDrWeightUM;
     private FitnessMDService mService;
     private int mHeight, mAge;
@@ -87,6 +87,9 @@ public class DoctorFragment extends Fragment {
     View listRowAdvice;
     TextView listRowAdviceTitle, listRowAdviceSubtitle;
     ImageView listRowAdviceIcon, listRowAdviceInfo;
+
+    private UsersDB mDB;
+    private User connectedUser = null;
 
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -161,7 +164,8 @@ public class DoctorFragment extends Fragment {
         }
 
         Log.d(LOG_TAG,"DoctorFragment");
-        sharedPreferencesManager = SharedPreferencesManager.getInstance(mActivity.getApplicationContext());
+        mDB = UsersDB.getInstance(mActivity.getApplicationContext());
+        connectedUser = mDB.getConnectedUser();
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Constants.GENDER_CHANGED_INTENT);
@@ -309,17 +313,17 @@ public class DoctorFragment extends Fragment {
     private void initUserData() {
         Log.d(LOG_TAG, "initUserData");
 
-        mGender = sharedPreferencesManager.getGender();
+        mGender = connectedUser.getGender();
 
-        mHeight = sharedPreferencesManager.getHeight();
+        mHeight = connectedUser.getHeight();
         Log.d(LOG_TAG, "mHeight : " + mHeight);
         tvDrHeightUM.setText(mHeight + " cm");
 
-        mWeight = sharedPreferencesManager.getWeight();
+        mWeight = connectedUser.getWeight();
         Log.d(LOG_TAG, "mWeight : " + mWeight);
         tvDrWeightUM.setText(mWeight + " kg");
 
-        int yob = sharedPreferencesManager.getYearOfBirth();
+        int yob = connectedUser.getYearOfBirth();
         Log.d(LOG_TAG, "yob : " + yob);
         Calendar calendar = Calendar.getInstance();
         int currentYear = calendar.get(Calendar.YEAR);
@@ -437,7 +441,7 @@ public class DoctorFragment extends Fragment {
                     public void onClick(View v) {
                         Log.d(LOG_TAG, "idealBodyWeightSetAsGoal onClick");
                         Toast.makeText(getActivity(), "Set as goal", Toast.LENGTH_LONG).show();
-                        sharedPreferencesManager.setWeightGoal(mWeightGoal);
+                        //sharedPreferencesManager.setWeightGoal(mWeightGoal);
                         Intent intent = new Intent(Constants.WEIGHT_GOAL_INTENT);
                         intent.putExtra(Constants.WEIGHT_GOAL_BUNDLE_KEY, mWeightGoal);
                         getActivity().sendBroadcast(intent);

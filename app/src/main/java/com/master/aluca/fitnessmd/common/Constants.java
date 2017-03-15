@@ -62,17 +62,17 @@ public class Constants {
     public static final CharSequence[] GENDERS = {"Male", "Female"};
     public static final CharSequence[] UNITS = {"Metric", "Imperial"};
 
-    public static final int HEIGHT_MIN_VALUE = 50;
+    public static final int HEIGHT_MIN_VALUE = 100;
     public static final int HEIGHT_MAX_VALUE = 300;
     public static final int HEIGHT_DEFAULT_VALUE = 165;
 
-    public static final int WEIGHT_KG_MIN_VALUE = 5;
+    public static final int WEIGHT_KG_MIN_VALUE = 35;
     public static final int WEIGHT_KG_MAX_VALUE = 500;
     public static final int WEIGHT_G_MIN_VALUE = 0;
     public static final int WEIGHT_G_MAX_VALUE = 9;
     public static final float WEIGHT_DEFAULT_VALUE = 55.0f;
 
-    public static final int YOB_MIN_VALUE = 1900;
+    public static final int YOB_MIN_VALUE = 1920;
     public static final int YOB_MAX_VALUE = 2016;
     public static final int YOB_DEFAULT_VALUE = 1980;
 

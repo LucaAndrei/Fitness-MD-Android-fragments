@@ -37,6 +37,7 @@ import com.master.aluca.fitnessmd.common.ArcProgress;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.util.IStepNotifier;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
 import java.text.SimpleDateFormat;
@@ -48,6 +49,7 @@ public class PedometerFragment extends Fragment {
     private static final String LOG_TAG = "Fitness_PedometerFrag";
 
     private Activity mActivity;
+    private UsersDB mDB;
     private SharedPreferencesManager sharedPreferencesManager;
     static TextView tvKCal, tvKm, tvDateToday;
     private FitnessMDService mService;
@@ -182,6 +184,7 @@ public class PedometerFragment extends Fragment {
         }
 
         Log.d(LOG_TAG,"PedometerFragment");
+        mDB = UsersDB.getInstance(getActivity());
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getActivity());
 
         totalSteps = sharedPreferencesManager.getStepsForCurrentDay();
@@ -408,7 +411,7 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
             kph3 = Math.round(kph3 * 10d) / 10d;
             kph2 = Math.round(kph2 * 10d) / 10d;
             kph = Math.round(kph * 10d) / 10d;
-            caloriesBurned = (kph3 - kph2 + kph + 1.4577) * sharedPreferencesManager.getWeight() * timeActiveInHours;
+            caloriesBurned = (kph3 - kph2 + kph + 1.4577) * mDB.getConnectedUser().getWeight() * timeActiveInHours;
         }
         tvKCal.setText("" + (int) caloriesBurned);
     }

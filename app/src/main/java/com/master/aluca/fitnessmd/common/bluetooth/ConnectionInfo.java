@@ -10,8 +10,10 @@
 package com.master.aluca.fitnessmd.common.bluetooth;
 
 import android.content.Context;
+import android.util.Log;
 
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.datatypes.Device;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 
 
 // Holds information about a saved device
@@ -27,13 +29,22 @@ public class ConnectionInfo {
     // Name of the connected device
     private String mDeviceName = null;
     private boolean deviceConnected;
+    private Device mDevice;
+
 
 
     private ConnectionInfo(Context c) {
         mContext = c;
+        mDevice = UsersDB.getInstance(mContext).getPairedDevice();
+        if (mDevice != null) {
 
-        mDeviceAddress = SharedPreferencesManager.getInstance(mContext).getSavedDeviceAddress();
-        mDeviceName = SharedPreferencesManager.getInstance(mContext).getSavedDeviceName();
+            mDeviceAddress = mDevice.getAddress();
+            mDeviceName = mDevice.getName();
+            Log.d("Fitness_ConnInfo","deviceAddress : " + mDeviceAddress + " >>> deviceName : " + mDeviceName);
+        } else {
+
+            Log.d("Fitness_ConnInfo","mDevice is null");
+        }
     }
 
     /**
@@ -67,7 +78,7 @@ public class ConnectionInfo {
     public void saveDevice(String deviceName, String deviceAddress) {
         mDeviceName = deviceName;
         mDeviceAddress = deviceAddress;
-        SharedPreferencesManager.getInstance(mContext).saveDevice(deviceName, deviceAddress);
+        UsersDB.getInstance(mContext).saveDevice("qwe@qwe.qwe",deviceName, deviceAddress);
 
     }
 

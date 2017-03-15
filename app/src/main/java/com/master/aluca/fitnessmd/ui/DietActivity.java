@@ -25,7 +25,6 @@ import android.widget.Toast;
 
 
 import com.master.aluca.fitnessmd.R;
-import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 
 import java.util.ArrayList;
@@ -39,8 +38,6 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
     public static final String LOG_TAG = "Fitness_DietActivity";
 
     private WebserverManager mWebserverManager;
-
-    private SharedPreferencesManager sharedPreferencesManager;
 
     private ListView lv;
     TextView tvBreakfast, tvMidMorning, tvLunch, tvSnack, tvDinner;

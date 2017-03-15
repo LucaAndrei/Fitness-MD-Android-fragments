@@ -40,6 +40,7 @@ import com.master.aluca.fitnessmd.receivers.AlarmReceiver;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FitnessMDService extends Service {
     /*
@@ -92,8 +93,8 @@ public class FitnessMDService extends Service {
 
     private IStepNotifier mCallback;
 
-    private boolean isConnectedToWifi = false;
-    private boolean isConnectedToNetworkData = false;
+    private static AtomicBoolean isConnectedToWifi = new AtomicBoolean(false);
+    private static AtomicBoolean isConnectedToNetworkData = new AtomicBoolean(false);
 
     private int calories;
     private long timeActive;
@@ -279,10 +280,6 @@ public class FitnessMDService extends Service {
         sRunning = false;
     }
 
-    public float getWeight() {
-        return sharedPreferencesManager.getWeight();
-    }
-
     public long getTimeActive() {
         Log.d(LOG_TAG,"getTimeActive");
 
@@ -362,11 +359,15 @@ public class FitnessMDService extends Service {
     }
 
     public boolean isConnectedToWifi() {
-        return isConnectedToWifi;
+        return isConnectedToWifi.get();
     }
 
     public boolean isConnectedToNetworkData() {
-        return isConnectedToNetworkData;
+        return isConnectedToNetworkData.get();
+    }
+
+    public synchronized static boolean hasInternet() {
+        return isConnectedToWifi.get() || isConnectedToNetworkData.get();
     }
 
 
@@ -396,24 +397,22 @@ public class FitnessMDService extends Service {
                 Log.d(LOG_TAG, "status : " + status);
                 if (status == NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
                     Log.d(LOG_TAG, "NETWORK_STATUS_NOT_CONNECTED");
-                    isConnectedToNetworkData = false;
-                    isConnectedToWifi = false;
+                    isConnectedToNetworkData.set(false);
+                    isConnectedToWifi.set(false);
                 } else if (status == NetworkUtil.NETWORK_STATUS_MOBILE) {
                     Log.d(LOG_TAG, "NETWORK_STATUS_MOBILE");
-                    getWeightFromServer();
-                    isConnectedToWifi = false;
-                    isConnectedToNetworkData = true;
+                    isConnectedToWifi.set(false);
+                    isConnectedToNetworkData.set(true);
                     pushDataToServer(false);
                 } else if (status == NetworkUtil.NETWORK_STATUS_WIFI) {
                     Log.d(LOG_TAG, "NETWORK_STATUS_WIFI");
-                    getWeightFromServer();
-                    isConnectedToWifi = true;
-                    isConnectedToNetworkData = false;
+                    isConnectedToWifi.set(true);
+                    isConnectedToNetworkData.set(false);
                     pushDataToServer(true);
 
                 } else {
-                    isConnectedToWifi = false;
-                    isConnectedToNetworkData = false;
+                    isConnectedToWifi.set(false);
+                    isConnectedToNetworkData.set(false);
                     Log.d(LOG_TAG, "network status unknown");
                 }
             } else if (action.equals(Constants.END_OF_DAY)) {
@@ -516,28 +515,6 @@ public class FitnessMDService extends Service {
         } else {
             Log.d(LOG_TAG, "eraseAllData ERROR : " + numberOfRowsAffected);
         }*/
-    }
-
-    public boolean getWeightFromServer() {
-        boolean oRet = false;
-//        if (mWebserverManager == null)
-//            mWebserverManager = WebserverManager.getInstance(this);
-        WeightDayReport weightDayReport = WebserverManager.getInstance(this).getWeightFromServer();
-        float weight = weightDayReport.getWeight();
-        long day = weightDayReport.getDay();
-        if (weight != -1) {
-            sharedPreferencesManager.setWeight(weight);
-            sharedPreferencesManager.setWeightLastMeasurement(day);
-
-            Intent intent = new Intent(Constants.WEIGHT_RECEIVED_INTENT);
-            intent.putExtra(Constants.WEIGHT_RECEIVED_WEIGHT_BUNDLE_KEY, weight);
-            intent.putExtra(Constants.WEIGHT_RECEIVED_LAST_MSRMNT_BUNDLE_KEY, day);
-            mContext.sendBroadcast(intent);
-            oRet = true;
-        } else {
-            Log.d(LOG_TAG, "getWeightFromServer error");
-        }
-        return oRet;
     }
 
     public void sendStepsToServer(long startOfCurrentDay, int totalSteps, int hourIndex) {

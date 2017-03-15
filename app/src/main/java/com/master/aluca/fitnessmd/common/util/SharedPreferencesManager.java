@@ -39,7 +39,6 @@ public class SharedPreferencesManager {
 
     private String mSavedDeviceName;
     private String mSavedDeviceAddress;
-    private IDataRefreshCallback mCallback;
     private String mEmail;
     private long mWeightLastMeasurementDay;
     private float mWeightGoal;
@@ -63,10 +62,6 @@ public class SharedPreferencesManager {
             mInstance = new SharedPreferencesManager(context);
         }
         return mInstance;
-    }
-
-    public void registerCallback(IDataRefreshCallback callback) {
-        mCallback = callback;
     }
 
     private SharedPreferencesManager(Context context) {
@@ -110,34 +105,6 @@ public class SharedPreferencesManager {
         mSWState = sharedPreferences.getInt(Constants.SHARED_PREFS_SW_STATE + mEmail, Constants.STOPWATCH_RESET);
     }
 
-    public String getUserName(String email) {
-        return sharedPreferences.getString(Constants.SHARED_PREFS_NAME_KEY+email, null);
-    }
-
-    public void setUserName(String email, String name) {
-        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_NAME_KEY+email, name);
-        sharedPreferencesEditor.commit();
-        mUserName = name;
-    }
-
-    public String getUserNameByEmail(String email) {
-        return sharedPreferences.getString(email, null);
-    }
-
-
-
-    public float getWeight() {
-        return mWeight;
-    }
-    public void setWeight(float weight) {
-        sharedPreferencesEditor.putFloat(Constants.SHARED_PREFS_WEIGHT_KEY, weight);
-        sharedPreferencesEditor.commit();
-        mWeight = weight;
-        if (mCallback != null)
-            mCallback.onDataChanged(Constants.SHARED_PREFS_WEIGHT_KEY);
-    }
-
-
     public float getWeightGoal() {
         return mWeightGoal;
     }
@@ -159,57 +126,7 @@ public class SharedPreferencesManager {
         mWeightLastMeasurementDay = weightLastMeasurementDay;
     }
 
-    public int getHeight() {
-        return mHeight;
-    }
-    public void setHeight(int height) {
-        sharedPreferencesEditor.putInt(Constants.SHARED_PREFS_HEIGHT_KEY, height);
-        sharedPreferencesEditor.commit();
-        mHeight = height;
-        if (mCallback != null)
-            mCallback.onDataChanged(Constants.SHARED_PREFS_HEIGHT_KEY);
-    }
 
-    public String getGender() {
-        return mGender;
-    }
-    public void setGender(String gender) {
-        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_GENDER_KEY, gender);
-        sharedPreferencesEditor.commit();
-        mGender = gender;
-        if (mCallback != null)
-            mCallback.onDataChanged(Constants.SHARED_PREFS_GENDER_KEY);
-    }
-
-    public int getYearOfBirth() {
-        return mYearOfBirth;
-    }
-    public void setYearOfBirth(int yearOfBirth) {
-        sharedPreferencesEditor.putInt(Constants.SHARED_PREFS_YOB_KEY, yearOfBirth);
-        sharedPreferencesEditor.commit();
-        mYearOfBirth = yearOfBirth;
-        if (mCallback != null)
-            mCallback.onDataChanged(Constants.SHARED_PREFS_YOB_KEY);
-    }
-
-    public void saveDevice(String deviceName, String deviceAddress) {
-        Log.d(LOG_TAG,"deviceName : " + deviceName + " >> " + deviceAddress);
-        sharedPreferencesEditor.putString(Constants.SAVED_DEVICE_NAME_KEY, deviceName);
-        sharedPreferencesEditor.putString(Constants.SAVED_DEVICE_ADDRESS_KEY, deviceAddress);
-        sharedPreferencesEditor.commit();
-    }
-
-    public String getSavedDeviceAddress() {
-        return mSavedDeviceAddress;
-    }
-
-    public String getSavedDeviceName() {
-        return mSavedDeviceName;
-    }
-
-    public boolean getIsUserLoggedIn() {
-        return mIsLoggedIn;
-    }
     public void setLoggedIn(boolean loggedIn) {
         sharedPreferencesEditor.putBoolean(Constants.IS_USER_LOGGED_IN, loggedIn);
         sharedPreferencesEditor.commit();
