@@ -12,11 +12,9 @@ package com.master.aluca.fitnessmd.ui.fragments.scale;
 import android.app.Activity;
 import android.app.Dialog;
 import android.support.v4.app.Fragment;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -30,6 +28,8 @@ import android.widget.TextView;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.ArcProgress;
 import com.master.aluca.fitnessmd.common.Constants;
+import com.master.aluca.fitnessmd.common.datatypes.User;
+import com.master.aluca.fitnessmd.common.util.IDataRefreshCallback;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
@@ -122,67 +122,51 @@ public class ScaleFragment extends Fragment {
 
         Log.d(LOG_TAG,"ScaleFragment");
         mDB = UsersDB.getInstance(getActivity());
+        mDB.registerCallback(mCallback);
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Constants.WEIGHT_RECEIVED_INTENT);
-        intentFilter.addAction(Constants.WEIGHT_GOAL_INTENT);
-        getActivity().registerReceiver(mBroadcastReceiver, intentFilter);
 
         setup(view);
     }
 
-
-    /*
-            TODO - this receiver should be unregistered when the application is destroyed
-     */
-    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+    private IDataRefreshCallback mCallback = new IDataRefreshCallback() {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
-            if (intent.getAction().equalsIgnoreCase(Constants.WEIGHT_RECEIVED_INTENT)) {
-                Log.d(LOG_TAG, "WEIGHT_RECEIVED_INTENT received");
-                float weight = intent.getFloatExtra(Constants.WEIGHT_RECEIVED_WEIGHT_BUNDLE_KEY, -1);
-                if (weight != -1) {
-                    Log.d(LOG_TAG, "weight : " + weight);
+        public void onDataChanged(String changedDataKey) {
+            Log.d(LOG_TAG,"onDataChanged : " + changedDataKey);
+            User connectedUser = mDB.getConnectedUser();
+            switch(changedDataKey) {
+                case Constants.WEIGHT_CHANGED_CALLBACK:
+                    Log.d(LOG_TAG, "weight : " + connectedUser.getWeight());
                     if (mArcProgressScale != null) {
-                        mArcProgressScale.setProgressWeight(weight);
+                        mArcProgressScale.setProgressWeight(connectedUser.getWeight());
                     }
-                } else {
-                    Log.d(LOG_TAG, "weight ERROR");
-                }
-
-                long lastMeasurementDay = intent.getLongExtra(Constants.WEIGHT_RECEIVED_LAST_MSRMNT_BUNDLE_KEY, -1);
-                if (lastMeasurementDay != -1) {
-                    Log.d(LOG_TAG, "lastMeasurementDay : " + (new Date(lastMeasurementDay)));
-                    SimpleDateFormat s = new SimpleDateFormat("d MMMM yyyy");
-                    tvDate.setText(s.format(new Date(lastMeasurementDay)));
-                } else {
-                    Log.d(LOG_TAG, "lastMeasurementDay ERROR");
-                }
-
-            } else if(intent.getAction().equalsIgnoreCase(Constants.WEIGHT_GOAL_INTENT)) {
-                Log.d(LOG_TAG, "WEIGHT_GOAL_INTENT received");
-                float weightGoal = intent.getFloatExtra(Constants.WEIGHT_GOAL_BUNDLE_KEY, -1);
-                if (weightGoal != -1) {
-                    Log.d(LOG_TAG, "weightGoal : " + weightGoal);
+                    // long lastMeasurementDay = intent.getLongExtra(Constants.WEIGHT_RECEIVED_LAST_MSRMNT_BUNDLE_KEY, -1);
+                    // if (lastMeasurementDay != -1) {
+                    //     Log.d(LOG_TAG, "lastMeasurementDay : " + (new Date(lastMeasurementDay)));
+                    //     SimpleDateFormat s = new SimpleDateFormat("d MMMM yyyy");
+                    //     tvDate.setText(s.format(new Date(lastMeasurementDay)));
+                    // } else {
+                    //     Log.d(LOG_TAG, "lastMeasurementDay ERROR");
+                    // }
+                    break;
+                case Constants.WEIGHT_GOAL_CHANGED_CALLBACK :
+                    Log.d(LOG_TAG, "weightGoal : " + connectedUser.getWeightGoal());
                     if (mArcProgressScale != null) {
-                        mArcProgressScale.setBottomText("Goal: " + weightGoal + " kg");
+                        mArcProgressScale.setBottomText("Goal: " + connectedUser.getWeightGoal() + " kg");
                     }
-                } else {
-                    Log.d(LOG_TAG, "weightGoal ERROR");
-                }
+                    break;
             }
         }
     };
 
     public void setup(View view) {
+        User connectedUser = mDB.getConnectedUser();
         tvDate = (TextView) view.findViewById(R.id.tvDate);
         tvLastMeasurement = (TextView) view.findViewById(R.id.tvLastMeasurement);
         mArcProgressScale = (ArcProgress) view.findViewById(R.id.arc_progress_scale);
-        float weightGoal = mDB.getConnectedUser().getWeightGoal();
+        float weightGoal = connectedUser.getWeightGoal();
         mArcProgressScale.setBottomText("Goal: " + weightGoal + " kg");
 
-        float weight = mDB.getConnectedUser().getWeight();
+        float weight = connectedUser.getWeight();
         mArcProgressScale.setProgressWeight(weight);
 
         SimpleDateFormat s = new SimpleDateFormat("d MMMM yyyy");
@@ -192,7 +176,6 @@ public class ScaleFragment extends Fragment {
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-        getActivity().unregisterReceiver(mBroadcastReceiver);
         super.onDestroy();
     }
 }

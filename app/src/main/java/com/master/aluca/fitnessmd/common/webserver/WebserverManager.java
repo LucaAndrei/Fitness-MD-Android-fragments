@@ -17,9 +17,18 @@ import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.github.underscore.$;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
+import com.master.aluca.fitnessmd.common.datatypes.User;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
+import com.master.aluca.fitnessmd.common.util.IStatsChanged;
+import com.master.aluca.fitnessmd.common.util.NetworkUtil;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
 import com.master.aluca.fitnessmd.library.MeteorCallback;
@@ -28,14 +37,16 @@ import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
 import com.master.aluca.fitnessmd.library.listeners.ResultListener;
 import com.master.aluca.fitnessmd.library.listeners.SubscribeListener;
 import com.master.aluca.fitnessmd.library.listeners.UnsubscribeListener;
-import com.master.aluca.fitnessmd.service.FitnessMDService;
 import com.master.aluca.fitnessmd.ui.auth.AuthenticationLogic;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WebserverManager implements MeteorCallback{
     private static final String LOG_TAG = "Fitness_WebserverMgr";
@@ -50,10 +61,13 @@ public class WebserverManager implements MeteorCallback{
     //private Collection advices;
 
     private ArrayList<Handler> handlerList = new ArrayList<>();
+    private ArrayList<IStatsChanged> statsCallbackList = new ArrayList<>();
 
 
     private UsersDB mDB;
+    private static String userLoggingInEmail;
 
+    LinkedHashMap<Long, Integer> savedStats = new LinkedHashMap<>();
 
 
     public static WebserverManager getInstance(Context context) {
@@ -73,6 +87,7 @@ public class WebserverManager implements MeteorCallback{
         // create a new instance
         //FitnessMDMeteor.createInstance(context, "ws://192.168.1.4:3000/websocket");
         FitnessMDMeteor.createInstance(context, "ws://128.224.108.202:3000/websocket");
+        //FitnessMDMeteor.createInstance(context, "wss://fitnessmd.now.sh/websocket");
         // register the callback that will handle events and receive messages
 
         FitnessMDMeteor.getInstance().addCallback(this);
@@ -95,43 +110,40 @@ public class WebserverManager implements MeteorCallback{
             Log.d(LOG_TAG, "Login failed");
             dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Input is not valid");
         } else {
-            boolean isEmailRegistered = mDB.isEmailRegistered(emailText.getText().toString());
+            final String email = emailText.getText().toString();
+
+
+            String password = passwordText.getText().toString();
+            boolean isEmailRegistered = mDB.isEmailRegistered(email);
             if (isEmailRegistered) {
-                boolean isPasswordCorrect = mDB.isPasswordCorrect(emailText.getText().toString(), passwordText.getText().toString());
+                String hashedPassword = Constants.getHashedPassword(password);
+                boolean isPasswordCorrect = mDB.isPasswordCorrect(email, hashedPassword);
                 if (isPasswordCorrect) {
-                    if (FitnessMDService.hasInternet()) {
+                    if (NetworkUtil.isConnectedToInternet(mContext)) {
                         Log.d(LOG_TAG, "try to connect to web server");
                         if (FitnessMDMeteor.getInstance().isConnected()) {
                             Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected()");
                             if (!FitnessMDMeteor.getInstance().isLoggedIn()) {
-                                Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().loginWithEmail()");
-                                FitnessMDMeteor.getInstance().loginWithEmail(emailText.getText().toString(), passwordText.getText().toString(),
-                                        new ResultListener() {
-                                            @Override
-                                            public void onSuccess(String s) {
-                                                Log.d(LOG_TAG, "Meteor Login SUCCESS");
-                                                mDB.setUserConnected(emailText.getText().toString(), true);
-                                                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Login successfully + server success");
-                                            }
-
-                                            @Override
-                                            public void onError(String error, String reason, String details) {
-                                                Log.d(LOG_TAG, "Meteor Login ERROR");
-                                                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, reason);
-                                            }
-                                        });
+                                if (mDB.hasUserCompletedRegistration(email)) {
+                                    Log.d(LOG_TAG, "doLogin : user completed registration");
+                                    doLogin(email, password);
+                                } else {
+                                    Log.d(LOG_TAG, "FitnessMDMeteor user did not complete registration. first signup then login");
+                                    doSignup(mDB.getNameByEmail(email), email, hashedPassword);
+                                }
                             } else {
-                                mDB.setUserConnected(emailText.getText().toString(), true);
+                                mDB.setUserConnected(email, true);
                                 dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Log in successful, already logged in on server");
                             }
                         } else {
                             Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected() false");
-                            mDB.setUserConnected(emailText.getText().toString(), true);
+                            mDB.setUserConnected(email, true);
                             dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Log in successful, problem with server");
                         }
                     } else {
-                            mDB.setUserConnected(emailText.getText().toString(), true);
-                            dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Login successfully, no internet, no login to server");
+                        Log.d(LOG_TAG, "Login successfully, no internet, no login to server");
+                        mDB.setUserConnected(email, true);
+                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Login successfully, no internet, no login to server");
                     }
                 } else {
                     dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Password not correct");
@@ -148,45 +160,145 @@ public class WebserverManager implements MeteorCallback{
             Log.d(LOG_TAG, "input not valid");
             dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Input is not valid");
         } else {
-            boolean addSuccess = mDB.addUser(
-                    emailText.getText().toString(),
-                    passwordText.getText().toString(),
-                    nameText.getText().toString());
+            String name = nameText.getText().toString();
+            String email = emailText.getText().toString();
+            String hashedPassword = Constants.getHashedPassword(passwordText.getText().toString());
 
-            if (addSuccess) {
-                Log.d(LOG_TAG,"addSuccess : " + addSuccess + " >>> hasInternet : " + FitnessMDService.hasInternet());
-                if (FitnessMDService.hasInternet()) {
+            boolean isEmailRegistered = mDB.isEmailRegistered(email);
+            if (!isEmailRegistered) {
+                boolean addSuccess = mDB.addUser(
+                        name,
+                        email,
+                        hashedPassword);
+                if (addSuccess) {
+                    Log.d(LOG_TAG, "addSuccess : " + addSuccess);
+                    if (NetworkUtil.getConnectivityStatusString(mContext) != NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
+                        Log.d(LOG_TAG, "try to connect to web server");
+                        if (FitnessMDMeteor.getInstance().isConnected()) {
+                            Log.d(LOG_TAG, "Meteor client connected");
+                            doSignup(name, email, hashedPassword);
+                        } else {
+                            mDB.setUserConnected(emailText.getText().toString(), true);
+                            dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully, problem with server");
+                        }
+                    } else {
+                        mDB.setUserConnected(emailText.getText().toString(), true);
+                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully, no internet, not registered on server");
+                    }
+                } else {
+                    dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Could not add user");
+                }
+
+            } else {
+                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Email registered");
+
+            }
+        }
+    }
+
+    private void doLogin(final String email, String normalPassword) {
+        Log.d(LOG_TAG, "doLogin : " + normalPassword);
+        userLoggingInEmail = email;
+        FitnessMDMeteor.getInstance().loginWithEmail(email, normalPassword,
+                new ResultListener() {
+                    @Override
+                    public void onSuccess(String s) {
+                        Log.d(LOG_TAG, "Meteor Login SUCCESS : " + s);
+//                        Gson gson = new Gson();
+//                        String json  = gson.toJson(s);
+//                        JsonParser parser = new JsonParser();
+//                        JsonElement object = parser.parse(json);
+//                        JsonObject obj = object.getAsJsonObject();
+//                        List<String> keys = new ArrayList<String>();
+//                        for (Entry<String, JsonElement> e : obj.entrySet()) {
+//                            Log.d(LOG_TAG,"object.key : " + e.getKey() + " >> value : " + e.getValue());
+//                        }
+
+                        //Log.d(LOG_TAG, "Meteor Login SUCCESS : " + obj.get("id"));
+//                        for(int t = 0; t < obj.size() ; t++) {
+//                            JsonObject elem = obj.get(t).getAsJsonObject();
+//                            if (elem.has("address")) {
+//                                mDB.updateUserID(documentID);
+//                            }
+//                        }
+                        mDB.setUserConnected(email, true);
+                        dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Login successfully + server success");
+                    }
+
+                    @Override
+                    public void onError(String error, String reason, String details) {
+                        Log.d(LOG_TAG, "Meteor Login ERROR");
+                        dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, reason);
+                    }
+                });
+    }
+
+    private void doSignup(String name, final String email, String hashedPassword) {
+        Log.d(LOG_TAG, "doSignup");
+        userLoggingInEmail = email;
+        FitnessMDMeteor.getInstance().registerAndLogin(name,
+                email, hashedPassword, new ResultListener() {
+                    @Override
+                    public void onSuccess(String s) {
+                        Log.d(LOG_TAG, "Meteor Login after Signup SUCCESS");
+                        mDB.setUserConnected(email, true);
+                        mDB.setUserCompletedRegistration(email);
+                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully");
+                    }
+
+                    @Override
+                    public void onError(String error, String reason, String details) {
+                        Log.d(LOG_TAG, "Meteor Login after signup ERROR");
+                        Log.d(LOG_TAG, "error : " + error + " >>> reason : " + reason + " >>> details : " + details);
+
+                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, reason);
+                    }
+                });
+    }
+
+    public void requestLogout() {
+        Log.d(LOG_TAG, "requestLogout");
+        User connectedUser = mDB.getConnectedUser();
+        if (connectedUser != null) {
+            if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
+                if (NetworkUtil.getConnectivityStatusString(mContext) != NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
                     Log.d(LOG_TAG,"try to connect to web server");
                     if (FitnessMDMeteor.getInstance().isConnected()) {
                         Log.d(LOG_TAG, "Meteor client connected");
-                        FitnessMDMeteor.getInstance().registerAndLogin(nameText.getText().toString(),
-                                emailText.getText().toString(), passwordText.getText().toString(), new ResultListener() {
-                                    @Override
-                                    public void onSuccess(String s) {
-                                        Log.d(LOG_TAG, "Meteor Login after Signup SUCCESS");
-                                        mDB.setUserConnected(emailText.getText().toString(), true);
-                                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully");
-                                    }
+                        if (FitnessMDMeteor.getInstance().isLoggedIn()) {
+                            Log.d(LOG_TAG, "Meteor user already logged in. Logging out ...");
+                            FitnessMDMeteor.getInstance().logout(new ResultListener() {
+                                @Override
+                                public void onSuccess(String result) {
+                                    Log.d(LOG_TAG, "requestLogout onSuccess");
+                                    Intent intent = new Intent(Constants.LOGOUT_INTENT);
+                                    mContext.sendBroadcast(intent);
+                                }
 
-                                    @Override
-                                    public void onError(String error, String reason, String details) {
-                                        Log.d(LOG_TAG, "Meteor Login after signup ERROR");
-                                        Log.d(LOG_TAG, "error : " + error + " >>> reason : " + reason + " >>> details : " + details);
-
-                                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, reason);
-                                    }
-                                });
+                                @Override
+                                public void onError(String error, String reason, String details) {
+                                    Log.d(LOG_TAG, "requestLogout onError");
+                                    Toast.makeText(mContext, reason, Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        } else {
+                            Intent intent = new Intent(Constants.LOGOUT_INTENT);
+                            mContext.sendBroadcast(intent);
+                            Log.d(LOG_TAG, "Meteor user NOT logged in");
+                        }
                     } else {
-                        mDB.setUserConnected(emailText.getText().toString(), true);
-                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully, problem with server");
+                        Intent intent = new Intent(Constants.LOGOUT_INTENT);
+                        mContext.sendBroadcast(intent);
+                        Log.d(LOG_TAG, "Meteor not connected. problem with server");
                     }
                 } else {
-                    mDB.setUserConnected(emailText.getText().toString(), true);
-                    dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully, no internet, not registered on server");
+                    Intent intent = new Intent(Constants.LOGOUT_INTENT);
+                    mContext.sendBroadcast(intent);
+                    Log.d(LOG_TAG, "no internet. cannot logout from server. only logged out from DB");
                 }
-            } else {
-                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Could not add user");
             }
+        } else {
+            Log.d(LOG_TAG, "user not even logged in. how did this call got here?");
         }
     }
 
@@ -245,56 +357,14 @@ public class WebserverManager implements MeteorCallback{
         return oRet;
     }
 
-    public void requestLogout() {
-        Log.d(LOG_TAG, "requestLogout");
-        if (mDB.getIsUserLoggedIn()) {
-            if (mDB.setUserConnected(mDB.getConnectedUser().getEmail(), false)) {
-                if (FitnessMDService.hasInternet()) {
-                    Log.d(LOG_TAG,"try to connect to web server");
-                    if (FitnessMDMeteor.getInstance().isConnected()) {
-                        Log.d(LOG_TAG, "Meteor client connected");
-                        if (FitnessMDMeteor.getInstance().isLoggedIn()) {
-                            Log.d(LOG_TAG, "Meteor user already logged in. Logging out ...");
-                            FitnessMDMeteor.getInstance().logout(new ResultListener() {
-                                @Override
-                                public void onSuccess(String result) {
-                                    Log.d(LOG_TAG, "requestLogout onSuccess");
-                                    Intent intent = new Intent(Constants.LOGOUT_INTENT);
-                                    mContext.sendBroadcast(intent);
-                                }
 
-                                @Override
-                                public void onError(String error, String reason, String details) {
-                                    Log.d(LOG_TAG, "requestLogout onError");
-                                    Toast.makeText(mContext, reason, Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        } else {
-                            Intent intent = new Intent(Constants.LOGOUT_INTENT);
-                            mContext.sendBroadcast(intent);
-                            Log.d(LOG_TAG, "Meteor user NOT logged in");
-                        }
-                    } else {
-                        Intent intent = new Intent(Constants.LOGOUT_INTENT);
-                        mContext.sendBroadcast(intent);
-                        Log.d(LOG_TAG, "Meteor not connected. problem with server");
-                    }
-                } else {
-                    Intent intent = new Intent(Constants.LOGOUT_INTENT);
-                    mContext.sendBroadcast(intent);
-                    Log.d(LOG_TAG, "no internet. cannot logout from server. only logged out from DB");
-                }
-            }
-        } else {
-            Log.d(LOG_TAG, "user not even logged in. how did this call got here?");
-        }
-    }
 
     @Override
     public void onConnect(boolean shouldSignIn) {
         Log.d(LOG_TAG, "Meteor DDP onConnect");
         isMeteorClientConnected.set(true);
         dispatchMessageToHandlers(Constants.METEOR_CLIENT_STATE, shouldSignIn);
+        //subscribeToStats();
     }
     private void dispatchMessageToHandlers(int what, boolean b) {
         dispatchMessageToHandlers(what, b ? 1 : 0, 0, null);
@@ -307,8 +377,12 @@ public class WebserverManager implements MeteorCallback{
     private void dispatchMessageToHandlers(int what, int arg1, int arg2, Object obj) {
 
         Log.d(LOG_TAG, "dispatchMessageToHandlers handlerList.size : " + handlerList.size());
-        for(Handler handler : handlerList) {
-            handler.obtainMessage(what, arg1, arg2, obj).sendToTarget();
+        if (handlerList.size() > 0) {
+            for(Handler handler : handlerList) {
+                if (handler != null) {
+                    handler.obtainMessage(what, arg1, arg2, obj).sendToTarget();
+                }
+            }
         }
     }
 
@@ -330,16 +404,30 @@ public class WebserverManager implements MeteorCallback{
         Log.d(LOG_TAG, "Meteor DDP onDataAdded "
                 + "Data added to <" + collectionName + "> in document <" + documentID + ">\n"
                 + "    Added: " + fieldsJson);
-        String[] userDocIds = FitnessMDMeteor.getInstance().getDatabase().getCollection("users").getDocumentIds();
-
-        for (int i = 0; i < userDocIds.length; i++) {
-            InMemoryDocument userdoc = FitnessMDMeteor.getInstance().getDatabase().getCollection("users").getDocument(userDocIds[i]);
-            String[] fieldNames = userdoc.getFieldNames();
-            for (int j = 0; j < fieldNames.length; j++) {
-                Log.d(LOG_TAG, "" + fieldNames[j] + " : " + userdoc.getField(fieldNames[j]));
+        if (collectionName.equalsIgnoreCase("users")) {
+            String[] userDocIds = FitnessMDMeteor.getInstance().getDatabase().getCollection(collectionName).getDocumentIds();
+            Log.d(LOG_TAG,"userdocIds.length : " + userDocIds.length);
+            for (int i = 0; i < userDocIds.length; i++) {
+                InMemoryDocument userdoc = FitnessMDMeteor.getInstance().getDatabase().getCollection(collectionName).getDocument(userDocIds[i]);
+                String[] fieldNames = userdoc.getFieldNames();
+                for (int j = 0; j < fieldNames.length; j++) {
+                    Log.d(LOG_TAG, "" + fieldNames[j] + " : " + userdoc.getField(fieldNames[j]));
+                    if (fieldNames[j].equalsIgnoreCase("emails")) {
+                        Gson gson = new Gson();
+                        String json  = gson.toJson(userdoc.getField(fieldNames[j]));
+                        JsonParser parser = new JsonParser();
+                        JsonElement element = parser.parse(json);
+                        JsonArray obj = element.getAsJsonArray();
+                        for(int t = 0; t < obj.size() ; t++) {
+                            JsonObject elem = obj.get(t).getAsJsonObject();
+                            if (elem.has("address") && elem.get("address").getAsString().equalsIgnoreCase(userLoggingInEmail)) {
+                                mDB.updateUserID(userLoggingInEmail, documentID);
+                            }
+                        }
+                    }
+                }
             }
         }
-
     }
 
     @Override
@@ -348,6 +436,103 @@ public class WebserverManager implements MeteorCallback{
                 + collectionName + "> in document <" + documentID + "> \n"
                 + "    Updated: " + updatedValuesJson
                 + "\n    Removed: " + removedValuesJson);
+
+        if (collectionName.equalsIgnoreCase("users")) {
+            parseStatisticsData();
+        }
+
+    }
+
+
+    private synchronized void parseStatisticsData() {
+        if (mDB.getConnectedUser() != null) {
+            InMemoryDocument userdoc =
+                    FitnessMDMeteor.getInstance().getDatabase().getCollection("users").getDocument(
+                            mDB.getConnectedUser().getDocId());
+            if (userdoc != null) {
+                Gson gson = new Gson();
+                String json  = gson.toJson(userdoc.getField("pedometerData"));
+                if (json != null) {
+                    JsonParser parser = new JsonParser();
+                    JsonElement element = parser.parse(json);
+                    JsonArray arr = element.getAsJsonArray();
+
+                    LinkedHashMap<Long, Integer> map = new LinkedHashMap<>();
+                    LinkedHashMap<Long, Integer> stats = new LinkedHashMap<>();
+                    long startOfCurrentDay = Constants.getStartOfCurrentDay();
+                    int totalSteps = 0;
+                    long[] daysAgo = new long[7];
+
+                    for (int k = 7; k >=1 ; k--) {
+                        daysAgo[k-1] = startOfCurrentDay - (k*24*60*60*1000);
+                    }
+                    // data is separated by hour index. concatenate data per day
+                    //Log.d(LOG_TAG,"map.size : " + map.size() + " entrySet.size : " + map.entrySet().size());
+                    for(int t = 0; t < arr.size() ; t++) {
+                        JsonObject elem = arr.get(t).getAsJsonObject();
+                        JsonElement dayElement = elem.get("day");
+                        if (dayElement != null) {
+                            Integer stepsForDay = map.get(dayElement.getAsLong());
+                            //Log.d(LOG_TAG,"day : " + dayElement.getAsLong() + " steps : " + elem.get("steps").getAsInt() + " stepsForDay : " + stepsForDay);
+                            if (stepsForDay != null) {
+                                int steps = map.get(elem.get("day").getAsLong());
+                                steps += elem.get("steps").getAsInt();
+                                map.put(elem.get("day").getAsLong(), steps);
+                            } else {
+                                map.put(elem.get("day").getAsLong(), elem.get("steps").getAsInt());
+                            }
+                        }
+                        totalSteps += elem.get("steps").getAsInt();
+                    }
+                    int maxSteps = -1;
+                    long dayForMaxSteps = -1;
+                    AtomicBoolean valueInStatsChanged = new AtomicBoolean(false);
+
+                    for (Map.Entry<Long,Integer> entry : map.entrySet()) {
+
+                        for (int l = 0; l < daysAgo.length; l++) {
+                            //Log.d(LOG_TAG,entry.getKey() + " : " + entry.getValue() + " daysAgo : " + daysAgo[l]);
+                            if (entry.getKey().longValue() == daysAgo[l]) {
+                                if(savedStats.entrySet().size() == 0) {
+                                    valueInStatsChanged.set(true);
+                                }
+                                if (savedStats.containsKey(entry.getKey())) {
+                                    Log.d(LOG_TAG,entry.getKey() + " : " + entry.getValue() + " savedStats : " + savedStats.get(entry.getKey().longValue()));
+                                    if (savedStats.get(entry.getKey().longValue()) != entry.getValue().longValue()) {
+                                        Log.d(LOG_TAG,"values not equal : " + entry.getValue() + " savedStats : " + savedStats.get(entry.getKey().longValue()));
+                                        valueInStatsChanged.set(true);
+                                    }
+                                } else {
+                                    savedStats.put(entry.getKey(), entry.getValue());
+                                }
+
+
+                                stats.put(entry.getKey(), entry.getValue());
+                            }
+                        }
+                        if (entry.getValue() > maxSteps) {
+                            maxSteps = entry.getValue();
+                            dayForMaxSteps = entry.getKey();
+                            mDB.updateBestSteps(entry.getKey(), entry.getValue());
+                        }
+                    }
+
+                    for (IStatsChanged callback : statsCallbackList) {
+                        callback.onTotalStepsChanged(totalSteps);
+                        callback.onAverageStepsChanged(totalSteps / (arr.size() / 8));
+                        callback.onMaxStepsChanged(dayForMaxSteps, maxSteps);
+                        if (valueInStatsChanged.get()) {
+                            Log.d(LOG_TAG,"stats values CHANGED");
+                            callback.onLast7DaysStats(stats);
+                        } else {
+                            Log.d(LOG_TAG,"stats values not changed");
+                        }
+                    }
+                }
+
+            }
+
+        }
     }
 
     @Override
@@ -368,36 +553,33 @@ public class WebserverManager implements MeteorCallback{
         sWebserverManager = null;
     }
 
-    public void subscribeToAdvices() {
-        Map<String, Object> insertMessage = new HashMap<String, Object>();
-        insertMessage.put("interlocutorId", "7cBFoCPdbfmpXJErZ");
+    public void subscribeToStats() {
+        if (mDB.getConnectedUser() != null) {
+            Log.d(LOG_TAG, "subscribeToStats : " + mDB.getConnectedUser().getDocId());
+            Map<String, String> insertMessage = new HashMap<String, String>();
+            insertMessage.put("_id", mDB.getConnectedUser().getDocId());
 
-        FitnessMDMeteor.getInstance().subscribe("advices", new Object[]{insertMessage}, new SubscribeListener() {
-            @Override
-            public void onSuccess() {
-                Log.d(LOG_TAG, "onSuccess subscriptionId");
-                String[] collectionNames = FitnessMDMeteor.getInstance().getDatabase().getCollectionNames();
-                Log.d(LOG_TAG, "collectionNames.length : " + collectionNames.length);
-                for (int i = 0; i < collectionNames.length; i++) {
-                    Log.d(LOG_TAG, "collectionNames[" + i + "] : " + collectionNames[i]);
+
+            FitnessMDMeteor.getInstance().subscribe("userDataByUserId", new Object[]{insertMessage}, new SubscribeListener() {
+                @Override
+                public void onSuccess() {
+                    Log.d(LOG_TAG, "onSuccess stats");
+                    parseStatisticsData();
                 }
 
-                Intent intent = new Intent(Constants.ADVICES_SUBSCRIPTION_READY_INTENT);
-                intent.putExtra(Constants.ADVICES_SUBSCRIPTION_READY_BUNDLE_KEY, true);
-                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-
-            }
-
-            @Override
-            public void onError(String error, String reason, String details) {
-                Log.d(LOG_TAG, "onError subscriptionId : " + error + " >>> " + reason + " >>> " + details);
-            }
-        });
+                @Override
+                public void onError(String error, String reason, String details) {
+                    Log.d(LOG_TAG, "onError subscriptionId : " + error + " >>> " + reason + " >>> " + details);
+                }
+            });
+        }
     }
 
     public InMemoryCollection getAdvices() {
         String[] collectionNames = FitnessMDMeteor.getInstance().getDatabase().getCollectionNames();
+        Log.d(LOG_TAG, "collectionNames.length : " + collectionNames.length);
         for (int i = 0; i < collectionNames.length; i++) {
+            Log.d(LOG_TAG, "collectionNames[" + i + "] : " + collectionNames[i]);
             if (collectionNames[i].equalsIgnoreCase("advices")) {
                 return FitnessMDMeteor.getInstance().getDatabase().getCollection(collectionNames[i]);
             }
@@ -415,11 +597,6 @@ public class WebserverManager implements MeteorCallback{
         return bestWeight;
     }
 
-    public StepsDayReport getAverageSteps() {
-        StepsDayReport averageSteps = new StepsDayReport(345, 0, 0);
-        return averageSteps;
-    }
-
     public WeightDayReport getAverageWeight() {
         WeightDayReport averageWeight = new WeightDayReport();
         return averageWeight;
@@ -432,26 +609,19 @@ public class WebserverManager implements MeteorCallback{
         handlerList.remove(0);
     }
 
+    public void registerStatsCallback(IStatsChanged callback) {
+        statsCallbackList.add(callback);
+    }
+
+    public void removeStatsCallback() {
+        //handlerList.remove(0);
+    }
+
     public void sendStepsToServer(long startOfCurrentDay, int totalSteps, int hourIndex) {
         if (FitnessMDMeteor.getInstance().isConnected()) {
-            if (!FitnessMDMeteor.getInstance().isLoggedIn()) {
-                FitnessMDMeteor.getInstance().loginWithEmail(mDB.getConnectedUser().getEmail(),
-                        mDB.getConnectedUser().getPassword(),
-                        new ResultListener() {
-                            @Override
-                            public void onSuccess(String s) {
-                                Log.d(LOG_TAG, "Meteor Login SUCCESS -- send steps to server");
-
-                            }
-
-                            @Override
-                            public void onError(String error, String reason, String details) {
-                                Log.d(LOG_TAG, "Meteor Login ERROR -- send steps to server");
-                            }
-                        });
-            } else {
-                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Log in successful");
-                FitnessMDMeteor.getInstance().sendStepsToServer(startOfCurrentDay, totalSteps, hourIndex,
+            if (mDB.getConnectedUser() != null) {
+                FitnessMDMeteor.getInstance().sendStepsToServer(mDB.getConnectedUser().getDocId(),
+                        startOfCurrentDay, totalSteps, hourIndex,
                         new ResultListener() {
                             @Override
                             public void onSuccess(String s) {
@@ -464,6 +634,8 @@ public class WebserverManager implements MeteorCallback{
                                 Log.d(LOG_TAG, "Send steps to server -- ERROR");
                             }
                         });
+            } else {
+                Log.d(LOG_TAG, "sendStepsToServer connectedUser is null");
             }
         } else {
             Log.d(LOG_TAG, "Meteor not connected ERROR -- send steps to server");

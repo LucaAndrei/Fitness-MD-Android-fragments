@@ -17,7 +17,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -105,11 +104,12 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(viewPager);
 
         Log.d(LOG_TAG, "onCreate");
-        loadSharedPrefs();
 
         mActivityHandler = new ActivityHandler();
         mDB = UsersDB.getInstance(getApplicationContext());
-        alwaysEnableBT = mDB.getConnectedUser().getAlwaysEnableBT();
+        if (mDB.getConnectedUser() != null) {
+            alwaysEnableBT = mDB.getConnectedUser().getAlwaysEnableBT() == 1 ? true : false;
+        }
 
         // Setup views
         mImageBT = (ImageView) findViewById(R.id.status_title);
@@ -416,56 +416,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-        //sharedPreferencesManager.setStepsForCurrentDay(mTabMenu.getStepsForCurrentDay(), false);
 
         WebserverManager mWebserverManager = WebserverManager.getInstance(this);
         mWebserverManager.destroyMeteor();
 
         super.onDestroy();
-
-    }
-
-    public void loadSharedPrefs() {
-
-        // Define default return values. These should not display, but are needed
-        final String STRING_ERROR = "error!";
-        final Integer INT_ERROR = -1;
-        // ...
-        final Set<String> SET_ERROR = new HashSet<>(1);
-
-        // Add an item to the set
-        SET_ERROR.add("Set Error!");
-
-        // Loop through the Shared Prefs
-        Log.i(LOG_TAG, "-----------------------------------");
-        Log.i(LOG_TAG, "-------------------------------------");
-
-        //for (String pref_name: prefs) {
-
-        SharedPreferences preference = getSharedPreferences(Constants.SHARED_PREFERENCES, Context.MODE_PRIVATE);
-        Map<String, ?> prefMap = preference.getAll();
-
-        Object prefObj;
-        Object prefValue = null;
-
-        for (String key : prefMap.keySet()) {
-
-            prefObj = prefMap.get(key);
-
-            if (prefObj instanceof String) prefValue = preference.getString(key, STRING_ERROR);
-            if (prefObj instanceof Integer) prefValue = preference.getInt(key, INT_ERROR);
-            // ...
-            if (prefObj instanceof Set) prefValue = preference.getStringSet(key, SET_ERROR);
-
-            Log.i(LOG_TAG,String.format("Shared Preference : %s - %s - %s", Constants.SHARED_PREFERENCES, key, String.valueOf(prefValue)));
-
-        }
-
-        Log.i(LOG_TAG, "-------------------------------------");
-
-        //}
-
-        Log.i(LOG_TAG, "------------------------------------");
 
     }
 }

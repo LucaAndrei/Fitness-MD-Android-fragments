@@ -69,10 +69,8 @@ public class LoginActivity extends Activity{
         mDB = UsersDB.getInstance(getApplicationContext());
 
 
-        boolean isLoggedIn = mDB.getIsUserLoggedIn();
-        Log.d(LOG_TAG, "mDB isLoggedIn : " + isLoggedIn);
-
-        if (isLoggedIn) {
+        if (mDB.getConnectedUser() != null) {
+            Log.d(LOG_TAG, "mDB isLoggedIn : true");
             Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intentMainActiv);
             finish();
@@ -85,6 +83,11 @@ public class LoginActivity extends Activity{
             }
             mWebserverManager =  WebserverManager.getInstance(this);
             mActivityHandler = new ActivityHandler();
+            if (!progressDialog.isShowing()) {
+                progressDialog.setIndeterminate(true);
+                progressDialog.setMessage("Connecting to server...");
+                progressDialog.show();
+            }
             mWebserverManager.registerCallback(mActivityHandler);
         }
     }
@@ -124,6 +127,39 @@ public class LoginActivity extends Activity{
                         }
                     }
                     break;
+                case Constants.SIGNUP_RESULT_INTENT:
+                    Log.d(LOG_TAG, "msg SIGNUP_RESULT_INTENT");
+                    Log.d(LOG_TAG, "msg.what : " + msg.what);
+                    Log.d(LOG_TAG, "msg.arg1 : " + msg.arg1);
+                    Log.d(LOG_TAG, "msg.arg2 : " + msg.arg2);
+                    if (msg.obj != null) {
+                        Log.d(LOG_TAG, "msg.obj : " + String.valueOf(msg.obj.toString()));
+                    }
+                    if (msg.arg1 > 0) {
+                        Log.d(LOG_TAG, "signup and login success");
+                        Intent intentMainActivity = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intentMainActivity);
+                        finish();
+                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                        if (progressDialog.isShowing()) {
+                            progressDialog.dismiss();
+                        }
+                        _loginButton.setEnabled(false);
+                        if (msg.obj!= null) {
+                            Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Log.d(LOG_TAG, "signup and login failure");
+                        _loginButton.setEnabled(true);
+                        Log.d(LOG_TAG, "Login after signup error");
+                        if (progressDialog.isShowing()) {
+                            progressDialog.dismiss();
+                        }
+                        if (msg.obj!= null) {
+                            Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    break;
                 case Constants.METEOR_CLIENT_STATE: {
                     Log.d(LOG_TAG, "msg METEOR_CLIENT_STATE");
                     Log.d(LOG_TAG, "msg.what : " + msg.what);
@@ -143,6 +179,9 @@ public class LoginActivity extends Activity{
                     } else {
                         // should display login form
                         Log.d(LOG_TAG, "should NOT log in automatically");
+                    }
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
                     }
                 }
                 default:
@@ -214,7 +253,7 @@ public class LoginActivity extends Activity{
         Log.d(LOG_TAG, "Login");
         if (!progressDialog.isShowing()) {
             progressDialog.setIndeterminate(true);
-            progressDialog.setMessage("Connecting...");
+            progressDialog.setMessage("Logging in...");
             progressDialog.show();
         }
 

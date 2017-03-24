@@ -26,13 +26,9 @@ package com.master.aluca.fitnessmd.library;
  */
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.firebase.tubesock.WebSocket;
-import com.firebase.tubesock.WebSocketEventHandler;
-import com.firebase.tubesock.WebSocketException;
-import com.firebase.tubesock.WebSocketMessage;
+import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.library.db.DataStore;
 import com.master.aluca.fitnessmd.library.db.Database;
@@ -41,13 +37,21 @@ import com.master.aluca.fitnessmd.library.listeners.Listener;
 import com.master.aluca.fitnessmd.library.listeners.ResultListener;
 import com.master.aluca.fitnessmd.library.listeners.SubscribeListener;
 import com.master.aluca.fitnessmd.library.listeners.UnsubscribeListener;
+import com.master.aluca.fitnessmd.library.websocket.WebSocket;
+import com.master.aluca.fitnessmd.library.websocket.WebSocketEventHandler;
+import com.master.aluca.fitnessmd.library.websocket.WebSocketException;
+import com.master.aluca.fitnessmd.library.websocket.WebSocketMessage;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.Socket;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -55,6 +59,10 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 /** Provides a single access point to the `Meteor` class that can be used across `Activity` instances */
 public class Meteor {
@@ -132,10 +140,13 @@ public class Meteor {
 
 			@Override
 			public void onMessage(final WebSocketMessage message) {
-				Log.d(LOG_TAG, "onTextMessage");
+
 
 				if (message.isText()) {
-					Log.d(LOG_TAG, "payload == " + message.getText());
+					if(!message.getText().equalsIgnoreCase("{\"msg\":\"ping\"}")) {
+						Log.d(LOG_TAG, "onTextMessage");
+						Log.d(LOG_TAG, "payload == " + message.getText());
+					}
 					handleMessage(message.getText());
 				}
 				else {
@@ -256,16 +267,19 @@ public class Meteor {
 	 * @param message the string to send
 	 */
 	private void send(final String message) {
-		Log.d(LOG_TAG, "send");
-		Log.d(LOG_TAG, "message == " + message);
+		if(!message.equalsIgnoreCase("{\"msg\":\"pong\"}")) {
+			Log.d(LOG_TAG, "send");
+			Log.d(LOG_TAG, "message == " + message);
+		}
 
 		if (message == null) {
 			throw new IllegalArgumentException("You cannot send `null` messages");
 		}
 
 		if (mConnected) {
-			Log.d(LOG_TAG, "dispatching");
-
+			if(!message.equalsIgnoreCase("{\"msg\":\"pong\"}")) {
+				Log.d(LOG_TAG, "dispatching");
+			}
 			if (mWebSocket != null) {
 				mWebSocket.send(message);
 			}
@@ -328,7 +342,8 @@ public class Meteor {
 	 * @param payload the JSON payload to process
 	 */
 	private void handleMessage(final String payload) {
-		Log.d(LOG_TAG, "  handleMessage : " + payload);
+		if(!payload.equalsIgnoreCase("{\"msg\":\"ping\"}"))
+			Log.d(LOG_TAG, "  handleMessage : " + payload);
 		final JsonNode data;
 		try {
 			data = mObjectMapper.readTree(payload);
@@ -344,8 +359,11 @@ public class Meteor {
 
 		if (data != null) {
 			if (data.has(Protocol.Field.MESSAGE)) {
-				Log.d(LOG_TAG, "  has MESSAGE");
+
 				final String message = data.get(Protocol.Field.MESSAGE).getTextValue();
+				if (!message.equals(Protocol.Message.PING)) {
+					Log.d(LOG_TAG, "  has MESSAGE");
+				}
 
 				if (message.equals(Protocol.Message.CONNECTED)) {
 					Log.d(LOG_TAG, "  has CONNECTED");
@@ -376,7 +394,7 @@ public class Meteor {
 						}
 					}
 				} else if (message.equals(Protocol.Message.PING)) {
-					Log.d(LOG_TAG, "  has PING");
+					//Log.d(LOG_TAG, "  has PING");
 					final String id;
 					if (data.has(Protocol.Field.ID)) {
 						Log.d(LOG_TAG, "  has ID");
@@ -500,6 +518,7 @@ public class Meteor {
 					final String id;
 					if (data.has(Protocol.Field.ID)) {
 						id = data.get(Protocol.Field.ID).getTextValue();
+						Log.d(LOG_TAG, "  id : " + id);
 					} else {
 						id = null;
 					}
@@ -642,8 +661,6 @@ public class Meteor {
 
 				// delete the last login token which is now invalid
 				SharedPreferencesManager.getInstance(mContext).saveServerLoginToken(null);
-				SharedPreferencesManager.getInstance(mContext).setLoggedIn(false);
-
 				if (listener != null) {
 					mCallbackProxy.forResultListener(listener).onSuccess(result);
 				}
@@ -677,13 +694,27 @@ public class Meteor {
 		}
 
 		final Map<String, Object> accountData = new Fields();
-		if (username != null) {
-			accountData.put("username", username);
-		}
+		final Map<String, Object> profileData = new Fields();
+		final Map<String, Object> passwordData = new Fields();
 		if (email != null) {
 			accountData.put("email", email);
 		}
-		accountData.put("password", password);
+		if (password != null) {
+			passwordData.put("digest",password);
+			passwordData.put("algorithm","sha-256");
+		}
+		accountData.put("password",passwordData);
+
+		if (username != null) {
+			profileData.put("name", username);
+			profileData.put("country", "RO");
+			profileData.put("height", Constants.HEIGHT_DEFAULT_VALUE);
+			profileData.put("weight", Constants.WEIGHT_DEFAULT_VALUE);
+			profileData.put("yearOfBirth", Constants.YOB_DEFAULT_VALUE);
+			profileData.put("gender", "Male");
+
+		}
+		accountData.put("profile", profileData);
 
 		call("createUser", new Object[]{accountData}, listener);
 	}
@@ -793,19 +824,20 @@ public class Meteor {
 		// get the last login token
 
 		Log.d(LOG_TAG, "  initSession");
+		announceSessionReady(false);
 		final String loginToken = SharedPreferencesManager.getInstance(mContext).getServerLoginToken();
 		Log.d(LOG_TAG, "  initSession loginToken : " + loginToken);
 
 		// if we found a login token that might work
 		if (loginToken != null) {
+
 			// try to sign in with that token
-			loginWithToken(loginToken, new ResultListener() {
+			/*loginWithToken(loginToken, new ResultListener() {
 
 				@Override
 				public void onSuccess(final String result) {
 					Log.d(LOG_TAG, "loginWithToken : onSuccess " + result);
 					announceSessionReady(true);
-					SharedPreferencesManager.getInstance(mContext).setLoggedIn(true);
 				}
 
 				@Override
@@ -816,19 +848,15 @@ public class Meteor {
 
 					// discard the token which turned out to be invalid
 					SharedPreferencesManager.getInstance(mContext).saveServerLoginToken(null);
-					SharedPreferencesManager.getInstance(mContext).setLoggedIn(false);
-
-
 
 					announceSessionReady(false);
 				}
 
-			});
+			});*/
 		}
 		// if we didn't find any login token
 		else {
 			announceSessionReady(false);
-			SharedPreferencesManager.getInstance(mContext).setLoggedIn(false);
 		}
 	}
 
@@ -857,7 +885,7 @@ public class Meteor {
 		return (Database) mDataStore;
 	}
 
-	public void sendStepsToServer(long startOfCurrentDay, int totalSteps, int hourIndex, final ResultListener listener) {
+	public void sendStepsToServer(String userId, long startOfCurrentDay, int totalSteps, int hourIndex, final ResultListener listener) {
 		if(startOfCurrentDay <= 0) {
 			throw new IllegalArgumentException("You must provide a valid date");
 		}
@@ -866,11 +894,20 @@ public class Meteor {
 		}
 
 		final Map<String, Object> stepsForDay = new Fields();
-        stepsForDay.put("userId", mLoggedInUserId);
+        stepsForDay.put("userId", userId);
 		stepsForDay.put("startOfDay",startOfCurrentDay);
 		stepsForDay.put("steps",totalSteps);
         stepsForDay.put("hourIndex",hourIndex);
 
 		call("updateStepsForToday", new Object[]{stepsForDay}, listener);
+	}
+
+	public void deleteChallenge(String challengeId, final ResultListener listener) {
+
+
+		final Map<String, Object> stepsForDay = new Fields();
+		stepsForDay.put("challengeId", challengeId);
+
+		call("deleteChallenge", new Object[]{stepsForDay}, listener);
 	}
 }

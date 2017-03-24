@@ -11,7 +11,6 @@ package com.master.aluca.fitnessmd.common.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.SystemClock;
 import android.util.Log;
 
 import com.master.aluca.fitnessmd.common.Constants;
@@ -25,27 +24,9 @@ public class SharedPreferencesManager {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor sharedPreferencesEditor;
 
-    private float mWeight;
-    private int mHeight;
-    private String mGender, mUserName, mSubscription;
-    private int mYearOfBirth;
-
-    private boolean mHasProfilePicture;
-    private String mProfilePictureURI;
-
-    private boolean mAlwaysEnableBT;
-
-    private boolean mIsLoggedIn;
-
-    private String mSavedDeviceName;
-    private String mSavedDeviceAddress;
     private String mEmail;
-    private long mWeightLastMeasurementDay;
-    private float mWeightGoal;
 
     private int mStepsForCurrentDay;
-    private long mChronometerBase;
-    private boolean mChronometerRunning;
     private long mStartOfCurrentDay;
 
     private String mServerLoginToken;
@@ -70,31 +51,9 @@ public class SharedPreferencesManager {
         sharedPreferences = mContext.getSharedPreferences(Constants.SHARED_PREFERENCES, Context.MODE_PRIVATE);
         sharedPreferencesEditor = sharedPreferences.edit();
 
-
-        mWeight = sharedPreferences.getFloat(Constants.SHARED_PREFS_WEIGHT_KEY, Constants.WEIGHT_DEFAULT_VALUE);
-        mHeight = sharedPreferences.getInt(Constants.SHARED_PREFS_HEIGHT_KEY, Constants.HEIGHT_DEFAULT_VALUE);
-        mGender = sharedPreferences.getString(Constants.SHARED_PREFS_GENDER_KEY, "Male");
-        mYearOfBirth = sharedPreferences.getInt(Constants.SHARED_PREFS_YOB_KEY, Constants.YOB_DEFAULT_VALUE);
-        mSubscription = sharedPreferences.getString(Constants.SHARED_PREFS_SUBSC_KEY, null);
-        mWeightGoal = sharedPreferences.getFloat(Constants.SHARED_PREFS_WEIGHT_GOAL_KEY, Constants.WEIGHT_DEFAULT_VALUE);
-
-        mHasProfilePicture = sharedPreferences.getBoolean(Constants.SHARED_PREFS_HAS_PROFILE_PIC, false);
-        mProfilePictureURI = sharedPreferences.getString(Constants.SHARED_PREFS_PROFILE_PIC_URI, null);
-        mIsLoggedIn = sharedPreferences.getBoolean(Constants.IS_USER_LOGGED_IN, false);
-
-        mAlwaysEnableBT = sharedPreferences.getBoolean(Constants.SHARED_PREFS_ALWAYS_ENABLE, false);
-
         mEmail = sharedPreferences.getString(Constants.SHARED_PREFS_EMAIL_KEY, null);
-        mUserName = sharedPreferences.getString(Constants.SHARED_PREFS_NAME_KEY+mEmail, null);
-        mWeightLastMeasurementDay = sharedPreferences.getLong(Constants.SHARED_PREFS_WEIGHT_LAST_MSRMNT, -1);
-
-        mSavedDeviceName = sharedPreferences.getString(Constants.SAVED_DEVICE_NAME_KEY, null);
-        mSavedDeviceAddress = sharedPreferences.getString(Constants.SAVED_DEVICE_ADDRESS_KEY, null);
-
 
         mStepsForCurrentDay = sharedPreferences.getInt(Constants.SHARED_PREFS_CURR_DAY_STEPS+mEmail, 0);
-        mChronometerBase = sharedPreferences.getLong(Constants.CHRONOMETER_SHARED_PREFS, SystemClock.elapsedRealtime());
-        mChronometerRunning = sharedPreferences.getBoolean(Constants.CHRONOMETER_RUNNING_SHARED_PREFS, false);
 
         mStartOfCurrentDay = sharedPreferences.getLong(Constants.START_OF_CURRENT_DAY, System.currentTimeMillis());
 
@@ -105,73 +64,9 @@ public class SharedPreferencesManager {
         mSWState = sharedPreferences.getInt(Constants.SHARED_PREFS_SW_STATE + mEmail, Constants.STOPWATCH_RESET);
     }
 
-    public float getWeightGoal() {
-        return mWeightGoal;
-    }
-
-    public void setWeightGoal(float weightGoal) {
-        sharedPreferencesEditor.putFloat(Constants.SHARED_PREFS_WEIGHT_GOAL_KEY, weightGoal);
-        sharedPreferencesEditor.commit();
-        mWeightGoal = weightGoal;
-        Log.d(LOG_TAG, "setWeightGoal : " + weightGoal);
-    }
-
-    public long getWeightLastMeasurement() {
-        return mWeightLastMeasurementDay;
-    }
-
-    public void setWeightLastMeasurement(long weightLastMeasurementDay) {
-        sharedPreferencesEditor.putLong(Constants.SHARED_PREFS_WEIGHT_LAST_MSRMNT, weightLastMeasurementDay);
-        sharedPreferencesEditor.commit();
-        mWeightLastMeasurementDay = weightLastMeasurementDay;
-    }
-
-
-    public void setLoggedIn(boolean loggedIn) {
-        sharedPreferencesEditor.putBoolean(Constants.IS_USER_LOGGED_IN, loggedIn);
-        sharedPreferencesEditor.commit();
-        mIsLoggedIn = loggedIn;
-    }
-
-    public boolean getHasProfilePicture() {
-        return mHasProfilePicture;
-    }
-    public void setHasProfilePicture(boolean hasProfilePicture) {
-        sharedPreferencesEditor.putBoolean(Constants.SHARED_PREFS_HAS_PROFILE_PIC, hasProfilePicture);
-        sharedPreferencesEditor.commit();
-        mHasProfilePicture = hasProfilePicture;
-    }
-
-    public String getProfilePictureURI() {
-        return mProfilePictureURI;
-    }
-    public void setProfilePictureURI(String uri) {
-        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_PROFILE_PIC_URI, uri);
-        sharedPreferencesEditor.commit();
-        mProfilePictureURI = uri;
-    }
-
-
-    public boolean getAlwaysEnableBT() {
-        return mAlwaysEnableBT;
-    }
-
-    public void setAlwaysEnableBT(boolean alwaysEnableBT) {
-        sharedPreferencesEditor.putBoolean(Constants.SHARED_PREFS_ALWAYS_ENABLE, alwaysEnableBT);
-        sharedPreferencesEditor.commit();
-        mAlwaysEnableBT = alwaysEnableBT;
-    }
-
     public String getEmail() {
         return mEmail;
     }
-
-    public void setEmail(String email) {
-        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_EMAIL_KEY, email);
-        sharedPreferencesEditor.commit();
-        this.mEmail = email;
-    }
-
 
     public String getServerLoginToken() {
         return mServerLoginToken;
@@ -239,23 +134,5 @@ public class SharedPreferencesManager {
 
     public int getSWState() {
         return mSWState;
-    }
-
-    public String getEmail(String email) {
-        return sharedPreferences.getString(Constants.SHARED_PREFS_EMAIL_KEY + email, null);
-    }
-
-    public String getPassword(String email) {
-        return sharedPreferences.getString(Constants.SHARED_PREFS_PASSWORD_KEY + email, null);
-    }
-
-    public void addEmail(String email) {
-        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_EMAIL_KEY + email, email);
-        sharedPreferencesEditor.commit();
-    }
-
-    public void addPassword(String email, String password) {
-        sharedPreferencesEditor.putString(Constants.SHARED_PREFS_PASSWORD_KEY+email, password);
-        sharedPreferencesEditor.commit();
     }
 }

@@ -12,6 +12,9 @@ import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.Device;
 import com.master.aluca.fitnessmd.common.datatypes.User;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 
 /**
  * Created by andrei on 3/14/2017.
@@ -23,10 +26,12 @@ public class UsersDB extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "FitnessMD_DB";
     public static final String TABLE_NAME_USERS= "users";
+    public static final String TABLE_NAME_USERS_DATA= "users_data";
 
-    private IDataRefreshCallback mCallback;
+    private ArrayList<IDataRefreshCallback> mCallbackList = new ArrayList<>();
 
     // columns
+    private static final String ID = "docID";
     private static final String EMAIL = "_id";
     private static final String PASSWORD = "password";
     private static final String NAME = "name";
@@ -41,11 +46,13 @@ public class UsersDB extends SQLiteOpenHelper {
     private static final String HAS_PROFILE_PICTURE = "hasProfilePicture";
     private static final String PROFILE_PICTURE_URI = "profilePictureURI";
     private static final String REGISTRATION_COMPLETE = "registrationComplete";
+    private static final String HAS_DEVICE_CONNECTED = "hasDeviceConnected";
     private static final String IS_ONLINE = "isOnline";
 
     private static final String DATABASE_CREATE_USERS_TABLE =
             "CREATE TABLE IF NOT EXISTS " +TABLE_NAME_USERS+ "("
                     + "_id String primary key, "// int		primary key, auto increment
+                    + "docID String, "
                     + "password String not null, "
                     + "name String not null, "
                     + "weight real not null, "
@@ -59,8 +66,32 @@ public class UsersDB extends SQLiteOpenHelper {
                     + "hasProfilePicture Integer not null, "
                     + "profilePictureURI String, "
                     + "registrationComplete Integer not null, "
+                    + "hasDeviceConnected Integer not null, "
                     + "isOnline Integer not null)";
+
+    private static final String USER_DATA_DOC_ID = "docID";
+    private static final String USER_DATA_EMAIL = "_id";
+    private static final String USER_DATA_BEST_STEPS_DAY = "best_steps_day";
+    private static final String USER_DATA_BEST_STEPS_VALUE = "best_steps_value";
+    private static final String USER_DATA_BEST_WEIGHT_DAY = "best_weight_day";
+    private static final String USER_DATA_BEST_WEIGHT_VALUE = "best_weight_value";
+
+
+    private static final String DATABASE_CREATE_USERS_DATA_TABLE =
+            "CREATE TABLE IF NOT EXISTS " +TABLE_NAME_USERS_DATA+ "("
+                    + "_id String primary key, "// int		primary key, auto increment
+                    + USER_DATA_DOC_ID + " String, "
+                    + USER_DATA_BEST_STEPS_DAY + " long, "
+                    + USER_DATA_BEST_STEPS_VALUE  + " int, "
+                    + USER_DATA_BEST_WEIGHT_DAY  + " long, "
+                    + USER_DATA_BEST_WEIGHT_VALUE  + " float)";
+
+
+
+
+
     private static final String DATABASE_DROP_USERS_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME_USERS;
+    private static final String DATABASE_DROP_USERS_DATA_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME_USERS_DATA;
 
     // Context, System
     private final Context mContext;
@@ -89,18 +120,20 @@ public class UsersDB extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         Log.d(LOG_TAG, "UsersDB onCreate");
         db.execSQL(DATABASE_CREATE_USERS_TABLE);
+        db.execSQL(DATABASE_CREATE_USERS_DATA_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
         Log.d(LOG_TAG, "UsersDB onUpgrade");
         db.execSQL(DATABASE_DROP_USERS_TABLE);
+        db.execSQL(DATABASE_DROP_USERS_DATA_TABLE);
         onCreate(db);
     }
 
-    public boolean addUser(String email, String password, String name) {
-        Log.d(LOG_TAG, "addUser: " + email + " pass : " + password + " >> name : " + name);
-        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password) || TextUtils.isEmpty(name)) {
+    public boolean addUser(String name, String email, String hashedPassword) {
+        Log.d(LOG_TAG, "addUser: " + email + " pass : " + hashedPassword + " >> name : " + name);
+        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(hashedPassword) || TextUtils.isEmpty(name)) {
             return false;
         }
         Cursor cursor = getWritableDatabase().query(TABLE_NAME_USERS, null, "_id" + "=?",
@@ -116,7 +149,7 @@ public class UsersDB extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put(EMAIL, email);
-        values.put(PASSWORD, password);
+        values.put(PASSWORD, hashedPassword);
         values.put(NAME, name);
         values.put(WEIGHT,  Constants.WEIGHT_DEFAULT_VALUE);
         values.put(WEIGHT_GOAL,  Constants.WEIGHT_DEFAULT_VALUE);
@@ -129,17 +162,25 @@ public class UsersDB extends SQLiteOpenHelper {
         values.put(HAS_PROFILE_PICTURE, 0);
         values.put(PROFILE_PICTURE_URI, (String) null);
         values.put(REGISTRATION_COMPLETE, 0);
+        values.put(HAS_DEVICE_CONNECTED, 0);
         values.put(IS_ONLINE, 0);
 
         long ret = getWritableDatabase().insert(TABLE_NAME_USERS, null, values);
-        Log.d(LOG_TAG,"ret : " + ret);
+        if (ret > 0) {
+            ContentValues user_data_values = new ContentValues();
+            user_data_values.put(USER_DATA_EMAIL, email);
+            getWritableDatabase().insert(TABLE_NAME_USERS_DATA, null, user_data_values);
+        }
+
+        Log.d(LOG_TAG, "ret : " + ret);
 
         return ret > 0;
     }
 
     public boolean updateWeight(float newWeight) {
         Log.d(LOG_TAG, "updateWeight newWeight: " + newWeight);
-        if (newWeight < 55.0f || TextUtils.isEmpty(connectedUserEmail)) {
+        if (newWeight < 35.0 || TextUtils.isEmpty(connectedUserEmail)) {
+            Log.d(LOG_TAG,"problems with params");
             return false;
         }
 
@@ -150,7 +191,6 @@ public class UsersDB extends SQLiteOpenHelper {
         Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
         // see if the column is there
         if (cursor.getColumnIndex(WEIGHT) < 0) {
-            // apple_device column not there - add it
             getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + WEIGHT +
                     " real not null;");
         }
@@ -160,14 +200,44 @@ public class UsersDB extends SQLiteOpenHelper {
         Log.d(LOG_TAG, "Updated: " + ret + " rows");
 
         cursor.close();
-        if (mCallback != null)
-            mCallback.onDataChanged(Constants.SHARED_PREFS_WEIGHT_KEY);
+        dispatchCallback(Constants.WEIGHT_CHANGED_CALLBACK);
 
         return ret == 1;
     }
+
+    public boolean updateWeightGoal(double weightGoal) {
+        Log.d(LOG_TAG, "updateWeightGoal weightGoal: " + weightGoal);
+        if (weightGoal < 35.0 || TextUtils.isEmpty(connectedUserEmail)) {
+            Log.d(LOG_TAG,"problems with params");
+            return false;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(WEIGHT_GOAL, weightGoal);
+
+        // cursor for all data
+        Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
+        // see if the column is there
+        if (cursor.getColumnIndex(WEIGHT_GOAL) < 0) {
+            getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + WEIGHT_GOAL +
+                    " real not null;");
+        }
+
+        int ret = getWritableDatabase().update(TABLE_NAME_USERS, values, EMAIL + " = ?",
+                new String[]{connectedUserEmail});
+        Log.d(LOG_TAG, "Updated: " + ret + " rows");
+
+        cursor.close();
+        dispatchCallback(Constants.WEIGHT_GOAL_CHANGED_CALLBACK);
+
+        return ret == 1;
+    }
+
+
     public boolean updateHeight(int newHeight) {
         Log.d(LOG_TAG, "updateHeight newHeight: " + newHeight);
-        if (newHeight < 55.0f || TextUtils.isEmpty(connectedUserEmail)) {
+        if (newHeight < Constants.HEIGHT_MIN_VALUE || TextUtils.isEmpty(connectedUserEmail) || newHeight > Constants.HEIGHT_MAX_VALUE) {
+            Log.d(LOG_TAG,"problems with params");
             return false;
         }
 
@@ -178,7 +248,6 @@ public class UsersDB extends SQLiteOpenHelper {
         Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
         // see if the column is there
         if (cursor.getColumnIndex(HEIGHT) < 0) {
-            // apple_device column not there - add it
             getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + HEIGHT +
                     " real not null;");
         }
@@ -188,14 +257,14 @@ public class UsersDB extends SQLiteOpenHelper {
         Log.d(LOG_TAG, "Updated: " + ret + " rows");
 
         cursor.close();
-        if (mCallback != null)
-            mCallback.onDataChanged(Constants.SHARED_PREFS_WEIGHT_KEY);
+        dispatchCallback(Constants.HEIGHT_CHANGED_CALLBACK);
 
         return ret == 1;
     }
     public boolean updateGender(String newGender) {
         Log.d(LOG_TAG, "updateGender newGender: " + newGender);
         if (TextUtils.isEmpty(newGender) || TextUtils.isEmpty(connectedUserEmail)) {
+            Log.d(LOG_TAG,"problems with params");
             return false;
         }
 
@@ -206,7 +275,6 @@ public class UsersDB extends SQLiteOpenHelper {
         Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
         // see if the column is there
         if (cursor.getColumnIndex(GENDER) < 0) {
-            // apple_device column not there - add it
             getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + GENDER +
                     " real not null;");
         }
@@ -216,15 +284,15 @@ public class UsersDB extends SQLiteOpenHelper {
         Log.d(LOG_TAG, "Updated: " + ret + " rows");
 
         cursor.close();
-        if (mCallback != null)
-            mCallback.onDataChanged(Constants.SHARED_PREFS_WEIGHT_KEY);
+        dispatchCallback(Constants.GENDER_CHANGED_CALLBACK);
 
         return ret == 1;
     }
     public boolean updateYearOfBirth(int yearOfBirth) {
-        Log.d(LOG_TAG, "updateHeight yearOfBirth: " + yearOfBirth);
-        if (yearOfBirth < Constants.HEIGHT_MIN_VALUE || yearOfBirth > Constants.HEIGHT_MAX_VALUE
+        Log.d(LOG_TAG, "updateYearOfBirth yearOfBirth: " + yearOfBirth);
+        if (yearOfBirth < Constants.YOB_MIN_VALUE || yearOfBirth > Constants.YOB_MAX_VALUE
                 || TextUtils.isEmpty(connectedUserEmail)) {
+            Log.d(LOG_TAG,"problems with params");
             return false;
         }
 
@@ -235,7 +303,6 @@ public class UsersDB extends SQLiteOpenHelper {
         Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
         // see if the column is there
         if (cursor.getColumnIndex(YEAR_OF_BIRTH) < 0) {
-            // apple_device column not there - add it
             getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + YEAR_OF_BIRTH +
                     " real not null;");
         }
@@ -245,8 +312,7 @@ public class UsersDB extends SQLiteOpenHelper {
         Log.d(LOG_TAG, "Updated: " + ret + " rows");
 
         cursor.close();
-        if (mCallback != null)
-            mCallback.onDataChanged(Constants.SHARED_PREFS_WEIGHT_KEY);
+        dispatchCallback(Constants.YOB_CHANGED_CALLBACK);
 
         return ret == 1;
     }
@@ -264,7 +330,6 @@ public class UsersDB extends SQLiteOpenHelper {
         Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
         // see if the column is there
         if (cursor.getColumnIndex(ALWAYS_ENABLE_BT) < 0) {
-            // apple_device column not there - add it
             getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + ALWAYS_ENABLE_BT +
                     " real not null;");
         }
@@ -291,7 +356,6 @@ public class UsersDB extends SQLiteOpenHelper {
         Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
         // see if the column is there
         if (cursor.getColumnIndex(PROFILE_PICTURE_URI) < 0) {
-            // apple_device column not there - add it
             getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + PROFILE_PICTURE_URI +
                     " real not null;");
         }
@@ -306,9 +370,9 @@ public class UsersDB extends SQLiteOpenHelper {
 
 
 
-    public boolean saveDevice(String email, String deviceName, String deviceAddress) {
+    public boolean saveDevice(String deviceName, String deviceAddress) {
         Log.d(LOG_TAG, "saveDevice deviceName: " + deviceName + " >>> deviceAddress : " + deviceAddress);
-        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(deviceName) || TextUtils.isEmpty(deviceAddress)) {
+        if (TextUtils.isEmpty(connectedUserEmail) || TextUtils.isEmpty(deviceName) || TextUtils.isEmpty(deviceAddress)) {
             return false;
         }
 
@@ -329,11 +393,36 @@ public class UsersDB extends SQLiteOpenHelper {
         }
 
         int ret = getWritableDatabase().update(TABLE_NAME_USERS, values, EMAIL + " = ?",
-                new String[]{email});
+                new String[]{connectedUserEmail});
         Log.d(LOG_TAG, "Updated: " + ret + " rows");
 
         cursor.close();
 
+        return ret == 1;
+    }
+
+    public boolean updateDeviceConnected(boolean isConnected) {
+        Log.d(LOG_TAG, "updateDeviceConnected isConnected: " + isConnected);
+        if (TextUtils.isEmpty(connectedUserEmail)) {
+            return false;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(HAS_DEVICE_CONNECTED, isConnected ? 1 : 0);
+
+        // cursor for all data
+        Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
+        // see if the column is there
+        if (cursor.getColumnIndex(HAS_DEVICE_CONNECTED) < 0) {
+            getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + HAS_DEVICE_CONNECTED +
+                    " real not null;");
+        }
+
+        int ret = getWritableDatabase().update(TABLE_NAME_USERS, values, EMAIL + " = ?",
+                new String[]{connectedUserEmail});
+        Log.d(LOG_TAG, "Updated: " + ret + " rows");
+
+        cursor.close();
         return ret == 1;
     }
 
@@ -371,7 +460,6 @@ public class UsersDB extends SQLiteOpenHelper {
         Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
         // see if the column is there
         if (cursor.getColumnIndex(IS_ONLINE) < 0) {
-            // apple_device column not there - add it
             getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + IS_ONLINE +
                     " Integer not null;");
         }
@@ -379,6 +467,11 @@ public class UsersDB extends SQLiteOpenHelper {
         int ret = getWritableDatabase().update(TABLE_NAME_USERS, values, EMAIL + " = ?",
                 new String[]{email});
         Log.d(LOG_TAG, "Updated: " + ret + " rows");
+        if (isConnected) {
+            connectedUserEmail = email;
+        } else {
+            connectedUserEmail = "";
+        }
 
         cursor.close();
 
@@ -402,10 +495,6 @@ public class UsersDB extends SQLiteOpenHelper {
                 ret = c.getString(columnIndex);
                 Log.d(LOG_TAG, "isEmailRegistered returned: " + ret);
             } while (c.moveToNext());
-            if (columnIndex != -1) {
-                ret = c.getString(columnIndex);
-                Log.d(LOG_TAG, "isEmailRegistered returned: " + ret);
-            }
         } else{
             Log.d(LOG_TAG, "isEmailRegistered: possible too many elements returned");
         }
@@ -428,40 +517,18 @@ public class UsersDB extends SQLiteOpenHelper {
             int columnIndex = c.getColumnIndex(PASSWORD);
             if (columnIndex != -1) {
                 ret = c.getString(columnIndex);
+                Log.d(LOG_TAG, "password From db : " + ret);
+
                 if (ret.equalsIgnoreCase(password)) {
+                    Log.d(LOG_TAG, "passwordCorrect");
                     c.close();
-                    connectedUserEmail = email;
                     return true;
+                } else {
+                    Log.d(LOG_TAG, "password not correct ret : " + ret );
                 }
             }
         } else {
             Log.d(LOG_TAG, "isPasswordCorrect: possible too many elements returned");
-        }
-        c.close();
-        return false;
-    }
-
-    public boolean getIsUserLoggedIn() {
-        Log.d(LOG_TAG, "getIsUserLoggedIn");
-        String ret = null;
-        Cursor c = getReadableDatabase().query(TABLE_NAME_USERS, null, IS_ONLINE + "=1",
-                null, null, null, null);
-
-        if (c == null) {
-            return false;
-        }
-        Log.d(LOG_TAG, "getIsUserLoggedIn : " + c.getCount());
-        if (c.getCount() == 1 && c.moveToFirst()) {
-            int columnIndex = c.getColumnIndex(IS_ONLINE);
-            if (columnIndex != -1) {
-                int columnIndexEmail = c.getColumnIndex(EMAIL);
-                ret = c.getString(columnIndexEmail);
-                Log.d(LOG_TAG, "getIsUserLoggedIn email : " + ret);
-                if (ret != null && ret != "") {
-                    c.close();
-                    return true;
-                }
-            }
         }
         c.close();
         return false;
@@ -478,6 +545,7 @@ public class UsersDB extends SQLiteOpenHelper {
         Log.d(LOG_TAG, "getConnectedUser : " + c.getCount());
         if (c.getCount() == 1 && c.moveToFirst()) {
             int columnIndexEmail = c.getColumnIndex(EMAIL);
+            int columnIndexDocumentID = c.getColumnIndex(ID);
             int columnIndexPassword = c.getColumnIndex(PASSWORD);
             int columnIndexName = c.getColumnIndex(NAME);
             int columnIndexWeight = c.getColumnIndex(WEIGHT);
@@ -491,24 +559,29 @@ public class UsersDB extends SQLiteOpenHelper {
             int columnIndexHasProfilePicture = c.getColumnIndex(HAS_PROFILE_PICTURE);
             int columnIndexProfilePictureURI = c.getColumnIndex(PROFILE_PICTURE_URI);
             int columnIndexRegistrationComplete = c.getColumnIndex(REGISTRATION_COMPLETE);
+            int columnIndexHasDeviceConnected = c.getColumnIndex(HAS_DEVICE_CONNECTED);
             int columnIndexIsOnline = c.getColumnIndex(IS_ONLINE);
 
-            if (columnIndexEmail != -1 && columnIndexPassword != -1 && columnIndexName != -1
+            if (columnIndexEmail != -1 && columnIndexDocumentID != -1 && columnIndexPassword != -1 && columnIndexName != -1
                     && columnIndexWeight != -1 && columnIndexWeightGoal != -1 && columnIndexHeight != -1
                     && columnIndexYOB != -1 && columnIndexGender != -1 && columnIndexAlwaysEnableBT != -1
                     && columnIndexSavedDeviceName != -1 && columnIndexSavedDeviceAddress != -1
                     && columnIndexHasProfilePicture != -1 && columnIndexProfilePictureURI != -1
-                    && columnIndexRegistrationComplete != -1 && columnIndexIsOnline != -1) {
-                ret = new User(c.getString(columnIndexEmail), c.getString(columnIndexPassword), c.getString(columnIndexName),
+                    && columnIndexRegistrationComplete != -1 && columnIndexHasDeviceConnected!= -1
+                    && columnIndexIsOnline != -1) {
+                ret = new User(c.getString(columnIndexEmail), c.getString(columnIndexDocumentID),
+                        c.getString(columnIndexPassword), c.getString(columnIndexName),
                         c.getString(columnIndexGender), c.getString(columnIndexSavedDeviceName),
                         c.getString(columnIndexSavedDeviceAddress), c.getString(columnIndexProfilePictureURI),
                         c.getFloat(columnIndexWeight), c.getFloat(columnIndexWeightGoal),
                         c.getInt(columnIndexHeight), c.getInt(columnIndexYOB),
                         c.getInt(columnIndexAlwaysEnableBT), c.getInt(columnIndexHasProfilePicture),
+                        c.getInt(columnIndexHasDeviceConnected),
                         c.getInt(columnIndexRegistrationComplete), c.getInt(columnIndexIsOnline)
                         );
-                c.close();
+
                 connectedUserEmail = c.getString(columnIndexEmail);
+                c.close();
                 return ret;
             } else {
                 Log.d(LOG_TAG, "getConnectedUser : un index e egal cu -1");
@@ -521,217 +594,177 @@ public class UsersDB extends SQLiteOpenHelper {
         return ret;
     }
 
+    public void registerCallback(IDataRefreshCallback callback) {
+        mCallbackList.add(callback);
+    }
+    private void dispatchCallback(String changedProperty) {
 
-   /* public boolean addNewDevice(String macAddress) {
-        if (DEBUG) Log.d(TAG, "Add new device: " + macAddress);
-        if (TextUtils.isEmpty(macAddress)) {
-            return false;
+        Log.d(LOG_TAG, "dispatchCallback mCallbackList.size : " + mCallbackList.size());
+        for(IDataRefreshCallback callback : mCallbackList) {
+            if (callback != null) {
+                callback.onDataChanged(changedProperty);
+            }
         }
-        Cursor cursor = getWritableDatabase().query(PROFILES_TABLE, null, MAC_ADDRESS + "=?",
-                new String[]{macAddress},
-                null, null, null);
-
-        if (cursor != null) {
-            int count = cursor.getCount();
-            cursor.close();
-            if (count > 0) return false;
-        }
-
-        ContentValues values = new ContentValues();
-        values.put(MAC_ADDRESS, macAddress);
-        values.put(MEDIA, ENABLED);
-        values.put(NETWORK, ENABLED);
-        values.put(HANDS_FREE, ENABLED);
-        values.put(PAIR_INDEX, mMaxIndex + 1);
-        values.put(APPLE_DEVICE, DEFAULT_VALUE);
-        long ret = getWritableDatabase().insert(PROFILES_TABLE, null, values);
-
-        return ret > 0;
     }
 
 
-    public boolean updateDevice(String macAddress, int profileId, int value) {
-        boolean isProfileSupported = Utils.getUtils().isProfileAvailable(profileId, Utils.getUtils()
-                .getDeviceWithMac(macAddress));
-        if (!isProfileSupported && value != NEVER_CONNECTED) {
-            value = NEVER_CONNECTED;
-        }
-        if (DEBUG) {
-            Log.d(TAG, "Update: " + macAddress + " on: " +
-                    Utils.getUtils().getProfileString(profileId) +
-                    " with: " + Utils.getUtils().getProfileStateString(value));
-        }
-        if (TextUtils.isEmpty(macAddress)) {
-            return false;
-        }
-        ContentValues values = new ContentValues();
-
-        switch (profileId) {
-            case BluetoothProfile.A2DP_SINK:
-            case BluetoothProfile.AVRCP_CONTROLLER:
-                values.put(MEDIA, value);
-                break;
-            case BluetoothProfile.HF_DEVICE:
-                values.put(HANDS_FREE, value);
-                break;
-            case BluetoothProfile.PAN:
-                values.put(NETWORK, value);
-                break;
-            default:
-                Log.e(TAG, "Unknown profile: " + Utils.getUtils().getProfileString(profileId));
-                break;
-        }
-
-        int ret = getWritableDatabase().update(PROFILES_TABLE, values, MAC_ADDRESS + " = ?",
-                new String[]{macAddress});
-        if (DEBUG) Log.d(TAG, "Updated: " + ret + " rows");
-
-        return ret == 1;
-    }
-
-
-    public boolean removeDevice(String macAddress) {
-        if (DEBUG) Log.d(TAG, "Remove device: " + macAddress);
-        if (TextUtils.isEmpty(macAddress)) return false;
-
-        int ret = getWritableDatabase().delete(PROFILES_TABLE, MAC_ADDRESS + "=?",
-                new String[]{macAddress});
-
-        return ret == 1;
-    }
-
-
-    public int getProfileValue(int profileId, String macAddress) {
-        if (!isDevicePaired(macAddress)) {
-            return -1;
-        }
-
-        int ret = -1;
-        Cursor c = getReadableDatabase().query(PROFILES_TABLE, null, MAC_ADDRESS + "=?",
-                new String[]{macAddress}, null, null, null);
+    public boolean hasUserCompletedRegistration(String email) {
+        boolean ret = false;
+        Cursor c = getReadableDatabase().query(TABLE_NAME_USERS, null, EMAIL + "=?",
+                new String[]{email}, null, null, null);
 
         if (c == null) {
-            return -1;
+            return ret;
         }
-        if (c.moveToFirst()) {
-            String column = "";
-            switch (profileId) {
-                case BluetoothProfile.A2DP_SINK:
-                case BluetoothProfile.AVRCP_CONTROLLER:
-                    column = MEDIA;
-                    break;
-                case BluetoothProfile.HF_DEVICE:
-                    column = HANDS_FREE;
-                    break;
-                case BluetoothProfile.PAN:
-                    column = NETWORK;
-                    break;
-                default:
-                    Log.e(TAG, "Unknown profile: " +
-                            Utils.getUtils().getProfileString(profileId));
-                    break;
+        Log.d(LOG_TAG, "getConnectedUser : " + c.getCount());
+        if (c.getCount() == 1 && c.moveToFirst()) {
+            int columnIndexRegistrationComplete = c.getColumnIndex(REGISTRATION_COMPLETE);
+
+            if (columnIndexRegistrationComplete != -1 ) {
+                ret = c.getInt(columnIndexRegistrationComplete) == 1 ? true : false;
+                c.close();
+                return ret;
+            } else {
+                Log.d(LOG_TAG, "hasUserCompletedRegistration : index e egal cu -1");
             }
-            int columnIndex = c.getColumnIndex(column);
-            if (columnIndex != -1) {
-                ret = c.getInt(columnIndex);
-            }
+        } else {
+            Log.d(LOG_TAG, "hasUserCompletedRegistration : posibil sa fi returnat mai multi useri");
         }
         c.close();
 
         return ret;
     }
 
+    public String getNameByEmail(String email) {
+        String ret = "";
+        Cursor c = getReadableDatabase().query(TABLE_NAME_USERS, null, EMAIL + "=?",
+                new String[]{email}, null, null, null);
 
-    public boolean isProfileOnValue(int profileId, String macAddress, int checkValue) {
-        if (DEBUG) {
-            Log.d(TAG, macAddress + " has profile " +
-                    Utils.getUtils().getProfileString(profileId) + " on " +
-                    Utils.getUtils().getProfileStateString(checkValue) + "?");
+        if (c == null) {
+            return ret;
         }
-        boolean ret = checkValue == getProfileValue(profileId, macAddress);
+        Log.d(LOG_TAG, "getNameByEmail : " + c.getCount());
+        if (c.getCount() == 1 && c.moveToFirst()) {
+            int columnIndexName = c.getColumnIndex(NAME);
 
-        if (DEBUG) {
-            Log.d(TAG, macAddress + " is " + (ret ? "enabled" : "disabled")
-                    + " for profile " + Utils.getUtils().getProfileString(profileId));
-        }
-        return ret;
-    }
-
-
-    private boolean isDevicePaired(String macAddress) {
-        boolean ret = false;
-        String query = "SELECT COUNT(*) FROM " + PROFILES_TABLE +
-                " WHERE " + MAC_ADDRESS + " = \"" + macAddress + "\"";
-        Cursor cursor = getReadableDatabase().rawQuery(query, null);
-        if (cursor != null) {
-            if (cursor.getCount() > 0) {
-                ret = true;
+            if (columnIndexName != -1 ) {
+                ret = c.getString(columnIndexName);
+                c.close();
+                return ret;
+            } else {
+                Log.d(LOG_TAG, "getNameByEmail : index e egal cu -1");
             }
-            cursor.close();
+        } else {
+            Log.d(LOG_TAG, "getNameByEmail : posibil sa fi returnat mai multi useri");
         }
+        c.close();
 
         return ret;
     }
 
-
-    public boolean updateDeviceManufacturer(String macAddress, boolean isAppleDevice) {
-        if (DEBUG) {
-            String manufacturer = isAppleDevice ? "Apple" : "not Apple";
-            Log.d(TAG, "Update manufacturer for: " + macAddress +
-                    " with: " + manufacturer + " manufacturer");
-        }
-        if (TextUtils.isEmpty(macAddress)) {
+    public boolean setUserCompletedRegistration(String email) {
+        Log.d(LOG_TAG, "setUserCompletedRegistration email: " + email);
+        if (TextUtils.isEmpty(email)) {
             return false;
         }
+
         ContentValues values = new ContentValues();
-        values.put(APPLE_DEVICE, isAppleDevice ? ENABLED : DISABLED);
+        values.put(REGISTRATION_COMPLETE, 1);
 
         // cursor for all data
-        Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + PROFILES_TABLE, null);
+        Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
         // see if the column is there
-        int checkColumnExistence = cursor.getColumnIndex(APPLE_DEVICE);
-        if (checkColumnExistence < 0) {
-            // apple_device column not there - add it
-            getWritableDatabase().execSQL("ALTER TABLE " + PROFILES_TABLE + " ADD " + APPLE_DEVICE +
-                    " integer;");
+        if (cursor.getColumnIndex(REGISTRATION_COMPLETE) < 0) {
+            getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + REGISTRATION_COMPLETE +
+                    " real not null;");
         }
 
-        int ret = getWritableDatabase().update(PROFILES_TABLE, values, MAC_ADDRESS + " = ?",
-                new String[]{macAddress});
-        if (DEBUG) Log.d(TAG, "Updated: " + ret + " rows");
+        int ret = getWritableDatabase().update(TABLE_NAME_USERS, values, EMAIL + " = ?",
+                new String[]{email});
+        Log.d(LOG_TAG, "Updated: " + ret + " rows");
+
+        cursor.close();
+        return ret == 1;
+    }
+
+    public boolean updateUserID(String email, String documentID) {
+        Log.d(LOG_TAG, "updateUserID email: " + email + " docId : " + documentID);
+        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(documentID)) {
+            Log.d(LOG_TAG,"problems with params");
+            return false;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(ID, documentID);
+
+
+
+        // cursor for all data
+        Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
+        // see if the column is there
+        if (cursor.getColumnIndex(ID) < 0) {
+            getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + ID +
+                    " String;");
+        }
+
+        int ret = getWritableDatabase().update(TABLE_NAME_USERS, values, EMAIL + " = ?",
+                new String[]{email});
+        Log.d(LOG_TAG, "Updated: " + ret + " rows");
+        if (ret == 1){
+            ContentValues user_data_values = new ContentValues();
+            user_data_values.put(USER_DATA_DOC_ID, documentID);
+            getWritableDatabase().update(TABLE_NAME_USERS_DATA, user_data_values, EMAIL + " = ?",
+                    new String[]{email});
+        }
 
         cursor.close();
 
         return ret == 1;
     }
 
-
-    public int isAppleDevice(String macAddress) {
-        if (DEBUG) Log.d(TAG, "Check if vendor for: " + macAddress + " is Apple");
-
-        int ret = DEFAULT_VALUE;
-        Cursor c = getReadableDatabase().query(PROFILES_TABLE, null, MAC_ADDRESS + "=?",
-                new String[]{macAddress}, null, null, null);
+    public HashMap<Long,Integer> getBestSteps() {
+        HashMap<Long, Integer> ret = null;
+        Cursor c = getReadableDatabase().query(TABLE_NAME_USERS_DATA, null, EMAIL + "=?",
+                new String[]{connectedUserEmail}, null, null, null);
 
         if (c == null) {
-            return ret;
+            Log.d(LOG_TAG, "getBestSteps cursor is null");
+            return null;
         }
-        if (c.moveToFirst()) {
-            String column = APPLE_DEVICE;
+        Log.d(LOG_TAG, "getBestSteps : " + c.getCount());
+        if (c.getCount() == 1 && c.moveToFirst()) {
 
-            int columnIndex = c.getColumnIndex(column);
-            if (columnIndex != -1) {
-                ret = c.getInt(columnIndex);
-                if (DEBUG) Log.d(TAG, "isAppleDevice returned: " + ret);
+            int columnIndexDay = c.getColumnIndex(USER_DATA_BEST_STEPS_DAY);
+            int columnIndexValue = c.getColumnIndex(USER_DATA_BEST_STEPS_VALUE);
+
+            if (columnIndexDay != -1 && columnIndexValue != -1 ) {
+                ret = new HashMap<>();
+                ret.put(c.getLong(columnIndexDay), c.getInt(columnIndexValue));
+                return ret;
+            } else {
+                Log.d(LOG_TAG, "getBestSteps : index e egal cu -1");
             }
+        } else {
+            Log.d(LOG_TAG, "getBestSteps : posibil sa fi returnat mai multi useri");
         }
         c.close();
 
         return ret;
-    }*/
+    }
 
+    public boolean updateBestSteps(Long day, Integer value) {
+        Log.d(LOG_TAG, "updateBestSteps steps " + value);
+        if (TextUtils.isEmpty(connectedUserEmail) || day < 0 || value < 0) {
+            return false;
+        }
 
-    public void registerCallback(IDataRefreshCallback callback) {
-        mCallback = callback;
+        ContentValues values = new ContentValues();
+        values.put(USER_DATA_BEST_STEPS_DAY, day.longValue());
+        values.put(USER_DATA_BEST_STEPS_VALUE, value.intValue());
+
+        int ret = getWritableDatabase().update(TABLE_NAME_USERS_DATA, values, EMAIL + " = ?",
+                new String[]{connectedUserEmail});
+        Log.d(LOG_TAG, "Updated: " + ret + " rows");
+        return ret == 1;
     }
 }

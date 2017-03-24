@@ -30,14 +30,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
+import com.master.aluca.fitnessmd.common.datatypes.User;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
-import com.master.aluca.fitnessmd.common.webserver.UsersDB;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 import com.master.aluca.fitnessmd.ui.PairDeviceActivity;
 
@@ -173,20 +173,17 @@ public class SettingsFragment extends Fragment {
     protected void setListeners(View mainActivity) {
         Log.d(LOG_TAG, "setListeners");
 
-
         btnGender.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(LOG_TAG, "btnGender onClick");
                 final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), AlertDialog.THEME_HOLO_LIGHT);
                 builder.setTitle("Gender");
-                builder.setSingleChoiceItems(Constants.GENDERS, -1, new DialogInterface.OnClickListener() {
+                String gender = mDB.getConnectedUser().getGender();
+                builder.setSingleChoiceItems(Constants.GENDERS, gender.equalsIgnoreCase("Male") ? 0 : 1, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         mDB.updateGender(Constants.GENDERS[which].toString());
                         btnGender.setText(Html.fromHtml("Gender<br /><small><small>" + Constants.GENDERS[which] + "</small></small>"));
-                        Intent genderChangedIntent = new Intent(Constants.GENDER_CHANGED_INTENT);
-                        genderChangedIntent.putExtra(Constants.GENDER_CHANGED_INTENT_BUNDLE_KEY, Constants.GENDERS[which]);
-                        getActivity().sendBroadcast(genderChangedIntent);
                         dialog.dismiss();
                     }
                 });
@@ -221,9 +218,6 @@ public class SettingsFragment extends Fragment {
                                 int height = height_picker.getValue();
                                 mDB.updateHeight(height);
                                 btnHeight.setText(Html.fromHtml("Height<br /><small>" + height + " " + unitsOfMeasurement.getText().toString() + "</small>"));
-                                Intent heightChangedIntent = new Intent(Constants.HEIGHT_CHANGED_INTENT);
-                                heightChangedIntent .putExtra(Constants.HEIGHT_CHANGED_INTENT_BUNDLE_KEY, height);
-                                getActivity().sendBroadcast(heightChangedIntent);
                             }
                         }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
@@ -269,11 +263,6 @@ public class SettingsFragment extends Fragment {
                                 float weight = kg_picker.getValue() + g_picker.getValue()/10f;
                                 mDB.updateWeight(weight);
                                 btnWeight.setText(Html.fromHtml("Weight<br /><small>" + weight + " kg</small>"));
-
-                                Intent weightChangedIntent = new Intent(Constants.WEIGHT_CHANGED_INTENT);
-                                weightChangedIntent.putExtra(Constants.WEIGHT_CHANGED_INTENT_BUNDLE_KEY, weight);
-                                getActivity().sendBroadcast(weightChangedIntent );
-
                             }
                         }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
@@ -313,10 +302,6 @@ public class SettingsFragment extends Fragment {
                                 int yob = yob_picker.getValue();
                                 mDB.updateYearOfBirth(yob);
                                 btnYoB.setText(Html.fromHtml("Year of birth<br /><small>" + yob + " " + unitsOfMeasurement.getText().toString() + "</small>"));
-
-                                Intent yobChangedIntent = new Intent(Constants.YOB_CHANGED_INTENT);
-                                yobChangedIntent   .putExtra(Constants.YOB_CHANGED_INTENT_BUNDLE_KEY, yob);
-                                getActivity().sendBroadcast(yobChangedIntent );
                             }
                         }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override

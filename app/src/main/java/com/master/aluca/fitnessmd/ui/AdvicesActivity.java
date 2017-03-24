@@ -78,7 +78,7 @@ public class AdvicesActivity extends Activity {
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
 
         mWebserverManager =  WebserverManager.getInstance(this);
-        mWebserverManager.subscribeToAdvices();
+        //mWebserverManager.subscribeToAdvices();
 
         MessageDetails Detail;
         Detail = new MessageDetails();

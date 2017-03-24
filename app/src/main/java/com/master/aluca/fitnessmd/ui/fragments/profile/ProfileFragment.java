@@ -34,8 +34,10 @@ import android.widget.TextView;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
+import com.master.aluca.fitnessmd.common.datatypes.User;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IDataRefreshCallback;
+import com.master.aluca.fitnessmd.common.util.IStatsChanged;
 import com.master.aluca.fitnessmd.common.util.ProfilePhotoUtils;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
@@ -44,6 +46,8 @@ import com.master.aluca.fitnessmd.service.FitnessMDService;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProfileFragment extends Fragment {
 
@@ -72,6 +76,7 @@ public class ProfileFragment extends Fragment {
     private Dialog mDialog;
 
     private FitnessMDService mService;
+    SimpleDateFormat dateFormat = new SimpleDateFormat("d MMMM yyyy");
 
 
 
@@ -115,7 +120,37 @@ public class ProfileFragment extends Fragment {
         if (!mActivity.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)) {
             Log.e(LOG_TAG, "Unable to bind to optical service");
         }
+        if (webserverManager != null) {
+            webserverManager.registerStatsCallback(mStatsChangedCallback);
+        }
+
     }
+
+    private IStatsChanged mStatsChangedCallback = new IStatsChanged() {
+        @Override
+        public void onTotalStepsChanged(int totalSteps) {
+        }
+
+        @Override
+        public void onMaxStepsChanged(long dayMillis, int maxSteps) {
+            Log.d(LOG_TAG,"IStatsChanged onTotalStepsChanged onMaxStepsChanged : " + maxSteps);
+            tvPersonalBestSteps.setText(String.valueOf(maxSteps) + " steps");
+            String day = dateFormat.format(new Date(dayMillis));
+            tvPersonalBestStepsDate.setText(day);
+        }
+
+        @Override
+        public void onAverageStepsChanged(int averageSteps) {
+            Log.d(LOG_TAG,"IStatsChanged onAverageStepsChanged averageSteps : " + averageSteps);
+            tvAverageSteps.setText(String.valueOf(averageSteps) + " steps");
+        }
+
+        @Override
+        public void onLast7DaysStats(HashMap<Long, Integer> last7DaysStats) {
+        }
+
+
+    };
 
     public void onStop() {
         Log.d(LOG_TAG, "onStop()");
@@ -163,28 +198,27 @@ public class ProfileFragment extends Fragment {
         @Override
         public void onDataChanged(String changedDataKey) {
             Log.d(LOG_TAG,"onDataChanged : " + changedDataKey);
+            User connectedUser = mDB.getConnectedUser();
             switch(changedDataKey) {
-                case Constants.SHARED_PREFS_GENDER_KEY:
-                    updateGenderTextView();
+                case Constants.GENDER_CHANGED_CALLBACK:
+                    updateGenderTextView(connectedUser.getGender());
                     break;
-                case Constants.SHARED_PREFS_YOB_KEY:
-                    updateAgeTextView();
+                case Constants.YOB_CHANGED_CALLBACK:
+                    updateAgeTextView(connectedUser.getYearOfBirth());
                     break;
-                case Constants.SHARED_PREFS_HEIGHT_KEY:
-                    updateHeightTextView();
+                case Constants.HEIGHT_CHANGED_CALLBACK:
+                    updateHeightTextView(connectedUser.getHeight());
                     break;
             }
         }
     };
 
-    private void updateHeightTextView() {
-        int height = mDB.getConnectedUser().getHeight();
+    private void updateHeightTextView(int height) {
         Log.d(LOG_TAG, "height : " + height);
         tvHeight.setText(height + " cm");
     }
 
-    private void updateAgeTextView() {
-        int yob = mDB.getConnectedUser().getYearOfBirth();
+    private void updateAgeTextView(int yob) {
         Log.d(LOG_TAG, "yob : " + yob);
         Calendar calendar = Calendar.getInstance();
         int currentYear = calendar.get(Calendar.YEAR);
@@ -194,8 +228,7 @@ public class ProfileFragment extends Fragment {
         tvAge.setText(age + " yrs");
     }
 
-    private void updateGenderTextView() {
-        String gender = mDB.getConnectedUser().getGender();
+    private void updateGenderTextView(String gender) {
         if (gender != null) {
             Log.d(LOG_TAG, "gender : " + gender.toString());
             tvGender.setText(gender);
@@ -261,7 +294,8 @@ public class ProfileFragment extends Fragment {
     private void initUserData() {
         Log.d(LOG_TAG,"initUserData");
 
-        String name = mDB.getConnectedUser().getName();
+        User connectedUser = mDB.getConnectedUser();
+        String name = connectedUser.getName();
         if (name != null) {
             Log.d(LOG_TAG, "name : " + name.toString());
             tvName.setText(name);
@@ -269,19 +303,17 @@ public class ProfileFragment extends Fragment {
             tvName.setText("Name Not set");
         }
 
-        updateGenderTextView();
+        updateGenderTextView(connectedUser.getGender());
 
-        updateAgeTextView();
+        updateAgeTextView(connectedUser.getYearOfBirth());
 
-        updateHeightTextView();
+        updateHeightTextView(connectedUser.getHeight());
 
-        updateProfilePicture();
+        updateProfilePicture(connectedUser.getProfilePictureURI());
     }
 
-    private void updateProfilePicture() {
+    private void updateProfilePicture(String profilePictureUri) {
         Log.d(LOG_TAG, "updateProfilePicture");
-
-        String profilePictureUri = mDB.getConnectedUser().getProfilePictureURI();
         Log.d(LOG_TAG, "profilePictureUri : " + profilePictureUri);
         if (profilePictureUri != null) {
             Bitmap profilePhoto = ProfilePhotoUtils.getProfilePicFromGallery(getActivity().getContentResolver(), Uri.parse(profilePictureUri));
@@ -295,27 +327,33 @@ public class ProfileFragment extends Fragment {
         Whenever this tab is selected, the UI must update with the latest achievements.
      */
     public void syncData() {
-        SimpleDateFormat s = new SimpleDateFormat("d MMMM yyyy");
-        String day = null;
-        StepsDayReport personalBestReport = webserverManager.getBestSteps();
-        int steps = personalBestReport.getSteps();
-        tvPersonalBestSteps.setText(String.valueOf(steps) + " steps");
 
-        day = s.format(new Date(personalBestReport.getDay()));
-        tvPersonalBestStepsDate.setText(day);
+        String day;
+        HashMap<Long, Integer> maxSteps = mDB.getBestSteps();
+        if (maxSteps != null) {
+            Log.d(LOG_TAG, "maxSteps.length " + maxSteps.size());
+            if (maxSteps.size() == 0) {
+                updateBestSteps(Constants.getStartOfCurrentDay(), 0);
+            } else if (maxSteps.size() > 1) {
+                Log.d(LOG_TAG,"error max steps");
+            } else {
+                for (Map.Entry<Long,Integer> entry : maxSteps.entrySet()) {
+                    updateBestSteps(entry.getKey(), entry.getValue());
+                }
+            }
+        } else {
+            updateBestSteps(Constants.getStartOfCurrentDay(), 0);
+        }
+
 
 
         WeightDayReport weightBestReport = webserverManager.getBestWeight();
         float weight = weightBestReport.getWeight();
         tvPersonalBestWeight.setText(String.valueOf(weight) + " kg");
 
-        day = s.format(new Date(weightBestReport.getDay()));
+        day = dateFormat.format(new Date(weightBestReport.getDay()));
         Log.d(LOG_TAG,"day : " + day);
         tvPersonalBestWeightDate.setText(day);
-
-        StepsDayReport averageStepsRaport = webserverManager.getAverageSteps();
-        int averageSteps = averageStepsRaport.getSteps();
-        tvAverageSteps.setText(String.valueOf(averageSteps) + " steps");
 
         WeightDayReport averageWeightRaport = webserverManager.getAverageWeight();
         float averageWeight = averageWeightRaport.getWeight();
@@ -330,5 +368,46 @@ public class ProfileFragment extends Fragment {
     public void setDefaultProfilePicture() {
         imageViewProfile.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.user));
         //imageViewProfile.setImageResource(mContext.getResources().getDrawable(R.drawable.user));
+    }
+
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        Log.d(LOG_TAG, "setUserVisibleHint() isVisibleToUser : " + isVisibleToUser);
+
+        // Make sure that we are currently visible
+        if (this.isVisible()) {
+            // If we are becoming invisible, then...
+            HashMap<Long, Integer> maxSteps = mDB.getBestSteps();
+            if (maxSteps != null) {
+                Log.d(LOG_TAG, "maxSteps.length " + maxSteps.size());
+                if (maxSteps.size() == 0) {
+                    updateBestSteps(Constants.getStartOfCurrentDay(), 0);
+                } else if (maxSteps.size() > 1) {
+                    Log.d(LOG_TAG, "error max steps");
+                } else {
+                    for (Map.Entry<Long, Integer> entry : maxSteps.entrySet()) {
+                        updateBestSteps(entry.getKey(), entry.getValue());
+                    }
+                }
+            } else {
+                updateBestSteps(Constants.getStartOfCurrentDay(), 0);
+            }
+
+            if (!isVisibleToUser) {
+                Log.d(LOG_TAG, "Not visible anymore.");
+                // TODO stop audio playback
+            }
+        }
+    }
+
+    private void updateBestSteps(long dayLong, int steps) {
+        Log.d(LOG_TAG, "updateBestSteps day : " + dayLong + " >> steps : " + steps);
+        tvPersonalBestSteps.setText(String.valueOf(steps) + " steps");
+        String day = dateFormat.format(new Date(dayLong));
+        tvPersonalBestStepsDate.setText(day);
+
     }
 }

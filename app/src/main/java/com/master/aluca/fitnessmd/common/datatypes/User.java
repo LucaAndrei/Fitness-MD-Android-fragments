@@ -13,6 +13,7 @@ import com.master.aluca.fitnessmd.common.Constants;
 
 public class User {
     private String email;
+    private String docId;
     private String password;
     private String name;
     private String gender;
@@ -27,12 +28,14 @@ public class User {
     private int hasProfilePicture;
     private int registrationComplete;
     private int isOnline;
+    private int hasDeviceConnected;
 
-    public User(String email, String password, String name, String gender, String savedDeviceName,
+    public User(String email, String docId, String password, String name, String gender, String savedDeviceName,
                 String savedDeviceAddress, String profilePictureURI, float weight, float weightGoal,
                 int height, int yearOfBirth, int alwaysEnableBT, int hasProfilePicture,
-                int registrationComplete, int isOnline) {
+                int registrationComplete, int isOnline, int hasDeviceConnected) {
         this.email = email;
+        this.docId = docId;
         this.password = password;
         this.name = name;
         this.gender = gender;
@@ -47,6 +50,7 @@ public class User {
         this.hasProfilePicture = hasProfilePicture;
         this.registrationComplete = registrationComplete;
         this.isOnline = isOnline;
+        this.hasDeviceConnected = hasDeviceConnected;
     }
 
     public float getWeight() {
@@ -170,4 +174,19 @@ public class User {
         this.isOnline = isOnline;
     }
 
+    public int getHasDeviceConnected() {
+        return hasDeviceConnected;
+    }
+
+    public void setHasDeviceConnected(int hasDeviceConnected) {
+        this.hasDeviceConnected = hasDeviceConnected;
+    }
+
+    public String getDocId() {
+        return docId;
+    }
+
+    public void setDocId(String docId) {
+        this.docId = docId;
+    }
 }

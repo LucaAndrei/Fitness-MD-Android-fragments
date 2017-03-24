@@ -17,7 +17,17 @@ import android.widget.EditText;
 import android.widget.NumberPicker;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
+import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
+
 import java.lang.reflect.Field;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 
 public class Constants {
@@ -44,20 +54,13 @@ public class Constants {
     public static final String NODEJS_GET_WEIGHT_ROUTE = "/weight/getdata";
 
     public static final String SHARED_PREFS_NAME_KEY = "SHARED_PREFS_NAME";
-    public static final String SHARED_PREFS_GENDER_KEY = "SHARED_PREFS_GENDER";
-    public static final String SHARED_PREFS_YOB_KEY = "SHARED_PREFS_YOB";
-    public static final String SHARED_PREFS_WEIGHT_KEY = "SHARED_PREFS_WEIGHT";
-    public static final String SHARED_PREFS_HEIGHT_KEY = "SHARED_PREFS_HEIGHT";
     public static final String SHARED_PREFS_PAIR_DEVICE_KEY = "SHARED_PREFS_PAIR_DEVICE";
 
-    public static final String SHARED_PREFS_HAS_PROFILE_PIC = "SHARED_PREFS_HAS_PROFILE_PIC";
-    public static final String SHARED_PREFS_PROFILE_PIC_URI = "SHARED_PREFS_PROFILE_PIC_URI";
+
     public static final String SHARED_PREFS_CURR_DAY_STEPS = "SHARED_PREFS_CURR_DAY_STEPS";
 
     public static final String SHARED_PREFS_EMAIL_KEY = "SHARED_PREFS_EMAIL";
     public static final String SHARED_PREFS_PASSWORD_KEY = "SHARED_PREFS_PASSWORD";
-
-    public static final String SHARED_PREFS_ALWAYS_ENABLE = "SHARED_PREFS_ALWAYS_ENABLE_BT";
 
     public static final CharSequence[] GENDERS = {"Male", "Female"};
     public static final CharSequence[] UNITS = {"Metric", "Imperial"};
@@ -99,23 +102,12 @@ public class Constants {
     public static final int GET_GALLERY_IMAGE = 3;
     public static final int TAKE_PHOTO = 4;
     public static final String END_OF_DAY_BUNDLE_KEY = "end_of_day_bundle_key";
-    public static final String WEIGHT_RECEIVED_INTENT = "weight_from_server_intent";
-    public static final String WEIGHT_RECEIVED_WEIGHT_BUNDLE_KEY = "weight_received_weight_bundle_key";
-    public static final String WEIGHT_RECEIVED_LAST_MSRMNT_BUNDLE_KEY = "weight_received_last_msrmnt_bundle_key";
-    public static final String SHARED_PREFS_WEIGHT_LAST_MSRMNT = "weight_last_measurement_key";
-    public static final String SHARED_PREFS_SUBSC_KEY = "SHARED_PREFS_SUBSC_KEY";
-    public static final String SHARED_PREFS_WEIGHT_GOAL_KEY = "SHARED_PREFS_WEIGHT_GOAL_KEY";
-    public static final String WEIGHT_GOAL_INTENT = "WEIGHT_GOAL_INTENT";
-    public static final String WEIGHT_GOAL_BUNDLE_KEY = "WEIGHT_GOAL_BUNDLE_KEY";
 
-    public static final String GENDER_CHANGED_INTENT = "GENDER_CHANGED_INTENT";
-    public static final String GENDER_CHANGED_INTENT_BUNDLE_KEY = "GENDER_CHANGED_INTENT_BUNDLE_KEY";
-    public static final String HEIGHT_CHANGED_INTENT = "HEIGHT_CHANGED_INTENT";
-    public static final String HEIGHT_CHANGED_INTENT_BUNDLE_KEY = "HEIGHT_CHANGED_INTENT_BUNDLE_KEY";
-    public static final String WEIGHT_CHANGED_INTENT = "WEIGHT_CHANGED_INTENT";
-    public static final String WEIGHT_CHANGED_INTENT_BUNDLE_KEY = "WEIGHT_CHANGED_INTENT_BUNDLE_KEY";
-    public static final String YOB_CHANGED_INTENT = "YOB_CHANGED_INTENT";
-    public static final String YOB_CHANGED_INTENT_BUNDLE_KEY = "YOB_CHANGED_INTENT_BUNDLE_KEY";
+    public static final String GENDER_CHANGED_CALLBACK = "GENDER_CHANGED_INTENT";
+    public static final String HEIGHT_CHANGED_CALLBACK = "HEIGHT_CHANGED_INTENT";
+    public static final String WEIGHT_CHANGED_CALLBACK = "WEIGHT_CHANGED_INTENT";
+    public static final String WEIGHT_GOAL_CHANGED_CALLBACK = "WEIGHT_GOAL_CHANGED_INTENT";
+    public static final String YOB_CHANGED_CALLBACK = "YOB_CHANGED_INTENT";
     public static final String CONNECTED_DEVICE_DETAILS_INTENT = "CONNECTED_DEVICE_DETAILS";
     public static final String CHRONOMETER_SHARED_PREFS = "CHRONOMETER_SHARED_PREFS";
     public static final String CHRONOMETER_RUNNING_SHARED_PREFS = "CHRONOMETER_RUNNING";
@@ -208,13 +200,48 @@ public class Constants {
     }
 
     public static long getStartOfCurrentDay() {
-        Log.d(LOG_TAG, "getStartOfCurrentDay");
+
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         long startOfDayInMillis = calendar.getTimeInMillis();
+        Log.d(LOG_TAG, "getStartOfCurrentDay : " + startOfDayInMillis);
         return startOfDayInMillis;
+    }
+    public static long getStartOfNextDay() {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        long startOfDayInMillis = calendar.getTimeInMillis();
+        Log.d(LOG_TAG, "getStartOfCurrentDay : " + startOfDayInMillis);
+        return startOfDayInMillis;
+    }
+
+    public static String getHashedPassword(String password) {
+        MessageDigest md = null;
+        String generatedPassword = password;
+
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+            md.update(password.getBytes());
+            byte[] digest = md.digest();
+            //String pass = BCrypt.hashpw(rawPass, BCrypt.gensalt());
+            StringBuilder sb = new StringBuilder();
+            for(int i=0; i< digest.length ;i++)
+            {
+                sb.append(Integer.toString((digest[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            generatedPassword = sb.toString();
+            Log.d(LOG_TAG, "generatedPassword : " + generatedPassword);
+            return generatedPassword;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

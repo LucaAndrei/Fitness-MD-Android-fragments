@@ -18,6 +18,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,12 +29,12 @@ import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.bluetooth.BluetoothManager;
-import com.master.aluca.fitnessmd.common.bluetooth.ConnectionInfo;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
-import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
+import com.master.aluca.fitnessmd.common.datatypes.User;
 import com.master.aluca.fitnessmd.common.util.IStepNotifier;
 import com.master.aluca.fitnessmd.common.util.NetworkUtil;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.receivers.AlarmReceiver;
 
@@ -81,9 +82,6 @@ public class FitnessMDService extends Service {
     private final IBinder mBinder = new FitnessMD_Binder();
     private static boolean sRunning = false;
 
-    private ConnectionInfo mConnectionInfo;
-
-
     private BluetoothManager mBtManager;
 
     private ArrayList<StepsDayReport> mNotPushedToServerData = new ArrayList<>();
@@ -102,6 +100,7 @@ public class FitnessMDService extends Service {
 
     private WebserverManager mWebserverManager;
     private SharedPreferencesManager sharedPreferencesManager;
+    private UsersDB mDB;
 
     ProgressDialog progressDialog = null;
 
@@ -131,13 +130,11 @@ public class FitnessMDService extends Service {
 
         registerReceiver(mReceiver, intentFilter);
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
+        mDB = UsersDB.getInstance(getApplicationContext());
 
         alarm = new AlarmReceiver();
 
         Log.d(LOG_TAG, "# Service : initialize ---");
-
-        // Get connection info instance
-        mConnectionInfo = ConnectionInfo.getInstance(mContext);
 
         // Get local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -236,10 +233,11 @@ public class FitnessMDService extends Service {
         // If ConnectionInfo holds previous connection info,
         // try to connect using it.
         Log.d(LOG_TAG, "setup");
-        Log.d(LOG_TAG, "mConnectionInfo.getSavedDeviceAddress() " + mConnectionInfo.getSavedDeviceAddress());
-        Log.d(LOG_TAG, "mConnectionInfo.getSavedDeviceName() " + mConnectionInfo.getSavedDeviceName());
-        if(mConnectionInfo.getSavedDeviceAddress() != null && mConnectionInfo.getSavedDeviceName() != null) {
-            connectDevice(mConnectionInfo.getSavedDeviceAddress());
+        User connectedUser = mDB.getConnectedUser();
+        Log.d(LOG_TAG, "connectedUser.getSavedDeviceAddress() " + connectedUser.getSavedDeviceAddress());
+        Log.d(LOG_TAG, "connectedUser.getSavedDeviceName() " + connectedUser.getSavedDeviceName());
+        if(connectedUser.getSavedDeviceAddress() != null && connectedUser.getSavedDeviceName() != null) {
+            connectDevice(connectedUser.getSavedDeviceAddress());
         } else {
             Constants.displayToastMessage(mContext, "You need to pair with the device.");
         }
@@ -366,11 +364,6 @@ public class FitnessMDService extends Service {
         return isConnectedToNetworkData.get();
     }
 
-    public synchronized static boolean hasInternet() {
-        return isConnectedToWifi.get() || isConnectedToNetworkData.get();
-    }
-
-
     public static boolean isServiceRunning() {
         return sRunning;
     }
@@ -427,7 +420,6 @@ public class FitnessMDService extends Service {
                 Log.d(LOG_TAG, "dayForReport : " + (new Date(dayForReport)) + " >>> steps : " + steps + " >>> weight : " + weight
                         + " >>> calories : " + calories + " >>> timeActive : " + (new Date(timeActive)) + " >>> wasPushedToServer : " + wasPushedToServer);
                 long error = mDB.insertActivityReport(dayForReport, steps, weight, calories, timeActive, wasPushedToServer);
-                sharedPreferencesManager.setStepsForCurrentDay(sharedPreferencesManager.getEmail(), 0);
 
                 if ( error == ErrorCodes.GENERAL_ERROR) {
                     Log.d(LOG_TAG, "inserting to DB failed. GENERAL_ERROR");
@@ -457,13 +449,13 @@ public class FitnessMDService extends Service {
 
                 if(deviceName != null && deviceAddress != null) {
                     // Remember device's address and name
-                    mConnectionInfo.saveDevice(deviceName, deviceAddress);
-                    mConnectionInfo.setDeviceConnected(true);
+                    mDB.saveDevice(deviceName, deviceAddress);
+                    mDB.updateDeviceConnected(true);
                     Toast.makeText(getApplicationContext(),
                             "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
                 }
             } else if (action.equals(Constants.DEVICE_CONNECTION_LOST)) {
-                mConnectionInfo.setDeviceConnected(false);
+                mDB.updateDeviceConnected(false);
             }
         }
     };
@@ -472,11 +464,11 @@ public class FitnessMDService extends Service {
      * Get connected device name
      */
     public String getDeviceName() {
-        return mConnectionInfo.getSavedDeviceName();
+        return mDB.getConnectedUser().getSavedDeviceName();
     }
 
     public boolean isDeviceConnected() {
-        return mConnectionInfo.getDeviceConnected();
+        return mDB.getConnectedUser().getHasDeviceConnected() == 1 ? true : false;
     }
 
     private void pushDataToServer(boolean isWifi) {

@@ -74,5 +74,13 @@ public class NetworkUtil {
         }
     }
 
+    public static boolean isConnectedToInternet(Context context) {
+        int networkType = getConnectivityStatusString(context);
+        if(networkType == NETWORK_STATUS_MOBILE || networkType == NETWORK_STATUS_WIFI) {
+            return true;
+        }
+        return false;
+    }
+
 
 }

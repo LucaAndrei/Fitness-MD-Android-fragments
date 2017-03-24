@@ -11,6 +11,7 @@ package com.master.aluca.fitnessmd.ui.fragments.stats;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.graphics.Paint;
 import android.support.v4.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,6 +25,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.components.Legend.LegendForm;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.XAxis.XAxisPosition;
@@ -36,13 +38,23 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
+import com.master.aluca.fitnessmd.common.util.IStatsChanged;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
+import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class StatisticsFragment extends Fragment {
 
@@ -57,7 +69,12 @@ public class StatisticsFragment extends Fragment {
 
     private FitnessMDService mService;
 
+    HashMap<Long, Integer> last7DaysStats = new HashMap<>();
+
     private Dialog mDialog;
+
+    private WebserverManager webserverManager;
+    private UsersDB mDB;
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -70,6 +87,9 @@ public class StatisticsFragment extends Fragment {
             if (mService == null) {
                 Log.e(LOG_TAG, "unable to connect to service");
                 return;
+            } else {
+                //webserverManager.subscribeToChallenges();
+                //webserverManager.subscribeToStats();
             }
         }
 
@@ -99,7 +119,55 @@ public class StatisticsFragment extends Fragment {
         if (!mActivity.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)) {
             Log.e(LOG_TAG, "Unable to bind to optical service");
         }
+
+        if (webserverManager != null) {
+            webserverManager.registerStatsCallback(mStatsChangedCallback);
+            webserverManager.subscribeToStats();
+        }
     }
+
+    private IStatsChanged mStatsChangedCallback = new IStatsChanged() {
+        @Override
+        public void onTotalStepsChanged(int totalSteps) {
+            Log.d(LOG_TAG, "IStatsChanged onTotalStepsChanged totalSteps : " + totalSteps);
+            tvStatsTotalSteps.setText(String.valueOf(totalSteps));
+        }
+
+        @Override
+        public void onMaxStepsChanged(long day, int maxSteps) {
+        }
+
+        @Override
+        public void onAverageStepsChanged(int averageSteps) {
+            Log.d(LOG_TAG, "IStatsChanged onAverageStepsChanged averageSteps : " + averageSteps);
+            tvStatsAverageSteps.setText(String.valueOf(averageSteps));
+        }
+
+        @Override
+        public void onLast7DaysStats(HashMap<Long, Integer> last7DaysStats) {
+            Log.d(LOG_TAG, "IStatsChanged onLast7DaysStats : " + last7DaysStats.size());
+            for (Map.Entry<Long,Integer> entry : last7DaysStats.entrySet()) {
+                Log.d(LOG_TAG,"IStatsChanged " + entry.getKey() + " >> " + new Date(entry.getKey()) + " : " + entry.getValue());
+            }
+            SortedSet<Long> keys = new TreeSet<>(last7DaysStats.keySet());
+            int[] values = new int[keys.size()];
+            int counter = last7DaysStats.size();
+            for (Long key : keys) {
+                //Log.d(LOG_TAG,"key : " + key + " value : " + last7DaysStats.get(key));
+                values[--counter] = last7DaysStats.get(key);
+
+            }
+            setData(7, values);
+
+            Map<Long, Integer> myMap = new TreeMap<Long,Integer>(last7DaysStats);
+            for (Map.Entry<Long, Integer> entry : myMap.entrySet()) {
+                //Log.d(LOG_TAG, "entryKey : " + entry.getKey() + " : " + entry.getValue());
+            }
+
+        }
+
+
+    };
 
     public void onStop() {
         Log.d(LOG_TAG, "onStop()");
@@ -130,7 +198,9 @@ public class StatisticsFragment extends Fragment {
             return;
         }
 
-        Log.d(LOG_TAG, "StatisticsFragment");
+        Log.d(LOG_TAG, "onActivityCreated StatisticsFragment");
+        mDB = UsersDB.getInstance(getActivity());
+        webserverManager = WebserverManager.getInstance(getActivity());
 
         setup(view);
     }
@@ -143,15 +213,13 @@ public class StatisticsFragment extends Fragment {
         tvStatsAverageSteps = (TextView) view.findViewById(R.id.tvStatsAverageSteps);
         tvStatsTotalSteps = (TextView) view.findViewById(R.id.tvStatsTotalSteps);
 
-        setStatsAverageSteps();
-        setStatsTotalSteps();
-
         mChart = (com.github.mikephil.charting.charts.BarChart) view.findViewById(R.id.chart1);
         mChart.getDescription().setEnabled(false);
         mChart.getLegend().setForm(LegendForm.NONE);
         mChart.setDoubleTapToZoomEnabled(false);
         mChart.setScaleXEnabled(false);
         mChart.setScaleYEnabled(false);
+
 
         IAxisValueFormatter xAxisFormatter = new DayAxisValueFormatter();
 
@@ -184,57 +252,30 @@ public class StatisticsFragment extends Fragment {
         /*
             TODO - set limit based on DoctorTab recommendation
          */
-        setData(7, 10000);
+        //setData(7, 10000);
         if (mChart.getData() != null)
             mChart.getData().setHighlightEnabled(false);
     }
 
-    private void setData(int count, float range) {
+    private void setData(int count, int[] values) {
 
-        /*ArrayList<StepsDayReport> stepsDayReports = mDB.getLastWeekReport(System.currentTimeMillis());
-        Log.d(LOG_TAG,"stepsDayReports.size : " + stepsDayReports.size());*/
-
-
-        Log.d(LOG_TAG, "count : " + count + " >>> range : " + range);
+        Log.d(LOG_TAG, "count : " + count + " >>> values.length : " + values.length);
         ArrayList<BarEntry> barValues = new ArrayList<>();
-        /*for (int i = 1; i < count + 1; i++) {
-            float mult = (range + 1);
-            int val = (int) (Math.random() * mult);
-            Log.d(LOG_TAG, "mult : " + mult);
-            Log.d(LOG_TAG, "val : " + val);
-            barValues.add(new BarEntry(-1-i, val));
-        }*/
-
-        String dateFormat = "EEE,MMM d";
-        SimpleDateFormat s = new SimpleDateFormat(dateFormat);
-        Calendar cal = Calendar.getInstance();
-        /*if (stepsDayReports.size() == 0) {
-            Log.d(LOG_TAG, "NO DATA CHART TEXT");
+        if (values.length == 0) {
             Paint paint = mChart.getPaint(Chart.PAINT_INFO);
             paint.setTextSize(24);
             mChart.setNoDataText("No results for last 7 days");
             mChart.setNoDataTextColor(getActivity().getResources().getColor(R.color.tab_menu_background));
             mChart.clear();
             mChart.invalidate();
-        } else {*/
-            for (int i = 0; i < count; i++) {
-                //barValues.add(new BarEntry(-2-i, stepsDayReports.get(i).getSteps()));
-                Random r = new Random();
-                int Low = 3000;
-                int High = 10000;
-                int Result = r.nextInt(High-Low) + Low;
-                barValues.add(new BarEntry(-2-i, Result));
-                //barValues.add(new BarEntry(s.format(new Date(stepsDayReports.get(i).getDay())),stepsDayReports.get(i).getSteps()));
-                //Log.d(LOG_TAG,"stepsDayReports.size : " + stepsDayReports.size());
-                //Log.d(LOG_TAG,"stepsDayReports.get(i).getSteps() : " + stepsDayReports.get(i).getSteps());
-                //String yesterday = getCalculatedDate((int) (value + 1));
-                //Log.d(LOG_TAG, (int)value + " day(s) ago was : " + yesterday);
-                Log.d(LOG_TAG, "Result : " + Result);
-
-                //cal.add(Calendar.DAY_OF_YEAR, days);
-                //return s.format(new Date(cal.getTimeInMillis()));
+        } else {
+            for (int i = 0; i < values.length; i++) {
+                Log.d(LOG_TAG,"setData values[" + i + "] : " + values[i]);
             }
-            Log.d(LOG_TAG, "create mchart data");
+            for (int i = 0; i < count; i++) {
+                Log.d(LOG_TAG,"values[" + i + "] : " + values[i]);
+                barValues.add(new BarEntry(-2-i, values[i]));
+            }
             BarDataSet set1 = new BarDataSet(barValues, "");
             set1.setColors(ColorTemplate.MATERIAL_COLORS);
             ArrayList<IBarDataSet> dataSets = new ArrayList<>();
@@ -242,18 +283,43 @@ public class StatisticsFragment extends Fragment {
             BarData data = new BarData(dataSets);
             data.setValueTextSize(10);
             //data.setBarWidth(0.8f);
+            mChart.clear();
             mChart.setData(data);
-       // }
+            mChart.invalidate();
+        }
     }
 
-    private void setStatsAverageSteps() {
-        /*StepsDayReport averageStepsRaport = mDB.getAverageSteps();
-        int averageSteps = averageStepsRaport.getSteps();
-        tvStatsAverageSteps.setText(String.valueOf(averageSteps));*/
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(LOG_TAG, "onDestroy");
     }
-    private void setStatsTotalSteps() {
-        /*StepsDayReport averageStepsRaport = mDB.getTotalSteps();
-        int averageSteps = averageStepsRaport.getSteps();
-        tvStatsTotalSteps.setText(String.valueOf(averageSteps));*/
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(LOG_TAG, "onResume");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(LOG_TAG, "onPause");
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        Log.d(LOG_TAG, "setUserVisibleHint() isVisibleToUser : " + isVisibleToUser);
+
+        // Make sure that we are currently visible
+        if (this.isVisible()) {
+            // If we are becoming invisible, then...
+            if (!isVisibleToUser) {
+                Log.d(LOG_TAG, "Not visible anymore.");
+                // TODO stop audio playback
+            }
+        }
     }
 }

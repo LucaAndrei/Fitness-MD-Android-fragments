@@ -24,11 +24,13 @@ import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AlarmReceiver extends BroadcastReceiver {
 
     private static final String LOG_TAG = "Fitness_AlarmReceiver";
     private SharedPreferencesManager sharedPreferencesManager;
+    private AtomicBoolean isSet = new AtomicBoolean(false);
 
     @Override
     public void onReceive(Context context, Intent intent)
@@ -74,13 +76,15 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     public void setAlarm(Context context) {
-        Log.d(LOG_TAG, "setAlarm");
-        AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, AlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), Constants.HALF_HOUR, pendingIntent);
+        if (isSet.compareAndSet(false, true)) {
+            Log.d(LOG_TAG, "setAlarm");
+            AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(context, AlarmReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), Constants.HALF_HOUR, pendingIntent);
 
-        sharedPreferencesManager = SharedPreferencesManager.getInstance(context);
+            sharedPreferencesManager = SharedPreferencesManager.getInstance(context);
+        }
     }
 
     public void cancelAlarm(Context context)

@@ -11,6 +11,7 @@ package com.master.aluca.fitnessmd.ui.fragments.pedometer;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.SharedPreferences;
 import android.support.v4.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -43,6 +44,9 @@ import com.master.aluca.fitnessmd.service.FitnessMDService;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class PedometerFragment extends Fragment {
 
@@ -149,6 +153,8 @@ public class PedometerFragment extends Fragment {
         if (!mActivity.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)) {
             Log.e(LOG_TAG, "Unable to bind to optical service");
         }
+        loadSharedPrefs();
+
     }
 
     public void onStop() {
@@ -266,6 +272,8 @@ public class PedometerFragment extends Fragment {
                     int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
                     int index = 0;
 
+                    Log.d(LOG_TAG, "startTimer onClick() hourOfDay: " + hourOfDay);
+
                     if(hourOfDay >=0 && hourOfDay <= 3) {
                         index = 0;
                     } else if (hourOfDay > 3 && hourOfDay <=6) {
@@ -285,7 +293,8 @@ public class PedometerFragment extends Fragment {
                     }
                     Log.d(LOG_TAG, "hourOfDay : " + hourOfDay);
                     Log.d(LOG_TAG, "index : " + index);
-                    mService.sendStepsToServer(sharedPreferencesManager.getStartOfCurrentDay(), contor[0]*10, index);
+
+                    mService.sendStepsToServer(Constants.getStartOfCurrentDay(), contor[0]*10, index);
                 }
                 switch (mState) {
                     case Constants.STOPWATCH_RUNNING:
@@ -450,6 +459,22 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
     }
 
     @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        Log.d(LOG_TAG, "setUserVisibleHint() isVisibleToUser : " + isVisibleToUser);
+
+        // Make sure that we are currently visible
+        if (this.isVisible()) {
+            // If we are becoming invisible, then...
+            if (!isVisibleToUser) {
+                Log.d(LOG_TAG, "Not visible anymore.");
+                // TODO stop audio playback
+            }
+        }
+    }
+
+    @Override
     public void onPause() {
         Log.d(LOG_TAG, "onPause()");
         if (mState == Constants.STOPWATCH_RUNNING) {
@@ -484,5 +509,49 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
         Log.d(LOG_TAG, "mAccumulatedTime : " + mAccumulatedTime);
         Log.d(LOG_TAG, "mState : " + mState);
         Log.d(LOG_TAG, "totalSteps : " + totalSteps);
+    }
+
+    public void loadSharedPrefs() {
+
+        // Define default return values. These should not display, but are needed
+        final String STRING_ERROR = "error!";
+        final Integer INT_ERROR = -1;
+        // ...
+        final Set<String> SET_ERROR = new HashSet<>(1);
+
+        // Add an item to the set
+        SET_ERROR.add("Set Error!");
+
+        // Loop through the Shared Prefs
+        Log.i(LOG_TAG, "-----------------------------------");
+        Log.i(LOG_TAG, "-------------------------------------");
+
+        //for (String pref_name: prefs) {
+
+        SharedPreferences preference = getActivity().getSharedPreferences(Constants.SHARED_PREFERENCES, Context.MODE_PRIVATE);
+        Map<String, ?> prefMap = preference.getAll();
+
+        Object prefObj;
+        Object prefValue = null;
+
+        for (String key : prefMap.keySet()) {
+
+            prefObj = prefMap.get(key);
+
+            if (prefObj instanceof String) prefValue = preference.getString(key, STRING_ERROR);
+            if (prefObj instanceof Integer) prefValue = preference.getInt(key, INT_ERROR);
+            // ...
+            if (prefObj instanceof Set) prefValue = preference.getStringSet(key, SET_ERROR);
+
+            Log.i(LOG_TAG,String.format("Shared Preference : %s - %s - %s", Constants.SHARED_PREFERENCES, key, String.valueOf(prefValue)));
+
+        }
+
+        Log.i(LOG_TAG, "-------------------------------------");
+
+        //}
+
+        Log.i(LOG_TAG, "------------------------------------");
+
     }
 }

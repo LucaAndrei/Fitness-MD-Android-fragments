@@ -25,9 +25,9 @@ public class DayAxisValueFormatter implements IAxisValueFormatter {
 
     @Override
     public String getFormattedValue(float value, AxisBase axis) {
-        Log.d(LOG_TAG, "value : " + value);
+        //Log.d(LOG_TAG, "value : " + value);
         String yesterday = getCalculatedDate("EEE,MMM d",(int)(value+1));
-        Log.d(LOG_TAG, (int)value + " day(s) ago was : " + yesterday);
+        //Log.d(LOG_TAG, (int)value + " day(s) ago was : " + yesterday);
         return yesterday;
     }
 

@@ -13,11 +13,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.support.v4.app.Fragment;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -35,6 +33,7 @@ import android.widget.Toast;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.User;
+import com.master.aluca.fitnessmd.common.util.IDataRefreshCallback;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 import com.master.aluca.fitnessmd.ui.AdvicesActivity;
@@ -50,12 +49,8 @@ public class DoctorFragment extends Fragment {
     private Activity mActivity;
     private TextView tvDrHeightUM, tvDrAgeUM, tvDrWeightUM;
     private FitnessMDService mService;
-    private int mHeight, mAge;
-    private String mGender;
     //LinearLayout btnSetWeightAsGoal, btnToFitnessMD;
-    float mWeight, mWeightGoal;
     private double mIdealBodyWeight;
-    private double mWaterRequired;
 
     private Dialog mDialog;
 
@@ -89,7 +84,6 @@ public class DoctorFragment extends Fragment {
     ImageView listRowAdviceIcon, listRowAdviceInfo;
 
     private UsersDB mDB;
-    private User connectedUser = null;
 
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -102,7 +96,6 @@ public class DoctorFragment extends Fragment {
 
             if (mService == null) {
                 Log.e(LOG_TAG, "unable to connect to service");
-                return;
             }
         }
 
@@ -112,6 +105,58 @@ public class DoctorFragment extends Fragment {
             mService = null;
         }
     };
+
+    private IDataRefreshCallback mCallback = new IDataRefreshCallback() {
+        @Override
+        public void onDataChanged(String changedDataKey) {
+            Log.d(LOG_TAG,"onDataChanged : " + changedDataKey);
+            User connectedUser = mDB.getConnectedUser();
+            switch(changedDataKey) {
+                case Constants.GENDER_CHANGED_CALLBACK:
+                    updateBMR(connectedUser.getGender(), connectedUser.getWeight(), connectedUser.getHeight(), connectedUser.getYearOfBirth());
+                    updateIdealBodyWeight(connectedUser.getGender(), connectedUser.getHeight());
+                    break;
+                case Constants.WEIGHT_CHANGED_CALLBACK:
+                    updateBMI(connectedUser.getWeight(), connectedUser.getHeight());
+                    updateBMR(connectedUser.getGender(), connectedUser.getWeight(), connectedUser.getHeight(), connectedUser.getYearOfBirth());
+                    updateWaterRequired(connectedUser.getWeight());
+                    updateWeight(connectedUser.getWeight());
+                    break;
+                case Constants.YOB_CHANGED_CALLBACK:
+                    Calendar calendar = Calendar.getInstance();
+                    int currentYear = calendar.get(Calendar.YEAR);
+                    Log.d(LOG_TAG, "currentYear : " + currentYear);
+                    updateBMR(connectedUser.getGender(), connectedUser.getWeight(), connectedUser.getHeight(), connectedUser.getYearOfBirth());
+                    updateAge(connectedUser.getYearOfBirth());
+                    break;
+                case Constants.HEIGHT_CHANGED_CALLBACK:
+                    updateBMI(connectedUser.getWeight(), connectedUser.getHeight());
+                    updateBMR(connectedUser.getGender(), connectedUser.getWeight(), connectedUser.getHeight(), connectedUser.getYearOfBirth());
+                    updateIdealBodyWeight(connectedUser.getGender(), connectedUser.getHeight());
+                    updateHeight(connectedUser.getHeight());
+                    break;
+            }
+        }
+    };
+
+    private void updateWeight(float weight) {
+        Log.d(LOG_TAG, "updateWeight weight : " + weight);
+        tvDrWeightUM.setText(weight + " kg");
+    }
+
+    private void updateAge(int yearOfBirth) {
+        Calendar calendar = Calendar.getInstance();
+        int currentYear = calendar.get(Calendar.YEAR);
+        Log.d(LOG_TAG, "currentYear : " + currentYear);
+        Log.d(LOG_TAG, "updateAge age : " + (currentYear - yearOfBirth));
+        tvDrAgeUM.setText((currentYear - yearOfBirth) + " yrs");
+    }
+
+    private void updateHeight(int height) {
+        Log.d(LOG_TAG, "updateHeight height : " + height);
+        tvDrHeightUM.setText(height + " cm");
+
+    }
 
 
     @Override
@@ -163,16 +208,9 @@ public class DoctorFragment extends Fragment {
             return;
         }
 
-        Log.d(LOG_TAG,"DoctorFragment");
+        Log.d(LOG_TAG, "DoctorFragment");
         mDB = UsersDB.getInstance(mActivity.getApplicationContext());
-        connectedUser = mDB.getConnectedUser();
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Constants.GENDER_CHANGED_INTENT);
-        intentFilter.addAction(Constants.HEIGHT_CHANGED_INTENT);
-        intentFilter.addAction(Constants.WEIGHT_CHANGED_INTENT);
-        intentFilter.addAction(Constants.YOB_CHANGED_INTENT);
-        getActivity().registerReceiver(mBroadcastReceiver, intentFilter);
+        mDB.registerCallback(mCallback);
 
         setup(view);
     }
@@ -193,55 +231,19 @@ public class DoctorFragment extends Fragment {
         });*/
     }
 
-    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
-            if (intent.getAction().equalsIgnoreCase(Constants.GENDER_CHANGED_INTENT)) {
-                mGender = intent.getStringExtra(Constants.GENDER_CHANGED_INTENT_BUNDLE_KEY);
-                updateBMR();
-                updateIdealBodyWeight();
-            } else if (intent.getAction().equalsIgnoreCase(Constants.HEIGHT_CHANGED_INTENT)) {
-                mHeight = intent.getIntExtra(Constants.HEIGHT_CHANGED_INTENT, -1);
-                if (mHeight != -1) {
-                    updateBMI();
-                    updateBMR();
-                    updateIdealBodyWeight();
-                } else {
-                    Log.d(LOG_TAG, "onReceive : " + intent.getAction() + " ERROR");
-                }
-            } else if (intent.getAction().equalsIgnoreCase(Constants.WEIGHT_CHANGED_INTENT)) {
-                mWeight = intent.getFloatExtra(Constants.HEIGHT_CHANGED_INTENT, 0.0f);
-                if (mWeight != 0.0f) {
-                    updateBMI();
-                    updateBMR();
-                    updateWaterRequired();
-                } else {
-                    Log.d(LOG_TAG, "onReceive : " + intent.getAction() + " ERROR");
-                }
-            } else if (intent.getAction().equalsIgnoreCase(Constants.YOB_CHANGED_INTENT)) {
-                int yob = intent.getIntExtra(Constants.YOB_CHANGED_INTENT, -1);
-                if (yob != -1) {
-                    Calendar calendar = Calendar.getInstance();
-                    int currentYear = calendar.get(Calendar.YEAR);
-                    Log.d(LOG_TAG, "currentYear : " + currentYear);
-                    mAge = currentYear - yob;
-                    updateBMR();
-                } else {
-                    Log.d(LOG_TAG, "onReceive : " + intent.getAction() + " ERROR");
-                }
-            }
-        }
-    };
+    private void updateBMR(String gender, float weight, int height, int yob) {
 
-    private void updateBMR() {
-        Log.d(LOG_TAG, "updateBMR : " + mGender);
         double BMR = 0;
-        if(mGender.equalsIgnoreCase("Male")) {
-            BMR = 66.47 + (13.75*mWeight) + (5*mHeight) - (6.75 * mAge);
+        Calendar calendar = Calendar.getInstance();
+        int currentYear = calendar.get(Calendar.YEAR);
+        int age = currentYear - yob;
+        Log.d(LOG_TAG, "updateBMR : " + gender + " >> weight : " + weight + " >> height : " + height + " >> age : " + age);
+
+        if(gender.equalsIgnoreCase("Male")) {
+            BMR = 66.47 + (13.75*weight) + (5*height) - (6.75 * age);
             Log.d(LOG_TAG, "updateBMR Male : " + BMR);
-        } else if (mGender.equalsIgnoreCase("Female")) {
-            BMR = 665.09 + (9.56 * mWeight) + (1.84 * mHeight) - (4.67 * mAge);
+        } else if (gender.equalsIgnoreCase("Female")) {
+            BMR = 665.09 + (9.56 * weight) + (1.84 * height) - (4.67 * age);
             Log.d(LOG_TAG, "updateBMR Female : " + BMR);
         } else {
             Log.d(LOG_TAG, "updateBMR ERROR");
@@ -254,31 +256,31 @@ public class DoctorFragment extends Fragment {
 
 
     // formula : weight / height ^ 2
-    private void updateBMI() {
+    private void updateBMI(float weight, int height) {
         Log.d(LOG_TAG, "updateBMI");
-        float mHeightMeters = (float)mHeight / 100;
-        double mBMI =  (mWeight / (mHeightMeters * mHeightMeters));
+        float mHeightMeters = (float)height / 100;
+        double mBMI =  (weight / (mHeightMeters * mHeightMeters));
         mBMI = Math.round(mBMI * 10d) / 10d;
-        Log.d(LOG_TAG, "mHeight : " + mHeight + " >>> mHeightMeters : " + mHeightMeters + " >>> mWeight : " + mWeight + " >>> mBMI : " + mBMI);
+        Log.d(LOG_TAG, "height : " + height + " >>> mHeightMeters : " + mHeightMeters + " >>> weight : " + weight + " >>> mBMI : " + mBMI);
 
         listRowBMISubtitle.setText(String.valueOf(mBMI));
 
 
         float normalBMIAverage = 21.75f;
-        mWeightGoal = (mHeightMeters * mHeightMeters) * normalBMIAverage;
+        float mWeightGoal = (mHeightMeters * mHeightMeters) * normalBMIAverage;
         mWeightGoal = Math.round(mWeightGoal * 10f) / 10f;
         Log.d(LOG_TAG, "mWeightGoal : " + mWeightGoal);
         //tvAverageWeight.setText(mWeightGoal + " kg");
     }
 
-    private void updateIdealBodyWeight() {
-        Log.d(LOG_TAG, "updateIdealBodyWeight");
+    private void updateIdealBodyWeight(String gender, int height) {
+        Log.d(LOG_TAG, "updateIdealBodyWeight gender : " + gender + " >> height : " + height);
         mIdealBodyWeight = 0.0;
-        if(mGender.equalsIgnoreCase("Male")) {
-            mIdealBodyWeight = 0.9 * mHeight - 88;
+        if(gender.equalsIgnoreCase("Male")) {
+            mIdealBodyWeight = 0.9 * height - 88;
             Log.d(LOG_TAG, "updateIdealBodyWeight Male : " + mIdealBodyWeight);
-        } else if (mGender.equalsIgnoreCase("Female")) {
-            mIdealBodyWeight = 0.9 * mHeight - 92;
+        } else if (gender.equalsIgnoreCase("Female")) {
+            mIdealBodyWeight = 0.9 * height - 92;
             Log.d(LOG_TAG, "updateIdealBodyWeight Female : " + mIdealBodyWeight);
         } else {
             Log.d(LOG_TAG, "updateIdealBodyWeight ERROR");
@@ -290,9 +292,9 @@ public class DoctorFragment extends Fragment {
 
 
 
-    private void updateWaterRequired() {
-        Log.d(LOG_TAG, "updateWaterRequired");
-        mWaterRequired = mWeight / 30;
+    private void updateWaterRequired(float weight) {
+        Log.d(LOG_TAG, "updateWaterRequired weight : " + weight);
+        double mWaterRequired = weight / 30;
         mWaterRequired = Math.round(mWaterRequired * 10d) / 10d;
         listRowWaterSubtitle.setText(String.valueOf(mWaterRequired) + " litres");
     }
@@ -304,22 +306,22 @@ public class DoctorFragment extends Fragment {
         //btnSetWeightAsGoal = (LinearLayout) view.findViewById(R.id.btnSetWeightAsGoal);
         //btnToFitnessMD = (LinearLayout) view.findViewById(R.id.btnToFitnessMD);
 
-        initUserData();
-        setupListRows(view);
+        User connectedUser = mDB.getConnectedUser();
+
+        initUserData(connectedUser);
+        setupListRows(view, connectedUser);
         setListeners(view);
     }
 
 
-    private void initUserData() {
+    private void initUserData(User connectedUser) {
         Log.d(LOG_TAG, "initUserData");
 
-        mGender = connectedUser.getGender();
-
-        mHeight = connectedUser.getHeight();
+        int mHeight = connectedUser.getHeight();
         Log.d(LOG_TAG, "mHeight : " + mHeight);
         tvDrHeightUM.setText(mHeight + " cm");
 
-        mWeight = connectedUser.getWeight();
+        float mWeight = connectedUser.getWeight();
         Log.d(LOG_TAG, "mWeight : " + mWeight);
         tvDrWeightUM.setText(mWeight + " kg");
 
@@ -328,13 +330,22 @@ public class DoctorFragment extends Fragment {
         Calendar calendar = Calendar.getInstance();
         int currentYear = calendar.get(Calendar.YEAR);
         Log.d(LOG_TAG, "currentYear : " + currentYear);
-        mAge = currentYear - yob;
-        Log.d(LOG_TAG, "age : " + mAge);
-        tvDrAgeUM.setText(mAge + " yrs");
+        Log.d(LOG_TAG, "age : " + (currentYear - yob));
+        tvDrAgeUM.setText((currentYear - yob) + " yrs");
     }
 
 
-    private void setupListRows(View view) {
+    private void setupListRows(View view, User connectedUser) {
+        final float weight = connectedUser.getWeight();
+        int height = connectedUser.getHeight();
+        String gender = connectedUser.getGender();
+        int yearOfBirth = connectedUser.getYearOfBirth();
+        final float weightGoal = connectedUser.getWeightGoal();
+        double waterRequired = weight / 30;
+        waterRequired = Math.round(waterRequired * 10d) / 10d;
+        final double finalWaterRequired = waterRequired;
+
+
         listRowBMI = view.findViewById(R.id.listRowBMI);
         listRowBMITitle = (TextView) listRowBMI.findViewById(R.id.listRowTitle);
         listRowBMISubtitle = (TextView) listRowBMI.findViewById(R.id.listRowSubtitle);
@@ -342,7 +353,7 @@ public class DoctorFragment extends Fragment {
         listRowBMIIcon = (ImageView) listRowBMI.findViewById(R.id.listRowIcon);
 
         listRowBMITitle.setText("Body Mass Index");
-        updateBMI();
+        updateBMI(connectedUser.getWeight(), connectedUser.getHeight());
         listRowBMIIcon.setImageResource(R.drawable.bmi);
         listRowBMI.setOnClickListener(new OnClickListener() {
             @Override
@@ -366,7 +377,7 @@ public class DoctorFragment extends Fragment {
         listRowBMRIcon = (ImageView) listRowBMR.findViewById(R.id.listRowIcon);
 
         listRowBMRTitle.setText("Basal metabolic rate");
-        updateBMR();
+        updateBMR(gender, weight, height, yearOfBirth);
         listRowBMRIcon.setImageResource(R.drawable.bmr);
         listRowBMR.setOnClickListener(new OnClickListener() {
             @Override
@@ -391,7 +402,7 @@ public class DoctorFragment extends Fragment {
         listRowWaterIcon = (ImageView) listRowWater.findViewById(R.id.listRowIcon);
 
         listRowWaterTitle.setText("Water required");
-        updateWaterRequired();
+        updateWaterRequired(weight);
 
         listRowWaterIcon.setImageResource(R.drawable.water);
         listRowWater.setOnClickListener(new OnClickListener() {
@@ -402,7 +413,7 @@ public class DoctorFragment extends Fragment {
                 LayoutInflater inflater = getActivity().getLayoutInflater();
                 View theView = inflater.inflate(R.layout.dialog_water_required_info, null, false);
                 TextView waterRequiredInfoLitres = (TextView) theView.findViewById(R.id.waterRequiredInfoLitres);
-                waterRequiredInfoLitres.setText(String.valueOf(mWaterRequired));
+                waterRequiredInfoLitres.setText(String.valueOf(finalWaterRequired));
                 builder.setView(theView);
                 AlertDialog levelDialog = builder.create();
                 levelDialog.show();
@@ -419,7 +430,7 @@ public class DoctorFragment extends Fragment {
 
 
         listRowIdealBodyWeightTitle.setText("Ideal Body Weight");
-        updateIdealBodyWeight();
+        updateIdealBodyWeight(gender, height);
         listRowIdealBodyWeightIcon.setImageResource(R.drawable.idealbody);
         listRowIdealBodyWeight.setOnClickListener(new OnClickListener() {
             @Override
@@ -441,10 +452,7 @@ public class DoctorFragment extends Fragment {
                     public void onClick(View v) {
                         Log.d(LOG_TAG, "idealBodyWeightSetAsGoal onClick");
                         Toast.makeText(getActivity(), "Set as goal", Toast.LENGTH_LONG).show();
-                        //sharedPreferencesManager.setWeightGoal(mWeightGoal);
-                        Intent intent = new Intent(Constants.WEIGHT_GOAL_INTENT);
-                        intent.putExtra(Constants.WEIGHT_GOAL_BUNDLE_KEY, mWeightGoal);
-                        getActivity().sendBroadcast(intent);
+                        mDB.updateWeightGoal(mIdealBodyWeight);
                         levelDialog.dismiss();
                     }
                 });
@@ -461,7 +469,7 @@ public class DoctorFragment extends Fragment {
         listRowCalorieNeedsIcon = (ImageView) listRowCalorieNeeds.findViewById(R.id.listRowIcon);
 
         listRowCalorieNeedsTitle.setText("Calorie Needs");
-        listRowCalorieNeedsSubtitle.setText(String.valueOf(mWeight * 35));
+        listRowCalorieNeedsSubtitle.setText(String.valueOf(weight * 35));
         listRowCalorieNeedsIcon.setImageResource(R.drawable.calories);
         listRowCalorieNeeds.setOnClickListener(new OnClickListener() {
             @Override
@@ -472,22 +480,22 @@ public class DoctorFragment extends Fragment {
                 View theView = inflater.inflate(R.layout.dialog_calories_needed_info, null, false);
 
                 TextView sedentaryValue = (TextView) theView.findViewById(R.id.tvSedentaryValue);
-                double sedentaryValueCal = mWeight * 31;
+                double sedentaryValueCal = weight * 31;
                 sedentaryValueCal = Math.round(sedentaryValueCal * 100d) / 100d;
                 sedentaryValue.setText(String.valueOf(sedentaryValueCal) + " Cal");
 
                 TextView lightlyActiveValue = (TextView) theView.findViewById(R.id.tvLightActiveValue);
-                double lightlyActiveCal = mWeight * 35;
+                double lightlyActiveCal = weight * 35;
                 lightlyActiveCal = Math.round(lightlyActiveCal * 100d) / 100d;
                 lightlyActiveValue.setText(String.valueOf(lightlyActiveCal) + " Cal");
 
                 TextView moderatelyActiveValue = (TextView) theView.findViewById(R.id.tvModActiveValue);
-                double moderatelyActiveCal = mWeight * 40;
+                double moderatelyActiveCal = weight * 40;
                 moderatelyActiveCal = Math.round(moderatelyActiveCal * 100d) / 100d;
                 moderatelyActiveValue.setText(String.valueOf(moderatelyActiveCal) + " Cal");
 
                 TextView veryActiveValue = (TextView) theView.findViewById(R.id.tvVeryActiveValue);
-                double veryActiveCal = mWeight * 45;
+                double veryActiveCal = weight * 45;
                 veryActiveCal = Math.round(veryActiveCal * 100d) / 100d;
                 veryActiveValue.setText(String.valueOf(veryActiveCal) + " Cal");
 
@@ -541,7 +549,23 @@ public class DoctorFragment extends Fragment {
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-        getActivity().unregisterReceiver(mBroadcastReceiver);
         super.onDestroy();
+    }
+
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        Log.d(LOG_TAG, "setUserVisibleHint() isVisibleToUser : " + isVisibleToUser);
+
+        // Make sure that we are currently visible
+        if (this.isVisible()) {
+            // If we are becoming invisible, then...
+            if (!isVisibleToUser) {
+                Log.d(LOG_TAG, "Not visible anymore.");
+                // TODO stop audio playback
+            }
+        }
     }
 }
