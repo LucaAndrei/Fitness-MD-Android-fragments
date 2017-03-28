@@ -597,6 +597,7 @@ public class UsersDB extends SQLiteOpenHelper {
     public void registerCallback(IDataRefreshCallback callback) {
         mCallbackList.add(callback);
     }
+
     private void dispatchCallback(String changedProperty) {
 
         Log.d(LOG_TAG, "dispatchCallback mCallbackList.size : " + mCallbackList.size());

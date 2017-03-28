@@ -60,7 +60,6 @@ public class StatisticsFragment extends Fragment {
 
     private static final String LOG_TAG = "Fitness_Statistics";
 
-    private static StatisticsFragment mInstance = null;
     private com.github.mikephil.charting.charts.BarChart mChart;
     TextView tvStatsAverageSteps, tvStatsTotalSteps;
 
@@ -69,15 +68,10 @@ public class StatisticsFragment extends Fragment {
 
     private FitnessMDService mService;
 
-    HashMap<Long, Integer> last7DaysStats = new HashMap<>();
-
-    private Dialog mDialog;
-
     private WebserverManager webserverManager;
     private UsersDB mDB;
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
-
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             Log.d(LOG_TAG, "on service connected");
@@ -173,9 +167,6 @@ public class StatisticsFragment extends Fragment {
         Log.d(LOG_TAG, "onStop()");
         super.onStop();
 
-        if (mDialog != null && mDialog.isShowing()) {
-            mDialog.dismiss();
-        }
         if (mService != null) {
             mActivity.unbindService(mServiceConnection);
         }

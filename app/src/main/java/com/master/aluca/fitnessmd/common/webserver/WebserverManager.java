@@ -12,12 +12,10 @@ package com.master.aluca.fitnessmd.common.webserver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.github.underscore.$;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -40,13 +38,11 @@ import com.master.aluca.fitnessmd.library.listeners.UnsubscribeListener;
 import com.master.aluca.fitnessmd.ui.auth.AuthenticationLogic;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class WebserverManager implements MeteorCallback{
     private static final String LOG_TAG = "Fitness_WebserverMgr";
@@ -311,45 +307,6 @@ public class WebserverManager implements MeteorCallback{
         boolean oRet = false;
         if (day < 1 || steps < 0)
             return oRet;
-
-       /* params = new ArrayList<>();
-        params.add(new BasicNameValuePair("day", ""+day));
-        params.add(new BasicNameValuePair("steps", "" + steps));
-        params.add(new BasicNameValuePair("timeActive", "" + timeActive));
-        JSONObject json = serverRequest.putPedometerData("http://" + Constants.LOCALHOST_IP_ADDRESS
-                        + ":"
-                        + Constants.LOCALHOST_NODEJS_PORT
-                        + Constants.NODEJS_PUT_PEDOMETER_ROUTE,
-                        params);
-        if(json != null){
-            try{
-                Log.d(LOG_TAG, "try get string response");
-                Log.d(LOG_TAG, "json : " + json.toString());
-                String jsonstr = json.getString("message");
-                Log.d(LOG_TAG, "jsonstr : " + jsonstr);
-                if(json.getBoolean("res")){
-                    oRet = true;
-                    Log.d(LOG_TAG, "json.getBoolean");
-                } else {
-                    int resultCode = json.getInt("message");
-                    if (resultCode == 400) {
-                        Log.d(LOG_TAG, "resultCode 400");
-                    } else if (resultCode == 401) {
-                        Log.d(LOG_TAG, "resultCode 401");
-                    } else if (resultCode == 404) {
-                        Log.d(LOG_TAG, "resultCode 404");
-                    } else {
-                        Log.d(LOG_TAG, "other result code");
-                    }
-                    Log.d(LOG_TAG, "json get boolean else");
-                }
-
-            }catch (JSONException e) {
-                e.printStackTrace();
-            }
-        } else {
-            Log.d(LOG_TAG, "json is null");
-        }*/
         oRet = true;
         Log.d(LOG_TAG, "put pedometer data success");
         Date date = new Date(day);
@@ -487,11 +444,11 @@ public class WebserverManager implements MeteorCallback{
                     int maxSteps = -1;
                     long dayForMaxSteps = -1;
                     AtomicBoolean valueInStatsChanged = new AtomicBoolean(false);
-
+                    Log.d(LOG_TAG,"savedStats.entrySet.size : " + savedStats.entrySet().size());
                     for (Map.Entry<Long,Integer> entry : map.entrySet()) {
 
                         for (int l = 0; l < daysAgo.length; l++) {
-                            //Log.d(LOG_TAG,entry.getKey() + " : " + entry.getValue() + " daysAgo : " + daysAgo[l]);
+                            Log.d(LOG_TAG,entry.getKey() + " : " + entry.getValue() + " daysAgo : " + daysAgo[l]);
                             if (entry.getKey().longValue() == daysAgo[l]) {
                                 if(savedStats.entrySet().size() == 0) {
                                     valueInStatsChanged.set(true);
@@ -505,8 +462,6 @@ public class WebserverManager implements MeteorCallback{
                                 } else {
                                     savedStats.put(entry.getKey(), entry.getValue());
                                 }
-
-
                                 stats.put(entry.getKey(), entry.getValue());
                             }
                         }
@@ -551,6 +506,7 @@ public class WebserverManager implements MeteorCallback{
         });
         FitnessMDMeteor.destroyInstance();
         sWebserverManager = null;
+        savedStats.clear();
     }
 
     public void subscribeToStats() {

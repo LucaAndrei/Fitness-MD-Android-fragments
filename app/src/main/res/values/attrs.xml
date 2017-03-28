@@ -4,6 +4,7 @@
         <attr name="arc_progress" format="integer"/>
         <attr name="is_weight" format="boolean"/>
         <attr name="arc_progress_weight" format="float"/>
+        <attr name="arc_progress_weight_text" format="float"/>
         <attr name="arc_angle" format="float"/>
         <attr name="arc_stroke_width" format="dimension"/>
         <attr name="arc_max" format="integer"/>

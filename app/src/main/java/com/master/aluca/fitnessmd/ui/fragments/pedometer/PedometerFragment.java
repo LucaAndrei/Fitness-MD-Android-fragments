@@ -112,7 +112,7 @@ public class PedometerFragment extends Fragment {
         }
     };
 
-        /*
+    /*
         When the user sets Gender, Year of birth or Height from the Settings menu
         the Profile tab does not get updated unless this callback is called.
      */
@@ -153,7 +153,7 @@ public class PedometerFragment extends Fragment {
         if (!mActivity.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)) {
             Log.e(LOG_TAG, "Unable to bind to optical service");
         }
-        loadSharedPrefs();
+        //loadSharedPrefs();
 
     }
 
@@ -401,11 +401,8 @@ public class PedometerFragment extends Fragment {
 
     /*
             For 0% grade:
-
-    CB = [0.0215 x KPH3 - 0.1765 x KPH2 + 0.8710 x KPH + 1.4577] x WKG x T
-
-
-http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calculator.shtml
+            CB = [0.0215 x KPH3 - 0.1765 x KPH2 + 0.8710 x KPH + 1.4577] x WKG x T
+            http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calculator.shtml
      */
     public void setKCal() {
         double timeActiveInHours = (double)((hours * 60) + minutes) / 60;
@@ -426,14 +423,11 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
     }
 
     /*
-
-    Activity Multiplier (Both HB + KA Method use same activity multiplier)
-    Little or No Exercise, Desk Job                     1.2 x BMR
-    Light Exercise, Sports 1 to 3 Times Per Week        1.375 x BMR
-    Moderate Exercise, Sports 3 to 5 Times Per Week     1.55 x BMR
-    Heavy Exercise, Sports 6 to 7 Times Per Week        1.725 x BMR
-
-
+            Activity Multiplier (Both HB + KA Method use same activity multiplier)
+            Little or No Exercise, Desk Job                     1.2 x BMR
+            Light Exercise, Sports 1 to 3 Times Per Week        1.375 x BMR
+            Moderate Exercise, Sports 3 to 5 Times Per Week     1.55 x BMR
+            Heavy Exercise, Sports 6 to 7 Times Per Week        1.725 x BMR
      */
 
     public int getStepsForCurrentDay() {
@@ -449,7 +443,6 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
 
     @Override
     public void onResume() {
-        Log.d(LOG_TAG, "onResume()");
         readFromSharedPref();
         pedometerView.postInvalidate();
         Log.d(LOG_TAG, "onResume() mState : " + mState);
@@ -462,13 +455,13 @@ http://www.shapesense.com/fitness-exercise/calculators/walking-calorie-burn-calc
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
 
-        Log.d(LOG_TAG, "setUserVisibleHint() isVisibleToUser : " + isVisibleToUser);
+        //Log.d(LOG_TAG, "setUserVisibleHint() isVisibleToUser : " + isVisibleToUser);
 
         // Make sure that we are currently visible
         if (this.isVisible()) {
             // If we are becoming invisible, then...
             if (!isVisibleToUser) {
-                Log.d(LOG_TAG, "Not visible anymore.");
+                //Log.d(LOG_TAG, "Not visible anymore.");
                 // TODO stop audio playback
             }
         }

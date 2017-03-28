@@ -45,9 +45,6 @@ public class SettingsFragment extends Fragment {
 
     private static final String LOG_TAG = "Fitness_SettingsLsnr";
 
-    private static SettingsFragment mInstance = null;
-
-
     private Activity mActivity;
     private UsersDB mDB;
     private WebserverManager webserverManager;
@@ -61,9 +58,6 @@ public class SettingsFragment extends Fragment {
     Button btnLogout;
 
     private FitnessMDService mService;
-
-    private Dialog mDialog;
-
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -111,9 +105,6 @@ public class SettingsFragment extends Fragment {
         Log.d(LOG_TAG, "onStop()");
         super.onStop();
 
-        if (mDialog != null && mDialog.isShowing()) {
-            mDialog.dismiss();
-        }
         if (mService != null) {
             mActivity.unbindService(mServiceConnection);
         }

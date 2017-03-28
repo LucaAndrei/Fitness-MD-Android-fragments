@@ -10,7 +10,6 @@
 package com.master.aluca.fitnessmd.ui.fragments.scale;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.support.v4.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
@@ -45,12 +44,9 @@ public class ScaleFragment extends Fragment {
     static TextView tvDate, tvLastMeasurement;
     private ArcProgress mArcProgressScale;
 
-    private Dialog mDialog;
-
     private FitnessMDService mService;
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
-
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             Log.d(LOG_TAG, "on service connected");
@@ -95,9 +91,6 @@ public class ScaleFragment extends Fragment {
         Log.d(LOG_TAG, "onStop()");
         super.onStop();
 
-        if (mDialog != null && mDialog.isShowing()) {
-            mDialog.dismiss();
-        }
         if (mService != null) {
             mActivity.unbindService(mServiceConnection);
         }
@@ -136,8 +129,12 @@ public class ScaleFragment extends Fragment {
             switch(changedDataKey) {
                 case Constants.WEIGHT_CHANGED_CALLBACK:
                     Log.d(LOG_TAG, "weight : " + connectedUser.getWeight());
+
                     if (mArcProgressScale != null) {
-                        mArcProgressScale.setProgressWeight(connectedUser.getWeight());
+                        float weightGoal = connectedUser.getWeightGoal();
+                        float userWeight = connectedUser.getWeight();
+                        Log.d(LOG_TAG, "WEIGHT_CHANGED_CALLBACK userWeight : " + userWeight + " >> weightGoal : " + weightGoal);
+                        mArcProgressScale.setProgressWeight();
                     }
                     // long lastMeasurementDay = intent.getLongExtra(Constants.WEIGHT_RECEIVED_LAST_MSRMNT_BUNDLE_KEY, -1);
                     // if (lastMeasurementDay != -1) {
@@ -149,9 +146,12 @@ public class ScaleFragment extends Fragment {
                     // }
                     break;
                 case Constants.WEIGHT_GOAL_CHANGED_CALLBACK :
-                    Log.d(LOG_TAG, "weightGoal : " + connectedUser.getWeightGoal());
+                    float weightGoal = connectedUser.getWeightGoal();
+                    float userWeight = connectedUser.getWeight();
+                    Log.d(LOG_TAG, "WEIGHT_GOAL_CHANGED_CALLBACK userWeight : " + userWeight + " >> weightGoal : " + weightGoal);
                     if (mArcProgressScale != null) {
-                        mArcProgressScale.setBottomText("Goal: " + connectedUser.getWeightGoal() + " kg");
+                        mArcProgressScale.setBottomText("Goal: " + weightGoal + " kg");
+                        mArcProgressScale.setProgressWeight();
                     }
                     break;
             }
@@ -166,8 +166,7 @@ public class ScaleFragment extends Fragment {
         float weightGoal = connectedUser.getWeightGoal();
         mArcProgressScale.setBottomText("Goal: " + weightGoal + " kg");
 
-        float weight = connectedUser.getWeight();
-        mArcProgressScale.setProgressWeight(weight);
+        mArcProgressScale.setProgressWeight();
 
         SimpleDateFormat s = new SimpleDateFormat("d MMMM yyyy");
         tvDate.setText(s.format(new Date(System.currentTimeMillis())));

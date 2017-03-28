@@ -37,11 +37,6 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
 
     public static final String LOG_TAG = "Fitness_DietActivity";
 
-    private WebserverManager mWebserverManager;
-
-    private ListView lv;
-    TextView tvBreakfast, tvMidMorning, tvLunch, tvSnack, tvDinner;
-
     private ArrayList<String> breakfast = new ArrayList<>();
     private ArrayList<String> midMorning = new ArrayList<>();
     private ArrayList<String> lunch = new ArrayList<>();
@@ -104,12 +99,6 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
             }
         });
         webView.loadUrl("file:///android_asset/monday.html");
-
-        /*tvBreakfast = (TextView) findViewById(R.id.breakfastText);
-        tvMidMorning = (TextView) findViewById(R.id.midMorningText);
-        tvLunch = (TextView) findViewById(R.id.lunchText);
-        tvSnack = (TextView) findViewById(R.id.snackText);
-        tvDinner = (TextView) findViewById(R.id.dinnerText);*/
     }
 
     private void createBreakfast() {
@@ -239,11 +228,6 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
         Log.d(LOG_TAG, "item : " + item);
         // Showing selected spinner item
         Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
-        /*tvBreakfast.setText(Html.fromHtml(breakfast.get(position)));
-        tvMidMorning.setText(Html.fromHtml(midMorning.get(position)));
-        tvLunch.setText(Html.fromHtml(lunch.get(position)));
-        tvSnack.setText(Html.fromHtml(snack.get(position)));
-        tvDinner.setText(Html.fromHtml(dinner.get(position)));*/
         switch (position) {
             case 0:
                 webView.loadUrl("file:///android_asset/monday_diet.html");

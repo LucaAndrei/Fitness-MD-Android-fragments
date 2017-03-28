@@ -9,8 +9,6 @@
 
 package com.master.aluca.fitnessmd.common.datatypes;
 
-import com.master.aluca.fitnessmd.common.Constants;
-
 public class Device {
     private String name;
     private String address;

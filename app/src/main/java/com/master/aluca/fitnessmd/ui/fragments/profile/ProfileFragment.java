@@ -67,17 +67,8 @@ public class ProfileFragment extends Fragment {
 
     private WebserverManager webserverManager;
 
-
-
-    int personalBestSteps, personalBestWeight;
-    int averageSteps, averageWeight;
-    private Bitmap profilePicture;
-
-    private Dialog mDialog;
-
     private FitnessMDService mService;
     SimpleDateFormat dateFormat = new SimpleDateFormat("d MMMM yyyy");
-
 
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -156,9 +147,6 @@ public class ProfileFragment extends Fragment {
         Log.d(LOG_TAG, "onStop()");
         super.onStop();
 
-        if (mDialog != null && mDialog.isShowing()) {
-            mDialog.dismiss();
-        }
         if (mService != null) {
             mActivity.unbindService(mServiceConnection);
         }

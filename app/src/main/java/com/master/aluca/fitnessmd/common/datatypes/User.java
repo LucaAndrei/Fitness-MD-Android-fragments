@@ -9,8 +9,6 @@
 
 package com.master.aluca.fitnessmd.common.datatypes;
 
-import com.master.aluca.fitnessmd.common.Constants;
-
 public class User {
     private String email;
     private String docId;

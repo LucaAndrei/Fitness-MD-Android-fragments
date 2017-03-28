@@ -12,7 +12,6 @@ package com.master.aluca.fitnessmd.ui;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
@@ -55,24 +54,18 @@ import com.master.aluca.fitnessmd.ui.fragments.settings.SettingsFragment;
 import com.master.aluca.fitnessmd.ui.fragments.stats.StatisticsFragment;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = "Fitness_MainActivity";
 
-    private Toolbar toolbar;
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
 
     private FitnessMDService mService;
-    private String mCurrentFragmentName;
-    private FrameLayout mMainLayout;
 
     private ImageView mImageBT = null;
     private TextView mTextStatus = null;
@@ -82,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityHandler mActivityHandler;
 
-    Meteor fitnessMDMeteor;
     private AtomicBoolean wasBTPopupDisplayed = new AtomicBoolean(false);
 
 
@@ -125,9 +117,6 @@ public class MainActivity extends AppCompatActivity {
         mTextStatus = (TextView) findViewById(R.id.status_text);
         mTextStatus.setText(getResources().getString(R.string.bt_state_init));
 
-
-        /*fitnessMDMeteor = FitnessMDMeteor.createInstance(MainActivity.this, "ws://128.224.108.234:3000/websocket");
-        fitnessMDMeteor.connect();*/
     }
 
     private void setupTabIcons(ViewPager viewPager) {

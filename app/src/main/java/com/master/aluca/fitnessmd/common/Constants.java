@@ -17,14 +17,6 @@ import android.widget.EditText;
 import android.widget.NumberPicker;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
-import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
-
 import java.lang.reflect.Field;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -63,7 +55,6 @@ public class Constants {
     public static final String SHARED_PREFS_PASSWORD_KEY = "SHARED_PREFS_PASSWORD";
 
     public static final CharSequence[] GENDERS = {"Male", "Female"};
-    public static final CharSequence[] UNITS = {"Metric", "Imperial"};
 
     public static final int HEIGHT_MIN_VALUE = 100;
     public static final int HEIGHT_MAX_VALUE = 300;

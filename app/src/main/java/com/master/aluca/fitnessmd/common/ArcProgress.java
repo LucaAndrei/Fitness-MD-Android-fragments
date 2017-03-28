@@ -21,9 +21,12 @@ import android.os.Parcelable;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import com.master.aluca.fitnessmd.R;
+import com.master.aluca.fitnessmd.common.datatypes.User;
+import com.master.aluca.fitnessmd.common.util.UsersDB;
 
 public class ArcProgress extends View {
     private Paint paint;
@@ -31,6 +34,7 @@ public class ArcProgress extends View {
 
     private RectF rectF = new RectF();
     private Canvas mCanvas;
+    private UsersDB mDB;
 
     private float strokeWidth;
     private float suffixTextSize;
@@ -95,6 +99,8 @@ public class ArcProgress extends View {
     public ArcProgress(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
+        mDB = UsersDB.getInstance(context);
+
         default_text_size = sp2px(getResources(), 18);
         min_size = (int) dp2px(getResources(), 100);
         default_text_size = sp2px(getResources(), 40);
@@ -121,7 +127,7 @@ public class ArcProgress extends View {
         arcAngle = attributes.getFloat(R.styleable.ArcProgress_arc_angle, default_arc_angle);
         setMax(attributes.getInt(R.styleable.ArcProgress_arc_max, default_max));
         setProgress(attributes.getInt(R.styleable.ArcProgress_arc_progress, 0));
-        setProgressWeight(attributes.getFloat(R.styleable.ArcProgress_arc_progress_weight, 0.0f));
+        setProgressWeight();
         setIsWeight(attributes.getBoolean(R.styleable.ArcProgress_is_weight, false));
         strokeWidth = attributes.getDimension(R.styleable.ArcProgress_arc_stroke_width, default_stroke_width);
         suffixTextSize = attributes.getDimension(R.styleable.ArcProgress_arc_suffix_text_size, default_suffix_text_size);
@@ -194,15 +200,28 @@ public class ArcProgress extends View {
     }
 
     public float getProgressWeight() {
-        return progress_weight;
+        return mDB.getConnectedUser().getWeight();
     }
 
-    public void setProgressWeight(float progressWeight) {
-        this.progress_weight = progressWeight;
-        if (this.progress_weight > getMax()) {
-            this.progress_weight %= getMax();
+    public void setProgressWeight() {
+        if (mDB != null) {
+            User connectedUser = mDB.getConnectedUser();
+                float weightGoal = connectedUser.getWeightGoal();
+                float userWeight = connectedUser.getWeight();
+                Log.d("Fitness_ScaleArc","weightGoal : " + weightGoal + " >> userWeight : " + userWeight);
+                if (weightGoal > userWeight) {
+                    this.progress_weight = userWeight;
+                    this.max = Math.round(weightGoal);
+                } else if (userWeight > weightGoal) {
+                    this.progress_weight = weightGoal;
+                    this.max = Math.round(userWeight);
+                }
+                if (this.progress_weight > getMax()) {
+                    this.progress_weight %= getMax();
+                }
+                invalidate();
+
         }
-        invalidate();
     }
 
     public boolean getIsWeight() {
@@ -333,7 +352,7 @@ public class ArcProgress extends View {
         float finishedSweepAngle;
         String text;
         if (isWeight) {
-            finishedSweepAngle = progress_weight / (float) getMax() * arcAngle;
+            finishedSweepAngle = progress_weight / (float)getMax() * arcAngle;
             text = String.valueOf(getProgressWeight());
         } else {
             finishedSweepAngle = progress / (float) getMax() * arcAngle;
@@ -401,7 +420,7 @@ public class ArcProgress extends View {
 
     @Override
     protected void onRestoreInstanceState(Parcelable state) {
-        if(state instanceof Bundle) {
+        if (state instanceof Bundle) {
             final Bundle bundle = (Bundle) state;
             strokeWidth = bundle.getFloat(INSTANCE_STROKE_WIDTH);
             suffixTextSize = bundle.getFloat(INSTANCE_SUFFIX_TEXT_SIZE);
@@ -412,7 +431,7 @@ public class ArcProgress extends View {
             textColor = bundle.getInt(INSTANCE_TEXT_COLOR);
             setMax(bundle.getInt(INSTANCE_MAX));
             setProgress(bundle.getInt(INSTANCE_PROGRESS));
-            setProgressWeight(bundle.getFloat(INSTANCE_PROGRESS_WEIGHT));
+            setProgressWeight();
             setIsWeight(bundle.getBoolean(INSTANCE_IS_WEIGHT));
             finishedStrokeColor = bundle.getInt(INSTANCE_FINISHED_STROKE_COLOR);
             unfinishedStrokeColor = bundle.getInt(INSTANCE_UNFINISHED_STROKE_COLOR);

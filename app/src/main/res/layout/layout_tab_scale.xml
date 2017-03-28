@@ -17,6 +17,7 @@
         android:layout_width="250dp"
         android:layout_height="250dp"
         app:arc_progress_weight="74.3"
+        app:arc_progress_weight_text="74.3"
         app:is_weight="true"
         app:arc_bottom_text="Goal: 69.0 kg"
         app:arc_max="100000"
