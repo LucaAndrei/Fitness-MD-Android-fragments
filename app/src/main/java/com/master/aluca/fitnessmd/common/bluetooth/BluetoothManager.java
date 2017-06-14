@@ -249,7 +249,7 @@ public class BluetoothManager {
             Log.d(LOG_TAG, "PairWithDeviceTask onPostExecute");
             if (mState == Constants.NOT_CONNECTED) {
                 Log.d(LOG_TAG, "PairWithDeviceTask call connectionFailed");
-                Constants.displayToastMessage(mContext, "Device connection was lost");
+                //Constants.displayToastMessage(mContext, "Device connection was lost");
             } else {
                 Log.d(LOG_TAG, "PairWithDeviceTask initiate communication with device");
                 initiateCommunicationWithDevice(mmSocket);
@@ -314,7 +314,8 @@ public class BluetoothManager {
 
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "CommunicationWithDevice disconnected - device connection lost", e);
-                    Toast.makeText(mContext, "Device connection was lost",Toast.LENGTH_LONG).show();
+                    //Toast.makeText(mContext, "Device connection was lost",Toast.LENGTH_LONG).show();
+                    //Constants.displayToastMessage(mContext, "Device connection was lost");
                     Intent intent = new Intent(Constants.DEVICE_CONNECTION_LOST);
                     mContext.sendBroadcast(intent);
                     break;
