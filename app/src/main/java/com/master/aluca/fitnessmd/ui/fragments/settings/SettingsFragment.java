@@ -11,7 +11,6 @@ package com.master.aluca.fitnessmd.ui.fragments.settings;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.support.v4.app.Fragment;

@@ -10,7 +10,6 @@
 package com.master.aluca.fitnessmd.ui.fragments.pedometer;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.support.v4.app.Fragment;
 import android.content.BroadcastReceiver;
@@ -58,28 +57,23 @@ public class PedometerFragment extends Fragment {
     static TextView tvKCal, tvKm, tvDateToday;
     private FitnessMDService mService;
     private ArcProgress mArcProgress;
-    private int stepsForCurrentDay;
     private int totalSteps = 0;
     Chronometer timeElapsed;
     int hours,minutes,seconds;
     double kilometers;
     double caloriesBurned = 0.0d;
+    private String mHours, mMinutes, mSeconds;
 
     Button startTimer;
 
-    private Dialog mDialog;
-
     private static final String TWO_DIGITS = "%02d";
     private static final String ONE_DIGIT = "%01d";
-    private static final String NEG_TWO_DIGITS = "-%02d";
-    private static final String NEG_ONE_DIGIT = "-%01d";
 
     View pedometerView;
 
     int mState = Constants.STOPWATCH_STOPPED;
 
     Calendar calendar;
-
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -161,9 +155,6 @@ public class PedometerFragment extends Fragment {
         Log.d(LOG_TAG, "onStop()");
         super.onStop();
 
-        if (mDialog != null && mDialog.isShowing()) {
-            mDialog.dismiss();
-        }
         if (mService != null) {
             mActivity.unbindService(mServiceConnection);
         }
@@ -352,7 +343,6 @@ public class PedometerFragment extends Fragment {
             pedometerView.postDelayed(mTimeUpdateThread, 10);
         }
     };
-    private String mHours, mMinutes, mSeconds;
 
     public void setTime(long time) {
         String format = null;
@@ -386,10 +376,10 @@ public class PedometerFragment extends Fragment {
 
         mSeconds = String.format(TWO_DIGITS, seconds);
         timeElapsed.setText(mHours + ":" + mMinutes + ":" + mSeconds);
-//        Log.d(LOG_TAG,"mHours : " + mHours);
+//        Log.d(LOG_TAG, "mHours : " + mHours);
 //        Log.d(LOG_TAG, "mMinutes : " + mMinutes);
 //        Log.d(LOG_TAG, "mSeconds : " + mSeconds);
-//        Log.d(LOG_TAG,"timeElapsed : " + timeElapsed.getText());
+//        Log.d(LOG_TAG, "timeElapsed : " + timeElapsed.getText());
     }
 
     public void setKm() {
@@ -429,10 +419,6 @@ public class PedometerFragment extends Fragment {
             Moderate Exercise, Sports 3 to 5 Times Per Week     1.55 x BMR
             Heavy Exercise, Sports 6 to 7 Times Per Week        1.725 x BMR
      */
-
-    public int getStepsForCurrentDay() {
-        return totalSteps;
-    }
 
     @Override
     public void onDestroy() {
@@ -486,8 +472,8 @@ public class PedometerFragment extends Fragment {
         sharedPreferencesManager.saveSWStartTime(Constants.SHARED_PREFS_SW_START_TIME+email, mStartTime);
         sharedPreferencesManager.saveSWAccumTime(Constants.SHARED_PREFS_SW_ACCUM_TIME + email, mAccumulatedTime);
         sharedPreferencesManager.saveSWState(Constants.SHARED_PREFS_SW_STATE + email, mState);
-        sharedPreferencesManager.setStepsForCurrentDay(Constants.SHARED_PREFS_CURR_DAY_STEPS + email, getStepsForCurrentDay());
-        Log.d(LOG_TAG, "writeToSharedPref() getStepsForCurrentDay() : " + getStepsForCurrentDay());
+        sharedPreferencesManager.setStepsForCurrentDay(Constants.SHARED_PREFS_CURR_DAY_STEPS + email, totalSteps);
+        Log.d(LOG_TAG, "writeToSharedPref() getStepsForCurrentDay() : " + totalSteps);
     }
 
     private void readFromSharedPref() {

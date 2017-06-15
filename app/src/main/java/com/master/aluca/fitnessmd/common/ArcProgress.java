@@ -206,21 +206,20 @@ public class ArcProgress extends View {
     public void setProgressWeight() {
         if (mDB != null) {
             User connectedUser = mDB.getConnectedUser();
-                float weightGoal = connectedUser.getWeightGoal();
-                float userWeight = connectedUser.getWeight();
-                Log.d("Fitness_ScaleArc","weightGoal : " + weightGoal + " >> userWeight : " + userWeight);
-                if (weightGoal > userWeight) {
-                    this.progress_weight = userWeight;
-                    this.max = Math.round(weightGoal);
-                } else if (userWeight > weightGoal) {
-                    this.progress_weight = weightGoal;
-                    this.max = Math.round(userWeight);
-                }
-                if (this.progress_weight > getMax()) {
-                    this.progress_weight %= getMax();
-                }
-                invalidate();
-
+            float weightGoal = connectedUser.getWeightGoal();
+            float userWeight = connectedUser.getWeight();
+            Log.d("Fitness_ScaleArc","weightGoal : " + weightGoal + " >> userWeight : " + userWeight);
+            if (weightGoal > userWeight) {
+                this.progress_weight = userWeight;
+                this.max = Math.round(weightGoal);
+            } else if (userWeight > weightGoal) {
+                this.progress_weight = weightGoal;
+                this.max = Math.round(userWeight);
+            }
+            if (this.progress_weight > getMax()) {
+                this.progress_weight %= getMax();
+            }
+            invalidate();
         }
     }
 

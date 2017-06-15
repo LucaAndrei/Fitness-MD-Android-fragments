@@ -11,7 +11,6 @@ package com.master.aluca.fitnessmd.ui.fragments.profile;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.support.v4.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
@@ -33,7 +32,6 @@ import android.widget.TextView;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.User;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IDataRefreshCallback;
@@ -62,8 +60,6 @@ public class ProfileFragment extends Fragment {
     ImageView imageViewProfile;
 
     private static Bitmap image = null;
-    private static Bitmap rotateImage = null;
-
 
     private WebserverManager webserverManager;
 
@@ -197,6 +193,10 @@ public class ProfileFragment extends Fragment {
                 case Constants.HEIGHT_CHANGED_CALLBACK:
                     updateHeightTextView(connectedUser.getHeight());
                     break;
+                case Constants.PROFILE_IMAGE_CHANGED_CALLBACK:
+                    updateProfilePicture(connectedUser.getProfilePictureURI());
+                    break;
+
             }
         }
     };
@@ -251,7 +251,6 @@ public class ProfileFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Log.d(LOG_TAG, "Choose from gallery");
-                        imageViewProfile.setImageBitmap(null);
                         if (image != null) {
                             image.recycle();
                         }
@@ -346,6 +345,8 @@ public class ProfileFragment extends Fragment {
         WeightDayReport averageWeightRaport = webserverManager.getAverageWeight();
         float averageWeight = averageWeightRaport.getWeight();
         tvAverageWeight.setText(String.valueOf(averageWeight) + " kg");
+
+        tvAverageSteps.setText("0 steps");
 
     }
 

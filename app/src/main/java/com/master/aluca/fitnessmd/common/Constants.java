@@ -105,6 +105,7 @@ public class Constants {
     public static final String DEVICE_CONNECTION_LOST = "DEVICE_CONNECTION_LOST";
     public static final String START_OF_CURRENT_DAY = "start_of_current_day";
     public static final String SERVER_LOGIN_TOKEN = "server_login_token";
+    public static final String PROFILE_IMAGE_CHANGED_CALLBACK = "PROFILE_IMAGE_CHANGED_INTENT";
 
 
 

@@ -9,7 +9,6 @@
 
 package com.master.aluca.fitnessmd.service;
 
-import android.app.ProgressDialog;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -18,7 +17,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -44,34 +42,6 @@ import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FitnessMDService extends Service {
-    /*
-
-        Model baza de date
-        id    data(long millis)      steps(int)       weight(float)      wasPushedToServer(boolean)
-
-        Cand se termina ziua -> save steps, weight in baza de date locala;
-                                ca si data foloseste inceputul zilei (asa cum e folosita in Alarm);
-                                wasPushedToServer - by default sa fie pe false
-                             -> inregistreaza un receiver care sa asculte atunci cand se activeaza/dezactiveaza conexiunea internet
-                             -> daca conexiunea la internet -> este activa extrage din baza de date toate datele care au wasPushedToServer == false
-                                                               fa push la datele astea pe server
-                                                               update in baza de date si pune wasPushedToServer pe true
-                                                            -> nu este activa salveaza un flag in serviciu care sa indice daca sunt/nu sunt date
-                                                               la care ar trebui facut push pe server;
-                                                               cand se primeste intentul ca s-a schimbat conexiunea la internet, verifica flag-ul :
-                                                               daca trebuie facut push la date, fa push.
-
-        Daca utilizatorul a apasat sync now -> daca conexiunea la internet -> este activa extrage din baza de date toate datele care au wasPushedToServer == false
-                                                               fa push la datele astea pe server
-                                                               update in baza de date si pune wasPushedToServer pe true
-                                            -> daca conexiunea la internet nu este activa -> notifica utilizatorul si cere-i sa activezi conexiunea la internet
-                                               cand se primeste intentul ca s-a schimbat conexiunea la internet, verifica flag-ul :
-                                                               daca trebuie facut push la date, fa push.
-
-
-
-
-     */
 
     public static final String LOG_TAG = "Fitness_Service";
     private BluetoothAdapter mBluetoothAdapter = null;
@@ -101,8 +71,6 @@ public class FitnessMDService extends Service {
     private WebserverManager mWebserverManager;
     private SharedPreferencesManager sharedPreferencesManager;
     private UsersDB mDB;
-
-    ProgressDialog progressDialog = null;
 
     public class FitnessMD_Binder extends Binder {
 

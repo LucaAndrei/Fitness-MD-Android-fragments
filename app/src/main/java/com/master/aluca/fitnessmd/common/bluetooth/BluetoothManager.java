@@ -207,9 +207,7 @@ public class BluetoothManager {
         @Override
         protected void onPreExecute() {
             Log.d(LOG_TAG, "PairWithDeviceTask onPreExecute : " + mContext);
-
             //progress = ProgressDialog.show(mContext, "Connecting...", "Please wait!!!");  //show a progress dialog
-
             //alertMessage.alertbox();
         }
 
@@ -227,7 +225,7 @@ public class BluetoothManager {
                 }
             } catch (IOException e) {
                 Log.d(LOG_TAG, "PairWithDeviceTask catch exception");
-                //Constants.displayToastMessage(mContext, "Unable to connect device"); -> http://stackoverflow.com/questions/16830255/how-to-display-toast-in-asynctask-in-android
+                // Constants.displayToastMessage(mContext, "Unable to connect device"); -> http://stackoverflow.com/questions/16830255/how-to-display-toast-in-asynctask-in-android
                 // Close the socket
                 setConnectionState(Constants.NOT_CONNECTED);
                 try {
@@ -255,7 +253,7 @@ public class BluetoothManager {
                 initiateCommunicationWithDevice(mmSocket);
             }
             Log.d(LOG_TAG, "PairWithDeviceTask dismiss progress dialog");
-            //alertMessage.dismiss();
+            // alertMessage.dismiss();
         }
 
         @Override
@@ -321,26 +319,7 @@ public class BluetoothManager {
                 }
             }
         }
-        /* 12-17 12:27:53.470 2246-2352/? D/lights: set_light_buttons: 2
-                 12-17 12:27:54.360 28194-28235/? E/bt-btm: btm_sec_disconnected - Clearing Pending flag
-         12-17 12:27:54.360 28194-28266/? W/bt-btif: invalid rfc slot id: 12
-                 12-17 12:27:54.370 29731-29759/? E/Fitness_BTManager: CommunicationWithDevice disconnected - device connection lost
-         java.io.IOException: bt socket closed, read return: -1
-         at android.bluetooth.BluetoothSocket.read(BluetoothSocket.java:429)
-         at android.bluetooth.BluetoothInputStream.read(BluetoothInputStream.java:96)
-         at java.io.InputStream.read(InputStream.java:162)
-         at com.master.aluca.fitnessmd.common.bluetooth.BluetoothManager$CommunicationWithDevice.run(BluetoothManager.java:283)
-                 12-17 12:27:54.370 29731-29759/? W/dalvikvm: threadid=12: thread exiting with uncaught exception (group=0x417d4c08)
-         12-17 12:27:54.385 29731-29759/? E/AndroidRuntime: FATAL EXCEPTION: Thread-809
-         Process: com.master.aluca.fitnessmd, PID: 29731
-         java.lang.RuntimeException: Can't create handler inside thread that has not called Looper.prepare()
-         at android.os.Handler.<init>(Handler.java:200)
-         at android.os.Handler.<init>(Handler.java:114)
-         at android.widget.Toast$TN.<init>(Toast.java:327)
-         at android.widget.Toast.<init>(Toast.java:92)
-         at android.widget.Toast.makeText(Toast.java:241)
-         at com.master.aluca.fitnessmd.Constants.displayToastMessage(Constants.java:120)
-         at com.master.aluca.fitnessmd.common.bluetooth.BluetoothManager$CommunicationWithDevice.run(BluetoothManager.java:290)*/
+
         public void cancel() {
             Log.d(LOG_TAG, "CommunicationWithDevice cancel");
             try {

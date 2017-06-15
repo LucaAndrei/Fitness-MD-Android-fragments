@@ -10,7 +10,6 @@
 package com.master.aluca.fitnessmd.ui.fragments.stats;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.graphics.Paint;
 import android.support.v4.app.Fragment;
 import android.content.ComponentName;
@@ -37,7 +36,6 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.master.aluca.fitnessmd.R;
-import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.util.IStatsChanged;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
@@ -45,13 +43,9 @@ import com.master.aluca.fitnessmd.service.FitnessMDService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -157,10 +151,7 @@ public class StatisticsFragment extends Fragment {
             for (Map.Entry<Long, Integer> entry : myMap.entrySet()) {
                 //Log.d(LOG_TAG, "entryKey : " + entry.getKey() + " : " + entry.getValue());
             }
-
         }
-
-
     };
 
     public void onStop() {
@@ -227,8 +218,6 @@ public class StatisticsFragment extends Fragment {
         xAxis.setTextColor(getActivity().getResources().getColor(R.color.tab_menu_background));
         //xAxis.setTextSize(10f);
 
-
-
         YAxis leftAxis = mChart.getAxisLeft();
         leftAxis.setDrawAxisLine(false);
         leftAxis.setDrawGridLines(false);
@@ -238,7 +227,6 @@ public class StatisticsFragment extends Fragment {
         rightAxis.setDrawGridLines(false);
         rightAxis.setAxisMaximum(10000);
         rightAxis.setAxisMinimum(0);
-
 
         /*
             TODO - set limit based on DoctorTab recommendation

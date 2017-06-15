@@ -41,7 +41,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         wakeLock.acquire();
 
         // Put here YOUR code.
-        Calendar calendar = Calendar.getInstance();
         long currentTimeInMillis = System.currentTimeMillis();
         Log.d(LOG_TAG,"currentTimeInMillis : " + currentTimeInMillis);
         Date currentTimeDate = new Date(currentTimeInMillis);

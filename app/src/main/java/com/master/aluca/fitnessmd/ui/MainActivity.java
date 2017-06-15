@@ -28,13 +28,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,7 +42,6 @@ import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.util.ProfilePhotoUtils;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
-import com.master.aluca.fitnessmd.library.Meteor;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 import com.master.aluca.fitnessmd.ui.fragments.doctor.DoctorFragment;
 import com.master.aluca.fitnessmd.ui.fragments.pedometer.PedometerFragment;
@@ -64,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
-
     private FitnessMDService mService;
 
     private ImageView mImageBT = null;
@@ -77,16 +73,10 @@ public class MainActivity extends AppCompatActivity {
 
     private AtomicBoolean wasBTPopupDisplayed = new AtomicBoolean(false);
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-        /*toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);*/
 
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setOffscreenPageLimit(6);
@@ -166,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public CharSequence getPageTitle(int position) {
-
             // return null to display only the icon
             return null;
         }
@@ -232,9 +221,6 @@ public class MainActivity extends AppCompatActivity {
 
                 AlertDialog levelDialog = builder.create();
                 levelDialog.show();
-
-                //Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                // startActivityForResult(enableIntent, Constants.REQUEST_ENABLE_BT);
             } else if (alwaysEnableBT) {
                 mService.enableBluetooth();
             }
@@ -283,31 +269,6 @@ public class MainActivity extends AppCompatActivity {
                     mTextStatus.setText(getResources().getString(R.string.bt_state_error));
                     mImageBT.setImageDrawable(getResources().getDrawable(android.R.drawable.presence_busy));
                     break;
-
-                // BT Command status
-                /*case Constants.MESSAGE_CMD_ERROR_NOT_CONNECTED:
-                    mTextStatus.setText(getResources().getString(R.string.bt_cmd_sending_error));
-                    mImageBT.setImageDrawable(getResources().getDrawable(android.R.drawable.presence_busy));
-                    break;
-
-                ////////////////////////////////////////////
-                // Contents changed
-                ////////////////////////////////////////////
-                case Constants.MESSAGE_READ_ACCEL_REPORT:
-                    ActivityReport ar = (ActivityReport)msg.obj;
-                    if(ar != null) {
-                        TimelineFragment frg = (TimelineFragment) mSectionsPagerAdapter.getItem(LLFragmentAdapter.FRAGMENT_POS_TIMELINE);
-                        frg.showActivityReport(ar);
-                    }
-                    break;
-
-                case Constants.MESSAGE_READ_ACCEL_DATA:
-                    ContentObject co = (ContentObject)msg.obj;
-                    if(co != null) {
-                        GraphFragment frg = (GraphFragment) mSectionsPagerAdapter.getItem(LLFragmentAdapter.FRAGMENT_POS_GRAPH);
-                        frg.drawAccelData(co.mAccelData);
-                    }
-                    break;*/
                 default:
                     break;
             }
@@ -324,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
      * Receives result from external activity
      */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(LOG_TAG, "onActivityResult " + resultCode);
+        Log.d(LOG_TAG, "onActivityResult requestCode : " + requestCode + " >>> resultCode " + resultCode);
         if (resultCode != 0) {
             switch (requestCode) {
                 case Constants.REQUEST_ENABLE_BT:
@@ -343,8 +304,6 @@ public class MainActivity extends AppCompatActivity {
                     Bitmap photo = (Bitmap) data.getExtras().get("data");
                     String url = ProfilePhotoUtils.insertImage(getContentResolver(), photo, "profile_pic", "desc");
                     Uri uri = Uri.parse(url);
-                    photo = ProfilePhotoUtils.rotatePhoto(getContentResolver(), uri);
-                    //mTabMenu.setProfilePicture("Profile", photo);
                     mDB.updateProfilePictureURI(uri.toString());
                     break;
                 case Constants.GET_GALLERY_IMAGE:
@@ -352,13 +311,10 @@ public class MainActivity extends AppCompatActivity {
                     //Log.d(LOG_TAG, "data extras : " + data.getExtras().get("data"));
                     Uri mImageUri = data.getData();
                     Log.d(LOG_TAG, "Uri : " + data.getData());
-                    Bitmap image = ProfilePhotoUtils.getProfilePicFromGallery(getContentResolver(), mImageUri);
-                    //mTabMenu.setProfilePicture("Profile",image);
                     mDB.updateProfilePictureURI(mImageUri.toString());
-
+                    break;
             }    // End of switch(requestCode)
         } else Log.d(LOG_TAG,"resultCode is 0 ");
-
     }
 
 

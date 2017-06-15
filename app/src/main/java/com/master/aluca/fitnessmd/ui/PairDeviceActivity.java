@@ -18,6 +18,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -43,8 +44,6 @@ public class PairDeviceActivity extends Activity {
     private ArrayAdapter<String> mPairedDevicesArrayAdapter;
     private ArrayAdapter<String> mNewDevicesArrayAdapter;
     BluetoothAdapter mBluetoothAdapter;
-    public static final String EXTRA_DEVICE_ADDRESS = "device_address";
-    private boolean mIsBtEnabled = false;
     Button mScanButton;
     private FitnessMDService mService;
     private Context mContext;
@@ -145,7 +144,7 @@ public class PairDeviceActivity extends Activity {
         }
 
         if (!mContext.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE)) {
-            Log.e(LOG_TAG, "Unable to bind to cd player service");
+            Log.e(LOG_TAG, "Unable to bind to fitnessmd service");
         }
     }
 
@@ -184,6 +183,7 @@ public class PairDeviceActivity extends Activity {
         Log.d(LOG_TAG, "doDiscovery()");
         mScanButton.setText("Scanning ...");
         mScanButton.setEnabled(false);
+        mScanButton.setBackgroundColor(Color.LTGRAY);
         // Indicate scanning in the title
         setProgressBarIndeterminateVisibility(true);
         setTitle(R.string.scanning);
@@ -206,6 +206,9 @@ public class PairDeviceActivity extends Activity {
 
             // Cancel discovery because it's costly and we're about to connect
             mBluetoothAdapter.cancelDiscovery();
+            mScanButton.setText("Scan for devices");
+            mScanButton.setEnabled(true);
+            mScanButton.setBackgroundColor(Color.parseColor("#52B3D9"));
 
             // Get the device MAC address, which is the last 17 chars in the View
             String info = ((TextView) v).getText().toString();
@@ -248,8 +251,9 @@ public class PairDeviceActivity extends Activity {
                     mNewDevicesArrayAdapter.add(noDevices);
                 }
                 //mScanButton.setVisibility(View.VISIBLE);
-                mScanButton.setText("Search for devices");
+                mScanButton.setText("Scan for devices");
                 mScanButton.setEnabled(true);
+                mScanButton.setBackgroundColor(Color.parseColor("#52B3D9"));
             } else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
                 if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)
                         == BluetoothAdapter.STATE_OFF) {
@@ -265,7 +269,6 @@ public class PairDeviceActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Constants.REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_CANCELED) {
-                mIsBtEnabled = false;
                 Log.d(LOG_TAG, "onActivityResult requestCode: " + "Enable Bluetooth"
                         + " >> resultCode : " + " CANCELED ");
                 Toast.makeText(getApplicationContext(), "Some functions will not work unless you turn on bluetooth", Toast.LENGTH_SHORT).show();
@@ -273,7 +276,6 @@ public class PairDeviceActivity extends Activity {
             } else if (resultCode == RESULT_OK) {
                 Log.d(LOG_TAG, "onActivityResult requestCode: " + "Enable Bluetooth"
                         + " >> resultCode : " + " ALLOWED ");
-                mIsBtEnabled = true;
                 // Bluetooth is now enabled, so set up a BT session
                 doDiscovery();
                 mService.initializeBluetoothManager();

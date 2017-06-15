@@ -98,8 +98,6 @@ public class UsersDB extends SQLiteOpenHelper {
     private SQLiteDatabase mDb;
     private static UsersDB sInstance;
     private static String connectedUserEmail = "";
-    private User connectedUser;
-
 
     // Constructor
     private UsersDB(Context context) {
@@ -365,6 +363,7 @@ public class UsersDB extends SQLiteOpenHelper {
         Log.d(LOG_TAG, "Updated: " + ret + " rows");
 
         cursor.close();
+        dispatchCallback(Constants.PROFILE_IMAGE_CHANGED_CALLBACK);
         return ret == 1;
     }
 
@@ -697,8 +696,6 @@ public class UsersDB extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put(ID, documentID);
-
-
 
         // cursor for all data
         Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);

@@ -21,7 +21,6 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -39,12 +38,7 @@ import com.master.aluca.fitnessmd.ui.fragments.doctor.AdviceItemAdapter;
 
 import java.util.ArrayList;
 import java.util.Date;
-/*
-import im.delight.android.ddp.db.Collection;
-import im.delight.android.ddp.db.Document;
 
-
-*/
 public class AdvicesActivity extends Activity {
 
     public static final String LOG_TAG = "Fitness_AdvicesActivity";
@@ -53,11 +47,9 @@ public class AdvicesActivity extends Activity {
 
     ListView msgList;
     ArrayList<MessageDetails> details;
-    AdapterView.AdapterContextMenuInfo info;
     AdviceItemAdapter mAdapter;
 
     private ProgressDialog pDialog;
-    private Dialog mDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
