@@ -30,6 +30,7 @@
         <activity android:name=".ui.auth.SignupActivity" />
         <activity android:name="com.master.aluca.fitnessmd.ui.MainActivity" />
         <activity android:name="com.master.aluca.fitnessmd.ui.PairDeviceActivity" />
+        <activity android:name="com.master.aluca.fitnessmd.ui.NoInternetActivity" />
         <activity android:name=".ui.DietActivity" />
         <activity android:name=".ui.AdvicesActivity" />
 

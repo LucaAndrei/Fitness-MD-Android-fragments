@@ -192,6 +192,7 @@ public class PedometerFragment extends Fragment {
         intentFilter.addAction(Constants.STEP_INCREMENT_INTENT);
         intentFilter.addAction(Constants.CONNECTED_DEVICE_DETAILS_INTENT);
         intentFilter.addAction(Constants.DEVICE_CONNECTION_LOST);
+        intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
         getActivity().registerReceiver(mBroadcastReceiver, intentFilter);
         pedometerView = view;
         setup(view);
@@ -230,6 +231,14 @@ public class PedometerFragment extends Fragment {
                     mAccumulatedTime += (curTime - mStartTime);
                     doStop();
                 }
+            } else if (intent.getAction().equals(Constants.FINISH_ACTIVITY_INTENT)) {
+                Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
+                if (mState == Constants.STOPWATCH_RUNNING) {
+                    stopUpdateThread();
+                }
+                // The stopwatch must keep running even if the user closes the app so save stopwatch state
+                // in shared prefs
+                writeToSharedPref();
             }
         }
     };

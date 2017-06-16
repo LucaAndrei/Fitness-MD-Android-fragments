@@ -25,6 +25,7 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.bluetooth.BluetoothManager;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
@@ -35,6 +36,8 @@ import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.receivers.AlarmReceiver;
+import com.master.aluca.fitnessmd.ui.MainActivity;
+import com.master.aluca.fitnessmd.ui.NoInternetActivity;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -360,6 +363,10 @@ public class FitnessMDService extends Service {
                     Log.d(LOG_TAG, "NETWORK_STATUS_NOT_CONNECTED");
                     isConnectedToNetworkData.set(false);
                     isConnectedToWifi.set(false);
+
+                    Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
+                    intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, true);
+                    mContext.sendBroadcast(intentFinishActivity);
                 } else if (status == NetworkUtil.NETWORK_STATUS_MOBILE) {
                     Log.d(LOG_TAG, "NETWORK_STATUS_MOBILE");
                     isConnectedToWifi.set(false);
@@ -370,7 +377,6 @@ public class FitnessMDService extends Service {
                     isConnectedToWifi.set(true);
                     isConnectedToNetworkData.set(false);
                     pushDataToServer(true);
-
                 } else {
                     isConnectedToWifi.set(false);
                     isConnectedToNetworkData.set(false);

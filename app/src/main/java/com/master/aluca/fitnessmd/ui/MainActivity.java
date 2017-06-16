@@ -11,10 +11,13 @@ package com.master.aluca.fitnessmd.ui;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -22,6 +25,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -106,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
         mImageBT.setImageDrawable(getResources().getDrawable(android.R.drawable.presence_invisible));
         mTextStatus = (TextView) findViewById(R.id.status_text);
         mTextStatus.setText(getResources().getString(R.string.bt_state_init));
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
+        getApplicationContext().registerReceiver(mBroadcastReceiver, intentFilter);
 
     }
 
@@ -317,6 +325,23 @@ public class MainActivity extends AppCompatActivity {
         } else Log.d(LOG_TAG,"resultCode is 0 ");
     }
 
+    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
+            if (intent.getAction() == Constants.FINISH_ACTIVITY_INTENT) {
+                Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
+                boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
+                if (shouldFinish) {
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    startActivity(intentMainActiv);
+                    finish();
+                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                }
+            }
+        }
+    };
+
 
 
     @Override
@@ -366,6 +391,7 @@ public class MainActivity extends AppCompatActivity {
         mWebserverManager.destroyMeteor();
 
         super.onDestroy();
-
     }
+
+
 }

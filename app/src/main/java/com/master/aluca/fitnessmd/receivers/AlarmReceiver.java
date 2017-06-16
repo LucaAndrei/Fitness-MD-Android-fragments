@@ -35,21 +35,21 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent)
     {
-        Log.d(LOG_TAG, "onReceive");
+        //Log.d(LOG_TAG, "onReceive");
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "");
         wakeLock.acquire();
 
         // Put here YOUR code.
         long currentTimeInMillis = System.currentTimeMillis();
-        Log.d(LOG_TAG,"currentTimeInMillis : " + currentTimeInMillis);
+        //Log.d(LOG_TAG,"currentTimeInMillis : " + currentTimeInMillis);
         Date currentTimeDate = new Date(currentTimeInMillis);
-        Log.d(LOG_TAG,"currentTimeDate : " + currentTimeDate);
+        //Log.d(LOG_TAG,"currentTimeDate : " + currentTimeDate);
 
         long startOfDayInMillis = Constants.getStartOfCurrentDay();
         Date startOfDayDate = new Date(startOfDayInMillis);
-        Log.d(LOG_TAG, "startOfDayInMillis : " + startOfDayInMillis);
-        Log.d(LOG_TAG, "startOfDayDate : " + startOfDayDate);
+        //Log.d(LOG_TAG, "startOfDayInMillis : " + startOfDayInMillis);
+        //Log.d(LOG_TAG, "startOfDayDate : " + startOfDayDate);
 
         // Add one day's time to the beginning of the day.
         // 24 hours * 60 minutes * 60 seconds * 1000 milliseconds = 1 day
@@ -57,18 +57,18 @@ public class AlarmReceiver extends BroadcastReceiver {
             sharedPreferencesManager = SharedPreferencesManager.getInstance(context);
         long endOfDayInMillis = sharedPreferencesManager.getStartOfCurrentDay() + Constants.DAY;
         Date endOfDayDate = new Date(endOfDayInMillis );
-        Log.d(LOG_TAG, "endOfDayInMillis : " + endOfDayInMillis);
-        Log.d(LOG_TAG, "endOfDayDate : " + endOfDayDate);
+        //Log.d(LOG_TAG, "endOfDayInMillis : " + endOfDayInMillis);
+        //Log.d(LOG_TAG, "endOfDayDate : " + endOfDayDate);
 
         if (currentTimeInMillis > endOfDayInMillis) {
-            Log.d(LOG_TAG, "Save number of steps to database");
+            //Log.d(LOG_TAG, "Save number of steps to database");
             Toast.makeText(context, "Saving to Database", Toast.LENGTH_LONG).show();
             Intent endOfDayIntent = new Intent(Constants.END_OF_DAY);
             endOfDayIntent.putExtra(Constants.END_OF_DAY_BUNDLE_KEY, startOfDayInMillis);
             context.sendBroadcast(endOfDayIntent);
             sharedPreferencesManager.resetStartOfCurrentDay(Constants.getStartOfCurrentDay());
         } else {
-            Log.d(LOG_TAG, "Day not ended");
+            //Log.d(LOG_TAG, "Day not ended");
         }
 
         wakeLock.release();
@@ -76,11 +76,12 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     public void setAlarm(Context context) {
         if (isSet.compareAndSet(false, true)) {
-            Log.d(LOG_TAG, "setAlarm");
+            //Log.d(LOG_TAG, "setAlarm");
             AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
             Intent intent = new Intent(context, AlarmReceiver.class);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), Constants.HALF_HOUR, pendingIntent);
+            // TODO - remove 7* half hour. set to half hour. for testing purposes, to not polute the log
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 7*Constants.HALF_HOUR, pendingIntent);
 
             sharedPreferencesManager = SharedPreferencesManager.getInstance(context);
         }
@@ -88,7 +89,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     public void cancelAlarm(Context context)
     {
-        Log.d(LOG_TAG, "cancelAlarm");
+        //Log.d(LOG_TAG, "cancelAlarm");
         Intent intent = new Intent(context, AlarmReceiver.class);
         PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, 0);
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

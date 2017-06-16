@@ -94,6 +94,10 @@ public class Constants {
     public static final int TAKE_PHOTO = 4;
     public static final String END_OF_DAY_BUNDLE_KEY = "end_of_day_bundle_key";
 
+
+    public static final String FINISH_ACTIVITY_INTENT = "finish_activity_intent";
+    public static final String FINISH_ACTIVITY_BUNDLE_KEY = "finish_activity_bundle_key";
+
     public static final String GENDER_CHANGED_CALLBACK = "GENDER_CHANGED_INTENT";
     public static final String HEIGHT_CHANGED_CALLBACK = "HEIGHT_CHANGED_INTENT";
     public static final String WEIGHT_CHANGED_CALLBACK = "WEIGHT_CHANGED_INTENT";

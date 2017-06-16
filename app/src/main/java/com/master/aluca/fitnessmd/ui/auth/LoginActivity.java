@@ -28,9 +28,11 @@ import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
+import com.master.aluca.fitnessmd.common.util.NetworkUtil;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.MainActivity;
+import com.master.aluca.fitnessmd.ui.NoInternetActivity;
 
 
 public class LoginActivity extends Activity{
@@ -53,42 +55,72 @@ public class LoginActivity extends Activity{
 
     private static Handler mActivityHandler = null;
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(LOG_TAG, "onResume");
+        if (!NetworkUtil.isConnectedToInternet(getApplicationContext())) {
+            Log.d(LOG_TAG, "NO INTERNET CONNECTION");
 
+            // should comment out these lines until production otherwise i will have to keep internet enabled all the time
+            // in order to enter the application.
+            // this screen should look like the one from the playstore when you have no internet
+            // a return/back button to exit the app, or retry
+            Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+            startActivity(intentMainActiv);
+            finish();
+            overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         Log.d(LOG_TAG, "onCreate");
-        _emailText = (EditText) findViewById(R.id.input_email_login);
-        _passwordText = (EditText) findViewById(R.id.input_password_login);
-        _loginButton = (Button) findViewById(R.id.btn_login);
-        _signupLink = (TextView) findViewById(R.id.link_signup);
 
-        progressDialog = new ProgressDialog(LoginActivity.this);
-        mDB = UsersDB.getInstance(getApplicationContext());
+        if (!NetworkUtil.isConnectedToInternet(getApplicationContext())) {
+            Log.d(LOG_TAG, "NO INTERNET CONNECTION");
 
-
-        if (mDB.getConnectedUser() != null) {
-            Log.d(LOG_TAG, "mDB isLoggedIn : true");
-            Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
+            // should comment out these lines until production otherwise i will have to keep internet enabled all the time
+            // in order to enter the application.
+            // this screen should look like the one from the playstore when you have no internet
+            // a return/back button to exit the app, or retry
+            Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
             startActivity(intentMainActiv);
             finish();
             overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
         } else {
-            setListeners();
-            if (!animPlayed) {
-                startAnimations();
-                animPlayed = true;
+            _emailText = (EditText) findViewById(R.id.input_email_login);
+            _passwordText = (EditText) findViewById(R.id.input_password_login);
+            _loginButton = (Button) findViewById(R.id.btn_login);
+            _signupLink = (TextView) findViewById(R.id.link_signup);
+
+            progressDialog = new ProgressDialog(LoginActivity.this);
+            mDB = UsersDB.getInstance(getApplicationContext());
+
+
+            if (mDB.getConnectedUser() != null) {
+                Log.d(LOG_TAG, "mDB isLoggedIn : true");
+                Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(intentMainActiv);
+                finish();
+                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+            } else {
+                setListeners();
+                if (!animPlayed) {
+                    startAnimations();
+                    animPlayed = true;
+                }
+                mWebserverManager =  WebserverManager.getInstance(this);
+                mActivityHandler = new ActivityHandler();
+                if (!progressDialog.isShowing()) {
+                    progressDialog.setIndeterminate(true);
+                    progressDialog.setMessage("Connecting to server...");
+                    progressDialog.show();
+                }
+                mWebserverManager.registerCallback(mActivityHandler);
             }
-            mWebserverManager =  WebserverManager.getInstance(this);
-            mActivityHandler = new ActivityHandler();
-            if (!progressDialog.isShowing()) {
-                progressDialog.setIndeterminate(true);
-                progressDialog.setMessage("Connecting to server...");
-                progressDialog.show();
-            }
-            mWebserverManager.registerCallback(mActivityHandler);
         }
     }
 
