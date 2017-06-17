@@ -11,7 +11,12 @@ package com.master.aluca.fitnessmd.ui.auth;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -70,7 +75,18 @@ public class LoginActivity extends Activity{
             startActivity(intentMainActiv);
             finish();
             overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+        } else {
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+            registerReceiver(mReceiver, intentFilter);
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(LOG_TAG, "onPause");
+        unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -91,15 +107,7 @@ public class LoginActivity extends Activity{
             finish();
             overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
         } else {
-            _emailText = (EditText) findViewById(R.id.input_email_login);
-            _passwordText = (EditText) findViewById(R.id.input_password_login);
-            _loginButton = (Button) findViewById(R.id.btn_login);
-            _signupLink = (TextView) findViewById(R.id.link_signup);
-
-            progressDialog = new ProgressDialog(LoginActivity.this);
             mDB = UsersDB.getInstance(getApplicationContext());
-
-
             if (mDB.getConnectedUser() != null) {
                 Log.d(LOG_TAG, "mDB isLoggedIn : true");
                 Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
@@ -107,6 +115,14 @@ public class LoginActivity extends Activity{
                 finish();
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             } else {
+                _emailText = (EditText) findViewById(R.id.input_email_login);
+                _passwordText = (EditText) findViewById(R.id.input_password_login);
+                _loginButton = (Button) findViewById(R.id.btn_login);
+                _signupLink = (TextView) findViewById(R.id.link_signup);
+
+                progressDialog = new ProgressDialog(LoginActivity.this);
+
+
                 setListeners();
                 if (!animPlayed) {
                     startAnimations();
@@ -114,12 +130,12 @@ public class LoginActivity extends Activity{
                 }
                 mWebserverManager =  WebserverManager.getInstance(this);
                 mActivityHandler = new ActivityHandler();
-                if (!progressDialog.isShowing()) {
+                mWebserverManager.registerCallback(mActivityHandler);
+                /*if (!progressDialog.isShowing()) {
                     progressDialog.setIndeterminate(true);
                     progressDialog.setMessage("Connecting to server...");
                     progressDialog.show();
-                }
-                mWebserverManager.registerCallback(mActivityHandler);
+                }*/
             }
         }
     }
@@ -137,10 +153,11 @@ public class LoginActivity extends Activity{
                         Log.d(LOG_TAG, "msg.obj : " + String.valueOf(msg.obj.toString()));
                     }
                     if (msg.arg1 > 0) {
-                        if (progressDialog.isShowing()) {
+                        /*if (progressDialog.isShowing()) {
                             progressDialog.dismiss();
-                        }
+                        }*/
                         _loginButton.setEnabled(false);
+                        _loginButton.setBackgroundColor(Color.LTGRAY);
 
                         Log.d(LOG_TAG, "Login sucess");
 
@@ -148,12 +165,21 @@ public class LoginActivity extends Activity{
                         startActivity(intentMainActivity);
                         finish();
                         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    } else if (msg.arg2 > 0) {
+                        Log.d(LOG_TAG, "Login error >> NO INTERNET CONNECTION");
+                        _loginButton.setEnabled(true);
+                        _loginButton.setBackgroundColor(Color.parseColor("#52B3D9"));
+                        Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                        startActivity(intentMainActiv);
+                        finish();
+                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
                     } else {
                         _loginButton.setEnabled(true);
+                        _loginButton.setBackgroundColor(Color.parseColor("#52B3D9"));
                         Log.d(LOG_TAG, "Login error");
-                        if (progressDialog.isShowing()) {
+                        /*if (progressDialog.isShowing()) {
                             progressDialog.dismiss();
-                        }
+                        }*/
                         if (msg.obj!= null) {
                             Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
                         }
@@ -173,20 +199,22 @@ public class LoginActivity extends Activity{
                         startActivity(intentMainActivity);
                         finish();
                         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                        if (progressDialog.isShowing()) {
+                        /*if (progressDialog.isShowing()) {
                             progressDialog.dismiss();
-                        }
+                        }*/
                         _loginButton.setEnabled(false);
+                        _loginButton.setBackgroundColor(Color.LTGRAY);
                         if (msg.obj!= null) {
                             Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
                         }
                     } else {
                         Log.d(LOG_TAG, "signup and login failure");
                         _loginButton.setEnabled(true);
+                        _loginButton.setBackgroundColor(Color.parseColor("#52B3D9"));
                         Log.d(LOG_TAG, "Login after signup error");
-                        if (progressDialog.isShowing()) {
+                        /*if (progressDialog.isShowing()) {
                             progressDialog.dismiss();
-                        }
+                        }*/
                         if (msg.obj!= null) {
                             Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
                         }
@@ -212,9 +240,9 @@ public class LoginActivity extends Activity{
                         // should display login form
                         Log.d(LOG_TAG, "should NOT log in automatically");
                     }
-                    if (progressDialog.isShowing()) {
+                    /*if (progressDialog.isShowing()) {
                         progressDialog.dismiss();
-                    }
+                    }*/
                 }
                 default:
                     break;
@@ -262,7 +290,7 @@ public class LoginActivity extends Activity{
 
             @Override
             public void onClick(View v) {
-                Log.d(LOG_TAG,"_loginButton onClick");
+                Log.d(LOG_TAG, "_loginButton onClick");
                 login();
             }
         });
@@ -283,13 +311,14 @@ public class LoginActivity extends Activity{
 
     public void login() {
         Log.d(LOG_TAG, "Login");
-        if (!progressDialog.isShowing()) {
+        /*if (!progressDialog.isShowing()) {
             progressDialog.setIndeterminate(true);
             progressDialog.setMessage("Logging in...");
             progressDialog.show();
-        }
+        }*/
 
         _loginButton.setEnabled(false);
+        _loginButton.setBackgroundColor(Color.LTGRAY);
         mWebserverManager.requestLogin(_emailText, _passwordText);
     }
 
@@ -308,6 +337,25 @@ public class LoginActivity extends Activity{
             }
         }
     }
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            //Log.d(LOG_TAG, "action : " + action);
+            if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+                Log.d(LOG_TAG, "ConnectivityManager.CONNECTIVITY_ACTION received");
+                int status = NetworkUtil.getConnectivityStatusString(context);
+                //Log.d(LOG_TAG, "status : " + status);
+                if (status == NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
+                    Log.d(LOG_TAG, "NETWORK_STATUS_NOT_CONNECTED");
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    startActivity(intentMainActiv);
+                    finish();
+                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                }
+            }
+        }
+    };
 
     @Override
     public void onBackPressed() {

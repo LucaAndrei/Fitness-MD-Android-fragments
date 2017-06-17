@@ -57,7 +57,8 @@
             android:id="@+id/btn_signup"
             android:layout_marginTop="24dp"
             android:text="Create Account"
-            style="@style/Button"/>
+            style="@style/Button"
+            android:layout_marginBottom="24dp"/>
 
         <TextView android:id="@+id/link_login"
             android:layout_width="fill_parent"

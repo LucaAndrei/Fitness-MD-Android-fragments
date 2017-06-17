@@ -123,7 +123,6 @@ public class Constants {
     public static final String ADVICES_SUBSCRIPTION_READY_INTENT = "advice_subscription_ready";
     public static final String ADVICES_SUBSCRIPTION_READY_BUNDLE_KEY = "advice_subscription_bundle_key";
 
-    public static final String LOGOUT_INTENT = "logout_intent";
     public static final String METEOR_CONNECTED_BUNDLE_KEY = "meteor_client_connected_bundle_key";
 
     public static final String SHARED_PREFS_SW_START_TIME = "shared_prefs_sw_start_time";
@@ -159,7 +158,7 @@ public class Constants {
     public static final int NOT_CONNECTED = 103;           // we're doing nothing
     public static final int CONNECTING = 104;     // now initiating an outgoing connection
     public static final int CONNECTED = 105;      // now connected to a remote device
-
+    public static final int NO_INTERNET_CONNECTION = 106;
 
 
     public static void displayToastMessage(Context context, String message) {

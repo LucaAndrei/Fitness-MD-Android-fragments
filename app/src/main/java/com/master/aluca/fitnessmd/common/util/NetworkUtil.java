@@ -27,7 +27,7 @@ public class NetworkUtil {
     public static final int NETWORK_STATUS_MOBILE=2;
 
     public static int getConnectivityStatusString(Context context) {
-        Log.d(LOG_TAG, "getConnectivityStatusString");
+        //Log.d(LOG_TAG, "getConnectivityStatusString");
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();

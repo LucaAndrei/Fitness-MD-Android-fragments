@@ -55,21 +55,14 @@ public class AdvicesActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_advice);
 
-        boolean intentRec = getIntent().getBooleanExtra("my_key",false);
-        Log.d(LOG_TAG, "onCreate L " + intentRec);
-
         msgList = (ListView) findViewById(R.id.MessageList);
         details = new ArrayList<MessageDetails>();
 
 
         pDialog = new ProgressDialog(AdvicesActivity.this);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Constants.ADVICES_SUBSCRIPTION_READY_INTENT);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
-
-        mWebserverManager =  WebserverManager.getInstance(this);
         //mWebserverManager.subscribeToAdvices();
+
 
         MessageDetails Detail;
         Detail = new MessageDetails();

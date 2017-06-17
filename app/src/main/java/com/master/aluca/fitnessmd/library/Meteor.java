@@ -902,6 +902,16 @@ public class Meteor {
 		call("updateStepsForToday", new Object[]{stepsForDay}, listener);
 	}
 
+	public void registerToChallenge(String userId, String challengeID, boolean isRegistering, final ResultListener listener) {
+
+		final Map<String, Object> stepsForDay = new Fields();
+		stepsForDay.put("userID", userId);
+		stepsForDay.put("challengeId",challengeID);
+		stepsForDay.put("registering",isRegistering);
+
+		call("registerChallenge", new Object[]{stepsForDay}, listener);
+	}
+
 	public void deleteChallenge(String challengeId, final ResultListener listener) {
 
 

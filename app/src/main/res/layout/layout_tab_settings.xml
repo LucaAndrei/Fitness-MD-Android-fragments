@@ -65,7 +65,7 @@
 
         <Button
             style="@style/Button"
-            android:text="Sync now"
+            android:text="Challenges"
             android:id="@+id/btnSyncNow"
             android:drawableEnd="@drawable/cloud"
             android:textAlignment="textStart"

@@ -50,7 +50,7 @@
         <Button
             android:id="@+id/btn_login"
             android:layout_marginTop="48dp"
-            android:layout_marginBottom="48dp"
+            android:layout_marginBottom="24dp"
             android:text="Login"
             style="@style/Button"/>
 

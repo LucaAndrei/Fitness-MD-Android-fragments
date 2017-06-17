@@ -39,6 +39,7 @@ import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 import com.master.aluca.fitnessmd.ui.PairDeviceActivity;
+import com.master.aluca.fitnessmd.ui.challenges.ChallengesActivity;
 
 public class SettingsFragment extends Fragment {
 
@@ -130,22 +131,8 @@ public class SettingsFragment extends Fragment {
         mDB = UsersDB.getInstance(getActivity());
         webserverManager = WebserverManager.getInstance(getActivity());
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Constants.LOGOUT_INTENT);
-        getActivity().registerReceiver(mBroadcastReceiver, intentFilter);
-
         setup(view);
     }
-
-    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
-            if (intent.getAction().equalsIgnoreCase(Constants.LOGOUT_INTENT)) {
-                getActivity().finish();
-            }
-        }
-    };
 
     public void setup(View view) {
         btnGender = (Button) view.findViewById(R.id.btnGender);
@@ -328,10 +315,13 @@ public class SettingsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Log.d(LOG_TAG, "btnSyncNow onClick");
-                ProgressDialog mProgressDialog = new ProgressDialog(getActivity());
+                /*ProgressDialog mProgressDialog = new ProgressDialog(getActivity());
                 mProgressDialog.setMessage("Receiving data from server");
                 mProgressDialog.show();
-                mProgressDialog.dismiss();
+                mProgressDialog.dismiss();*/
+                Intent intent = new Intent(getActivity(), ChallengesActivity.class);
+                //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
             }
         });
 
@@ -383,7 +373,6 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-        getActivity().unregisterReceiver(mBroadcastReceiver);
         super.onDestroy();
     }
 

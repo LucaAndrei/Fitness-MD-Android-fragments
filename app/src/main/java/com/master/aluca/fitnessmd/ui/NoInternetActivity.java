@@ -33,6 +33,7 @@ public class NoInternetActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(LOG_TAG, "onCreate");
         setContentView(R.layout.activity_nointernet);
 
         mDB = UsersDB.getInstance(getApplicationContext());

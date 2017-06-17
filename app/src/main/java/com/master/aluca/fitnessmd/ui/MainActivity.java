@@ -337,6 +337,10 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intentMainActiv);
                     finish();
                     overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    WebserverManager mWebserverManager = WebserverManager.getInstance(getApplicationContext());
+                    mWebserverManager.destroyMeteor();
+                } else {
+                    finish();
                 }
             }
         }
@@ -387,8 +391,8 @@ public class MainActivity extends AppCompatActivity {
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
 
-        WebserverManager mWebserverManager = WebserverManager.getInstance(this);
-        mWebserverManager.destroyMeteor();
+        //WebserverManager mWebserverManager = WebserverManager.getInstance(this);
+        //mWebserverManager.destroyMeteor();
 
         super.onDestroy();
     }

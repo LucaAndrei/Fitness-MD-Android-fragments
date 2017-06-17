@@ -45,7 +45,6 @@ public class UsersDB extends SQLiteOpenHelper {
     private static final String SAVED_DEVICE_ADDRESS = "savedDeviceAddress";
     private static final String HAS_PROFILE_PICTURE = "hasProfilePicture";
     private static final String PROFILE_PICTURE_URI = "profilePictureURI";
-    private static final String REGISTRATION_COMPLETE = "registrationComplete";
     private static final String HAS_DEVICE_CONNECTED = "hasDeviceConnected";
     private static final String IS_ONLINE = "isOnline";
 
@@ -65,7 +64,6 @@ public class UsersDB extends SQLiteOpenHelper {
                     + "savedDeviceAddress String, "
                     + "hasProfilePicture Integer not null, "
                     + "profilePictureURI String, "
-                    + "registrationComplete Integer not null, "
                     + "hasDeviceConnected Integer not null, "
                     + "isOnline Integer not null)";
 
@@ -159,7 +157,6 @@ public class UsersDB extends SQLiteOpenHelper {
         values.put(SAVED_DEVICE_ADDRESS, (String) null);
         values.put(HAS_PROFILE_PICTURE, 0);
         values.put(PROFILE_PICTURE_URI, (String) null);
-        values.put(REGISTRATION_COMPLETE, 0);
         values.put(HAS_DEVICE_CONNECTED, 0);
         values.put(IS_ONLINE, 0);
 
@@ -557,7 +554,6 @@ public class UsersDB extends SQLiteOpenHelper {
             int columnIndexSavedDeviceAddress = c.getColumnIndex(SAVED_DEVICE_ADDRESS);
             int columnIndexHasProfilePicture = c.getColumnIndex(HAS_PROFILE_PICTURE);
             int columnIndexProfilePictureURI = c.getColumnIndex(PROFILE_PICTURE_URI);
-            int columnIndexRegistrationComplete = c.getColumnIndex(REGISTRATION_COMPLETE);
             int columnIndexHasDeviceConnected = c.getColumnIndex(HAS_DEVICE_CONNECTED);
             int columnIndexIsOnline = c.getColumnIndex(IS_ONLINE);
 
@@ -566,7 +562,7 @@ public class UsersDB extends SQLiteOpenHelper {
                     && columnIndexYOB != -1 && columnIndexGender != -1 && columnIndexAlwaysEnableBT != -1
                     && columnIndexSavedDeviceName != -1 && columnIndexSavedDeviceAddress != -1
                     && columnIndexHasProfilePicture != -1 && columnIndexProfilePictureURI != -1
-                    && columnIndexRegistrationComplete != -1 && columnIndexHasDeviceConnected!= -1
+                    && columnIndexHasDeviceConnected!= -1
                     && columnIndexIsOnline != -1) {
                 ret = new User(c.getString(columnIndexEmail), c.getString(columnIndexDocumentID),
                         c.getString(columnIndexPassword), c.getString(columnIndexName),
@@ -576,7 +572,7 @@ public class UsersDB extends SQLiteOpenHelper {
                         c.getInt(columnIndexHeight), c.getInt(columnIndexYOB),
                         c.getInt(columnIndexAlwaysEnableBT), c.getInt(columnIndexHasProfilePicture),
                         c.getInt(columnIndexHasDeviceConnected),
-                        c.getInt(columnIndexRegistrationComplete), c.getInt(columnIndexIsOnline)
+                        c.getInt(columnIndexIsOnline)
                         );
 
                 connectedUserEmail = c.getString(columnIndexEmail);
@@ -586,7 +582,7 @@ public class UsersDB extends SQLiteOpenHelper {
                 Log.d(LOG_TAG, "getConnectedUser : un index e egal cu -1");
             }
         } else {
-            Log.d(LOG_TAG, "getConnectedUser : posibil sa fi returnat mai multi useri");
+            Log.d(LOG_TAG, "getConnectedUser : no users found");
         }
         c.close();
 
@@ -605,34 +601,6 @@ public class UsersDB extends SQLiteOpenHelper {
                 callback.onDataChanged(changedProperty);
             }
         }
-    }
-
-
-    public boolean hasUserCompletedRegistration(String email) {
-        boolean ret = false;
-        Cursor c = getReadableDatabase().query(TABLE_NAME_USERS, null, EMAIL + "=?",
-                new String[]{email}, null, null, null);
-
-        if (c == null) {
-            return ret;
-        }
-        Log.d(LOG_TAG, "getConnectedUser : " + c.getCount());
-        if (c.getCount() == 1 && c.moveToFirst()) {
-            int columnIndexRegistrationComplete = c.getColumnIndex(REGISTRATION_COMPLETE);
-
-            if (columnIndexRegistrationComplete != -1 ) {
-                ret = c.getInt(columnIndexRegistrationComplete) == 1 ? true : false;
-                c.close();
-                return ret;
-            } else {
-                Log.d(LOG_TAG, "hasUserCompletedRegistration : index e egal cu -1");
-            }
-        } else {
-            Log.d(LOG_TAG, "hasUserCompletedRegistration : posibil sa fi returnat mai multi useri");
-        }
-        c.close();
-
-        return ret;
     }
 
     public String getNameByEmail(String email) {
@@ -660,31 +628,6 @@ public class UsersDB extends SQLiteOpenHelper {
         c.close();
 
         return ret;
-    }
-
-    public boolean setUserCompletedRegistration(String email) {
-        Log.d(LOG_TAG, "setUserCompletedRegistration email: " + email);
-        if (TextUtils.isEmpty(email)) {
-            return false;
-        }
-
-        ContentValues values = new ContentValues();
-        values.put(REGISTRATION_COMPLETE, 1);
-
-        // cursor for all data
-        Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME_USERS, null);
-        // see if the column is there
-        if (cursor.getColumnIndex(REGISTRATION_COMPLETE) < 0) {
-            getWritableDatabase().execSQL("ALTER TABLE " + TABLE_NAME_USERS + " ADD " + REGISTRATION_COMPLETE +
-                    " real not null;");
-        }
-
-        int ret = getWritableDatabase().update(TABLE_NAME_USERS, values, EMAIL + " = ?",
-                new String[]{email});
-        Log.d(LOG_TAG, "Updated: " + ret + " rows");
-
-        cursor.close();
-        return ret == 1;
     }
 
     public boolean updateUserID(String email, String documentID) {

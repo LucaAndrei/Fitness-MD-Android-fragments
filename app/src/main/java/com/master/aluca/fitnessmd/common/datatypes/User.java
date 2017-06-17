@@ -24,14 +24,13 @@ public class User {
     private int yearOfBirth;
     private int alwaysEnableBT;
     private int hasProfilePicture;
-    private int registrationComplete;
     private int isOnline;
     private int hasDeviceConnected;
 
     public User(String email, String docId, String password, String name, String gender, String savedDeviceName,
                 String savedDeviceAddress, String profilePictureURI, float weight, float weightGoal,
                 int height, int yearOfBirth, int alwaysEnableBT, int hasProfilePicture,
-                int registrationComplete, int isOnline, int hasDeviceConnected) {
+                int isOnline, int hasDeviceConnected) {
         this.email = email;
         this.docId = docId;
         this.password = password;
@@ -46,7 +45,6 @@ public class User {
         this.yearOfBirth = yearOfBirth;
         this.alwaysEnableBT = alwaysEnableBT;
         this.hasProfilePicture = hasProfilePicture;
-        this.registrationComplete = registrationComplete;
         this.isOnline = isOnline;
         this.hasDeviceConnected = hasDeviceConnected;
     }
@@ -153,15 +151,6 @@ public class User {
 
     public void setAlwaysEnableBT(int alwaysEnableBT) {
         this.alwaysEnableBT = alwaysEnableBT;
-    }
-
-
-    public int getRegistrationComplete() {
-        return registrationComplete;
-    }
-
-    public void setRegistrationComplete(int registrationComplete) {
-        this.registrationComplete = registrationComplete;
     }
 
     public int getIsOnline() {

@@ -91,13 +91,16 @@ public class FitnessMDService extends Service {
     @Override
     public void onCreate() {
         Log.d(LOG_TAG, "# Service - onCreate() starts here");
+
         mContext = getApplicationContext();
+        WebserverManager.getInstance(mContext).subscribeToChallenges();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         intentFilter.addAction(Constants.END_OF_DAY);
         intentFilter.addAction(Constants.CONNECTED_DEVICE_DETAILS_INTENT);
         intentFilter.addAction(Constants.DEVICE_CONNECTION_LOST);
+        intentFilter.addAction("myIntent");
 
         registerReceiver(mReceiver, intentFilter);
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
@@ -124,6 +127,8 @@ public class FitnessMDService extends Service {
                 initializeBluetoothManager();
             }
         }
+
+
     }
 
     public boolean enableBluetooth() {

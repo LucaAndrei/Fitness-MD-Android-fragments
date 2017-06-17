@@ -11,6 +11,7 @@ package com.master.aluca.fitnessmd.ui.fragments.pedometer;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -38,6 +39,7 @@ import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.util.IStepNotifier;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
+import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
 import java.text.SimpleDateFormat;
@@ -135,6 +137,8 @@ public class PedometerFragment extends Fragment {
         this.mActivity = activity;
     }
 
+    private WebserverManager webserverManager;
+
     @Override
     public void onStart() {
         Log.d(LOG_TAG, "onStart()");
@@ -148,6 +152,8 @@ public class PedometerFragment extends Fragment {
             Log.e(LOG_TAG, "Unable to bind to optical service");
         }
         //loadSharedPrefs();
+
+
 
     }
 
@@ -165,8 +171,6 @@ public class PedometerFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle
             savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-
-
 
         return inflater.inflate(R.layout.layout_tab_pedometer, container, false);
     }
@@ -318,6 +322,7 @@ public class PedometerFragment extends Fragment {
         setKCal();
 
     }
+
 
     private void doStop() {
         Log.d(LOG_TAG, "doStop()");
