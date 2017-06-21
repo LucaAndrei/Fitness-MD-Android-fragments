@@ -10,14 +10,11 @@
 package com.master.aluca.fitnessmd.ui;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,166 +24,105 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.datatypes.MessageDetails;
+import com.master.aluca.fitnessmd.common.datatypes.AdviceDetails;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
+import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryCollection;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
 import com.master.aluca.fitnessmd.ui.fragments.doctor.AdviceItemAdapter;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 
 public class AdvicesActivity extends Activity {
 
     public static final String LOG_TAG = "Fitness_AdvicesActivity";
-
-    private WebserverManager mWebserverManager;
-
-    ListView msgList;
-    ArrayList<MessageDetails> details;
+    ListView advicesList;
+    ArrayList<AdviceDetails> advices;
     AdviceItemAdapter mAdapter;
-
-    private ProgressDialog pDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_advice);
+        Log.d(LOG_TAG, "onCreate");
 
-        msgList = (ListView) findViewById(R.id.MessageList);
-        details = new ArrayList<MessageDetails>();
-
-
-        pDialog = new ProgressDialog(AdvicesActivity.this);
-
-        //mWebserverManager.subscribeToAdvices();
-
-
-        MessageDetails Detail;
-        Detail = new MessageDetails();
-        Detail.setIcon(R.drawable.tab_selector_doctor);
-        Detail.setName("Bob");
-        Detail.setSub("Dinner");
-        Detail.setDesc("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla auctor.");
-        Detail.setTime("12/12/2012 12:12");
-        details.add(Detail);
-
-        Detail = new MessageDetails();
-        Detail.setIcon(R.drawable.tab_selector_doctor);
-        Detail.setName("Rob");
-        Detail.setSub("Party");
-        Detail.setDesc("Dolor sit amet, consectetur adipiscing elit. Nulla auctor.");
-        Detail.setTime("13/12/2012 10:12");
-        details.add(Detail);
-
-        Detail = new MessageDetails();
-        Detail.setIcon(R.drawable.tab_selector_doctor);
-        Detail.setName("Mike");
-        Detail.setSub("Mail");
-        Detail.setDesc("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
-        Detail.setTime("13/12/2012 02:12");
-        details.add(Detail);
-
-        mAdapter = new AdviceItemAdapter(details,this);
-
-        msgList.setAdapter(mAdapter);
-
-        msgList.setOnItemClickListener(new OnItemClickListener() {
+        advicesList = (ListView) findViewById(R.id.MessageList);
+        advices = new ArrayList<>();
+        mAdapter = new AdviceItemAdapter(advices,this);
+        advicesList.setAdapter(mAdapter);
+        advicesList.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView a, View v, int position, long id) {
-
                 String s = (String) ((TextView) v.findViewById(R.id.From)).getText();
-                Toast.makeText(AdvicesActivity.this, s, Toast.LENGTH_LONG).show();
+                Toast.makeText(AdvicesActivity.this, s, Toast.LENGTH_SHORT).show();
             }
         });
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
+        intentFilter.addAction(Constants.NEW_ADVICE_INTENT);
+        getApplicationContext().registerReceiver(mBroadcastReceiver, intentFilter);
+
+        updateAdvicesList();
     }
 
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    private void updateAdvicesList() {
 
+        InMemoryCollection advicesCollection = FitnessMDMeteor.getInstance().getDatabase().getCollection("advices");
+        if (advicesCollection != null) {
+            Log.d(LOG_TAG,"updateAdvicesList");
+            advices.clear();
+            for (String adviceDocID : advicesCollection.getDocumentIds()) {
+                InMemoryDocument adviceDoc = advicesCollection.getDocument(adviceDocID);
+                Log.d(LOG_TAG,"adviceDoc.getField(AdviceDetails.TIMESTAMP) : " + adviceDoc.getField(AdviceDetails.TIMESTAMP));
+                String date = adviceDoc.getField(AdviceDetails.TIMESTAMP).toString();
+                String[] datesplit = date.split("=", date.length() - 1);
+                AdviceDetails advice = new AdviceDetails(adviceDoc.getField(AdviceDetails.OWNER).toString(),
+                        datesplit[1].substring(0,datesplit[1].length() - 1),
+                        adviceDoc.getField(AdviceDetails.MESSAGE).toString());
+                advices.add(advice);
+            }
+            mAdapter.notifyDataSetChanged();
+        } else {
+            Log.d(LOG_TAG,"advices collection is null");
+        }
+    }
+
+    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            Log.d(LOG_TAG, "action : " + action.toString());
-            if (action.equals(Constants.ADVICES_SUBSCRIPTION_READY_INTENT)) {
-                if (intent.getBooleanExtra(Constants.ADVICES_SUBSCRIPTION_READY_BUNDLE_KEY, false)) {
-                    new LoadData().execute();
-
+            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
+            if (intent.getAction() == Constants.FINISH_ACTIVITY_INTENT) {
+                Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
+                boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
+                if (shouldFinish) {
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    startActivity(intentMainActiv);
+                    finish();
+                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    WebserverManager mWebserverManager = WebserverManager.getInstance(getApplicationContext());
+                    mWebserverManager.destroyMeteor();
                 } else {
-                    Log.d(LOG_TAG, "ADVICES_SUBSCRIPTION_READY_BUNDLE_KEY false");
+                    finish();
                 }
+            } else if (intent.getAction().equalsIgnoreCase(Constants.NEW_ADVICE_INTENT)) {
+                updateAdvicesList();
             }
         }
-
     };
 
-    class LoadData extends AsyncTask<String, String, String> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            pDialog.setIndeterminate(true);
-            pDialog.setMessage("Fetch data...");
-            pDialog.show();
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            //ProgressDialog mProgressDialog = new ProgressDialog(Advice.this);
-            //mProgressDialog.setMessage("Receiving data from server");
-            //mProgressDialog.show();
-            InMemoryCollection advices = mWebserverManager.getAdvices();
-            if (advices != null) {
-                String[] documentIds = advices.getDocumentIds();
-                Log.d(LOG_TAG, "documentIds.length : " + documentIds.length);
-                details.clear();
-                for (int i = 0; i < documentIds.length; i++) {
-                    InMemoryDocument doc = advices.getDocument(documentIds[i]);
-                    String[] fieldNames = doc.getFieldNames();
-                    Log.d(LOG_TAG, "fieldNames.length : " + fieldNames.length);
-                    for (int j = 0; j < fieldNames.length; j++) {
-                        Log.d(LOG_TAG, "field : " + fieldNames[j] + " >>> " + doc.getField(fieldNames[j]));
-
-                    }
-                    MessageDetails Detail = new MessageDetails();
-                    Detail.setIcon(R.drawable.tab_selector_doctor);
-                    Detail.setName(doc.getField("ownerName").toString());
-                    Detail.setSub("Advice");
-                    Detail.setDesc(doc.getField("message").toString());
-                    String timestamp = doc.getField("timestamp").toString();
-                    Log.d(LOG_TAG, "timestamp : " + timestamp);
-                    String splittedString = timestamp.split("=")[1];
-                    String ts = splittedString.substring(0, splittedString.length()-1);
-                    long timestampVal  = Long.valueOf(ts).longValue();
-                    Log.d(LOG_TAG, "timestampVal : " + timestampVal);
-                    Detail.setTime(new Date(timestampVal).toString());
-                    details.add(Detail);
-                }
-            }
-            //mAdapter.notifyDataSetChanged();
-            return null;
-        }
-
-        /**
-         * After completing background task Dismiss the progress dialog
-         **/
-        protected void onPostExecute(String file_url) {
-            // dismiss the dialog after getting all the data
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mAdapter.notifyDataSetChanged();
-                }
-            });
-
-            pDialog.dismiss();
-        }
-    }
 
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         super.onDestroy();
     }
 

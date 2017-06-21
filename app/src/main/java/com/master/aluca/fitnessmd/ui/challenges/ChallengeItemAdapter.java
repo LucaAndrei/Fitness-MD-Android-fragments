@@ -10,6 +10,7 @@
 package com.master.aluca.fitnessmd.ui.challenges;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.master.aluca.fitnessmd.R;
@@ -65,14 +67,13 @@ public class ChallengeItemAdapter extends BaseAdapter {
             v = vi.inflate(R.layout.challenge_item_adapter, null);
         }
 
-        ImageView image = (ImageView) v.findViewById(R.id.challenge_icon);
+        LinearLayout item = (LinearLayout) v.findViewById(R.id.challenge_item);
         TextView difficulty = (TextView)v.findViewById(R.id.challenge_difficulty);
         TextView type = (TextView)v.findViewById(R.id.challenge_type);
         TextView text = (TextView)v.findViewById(R.id.challenge_text);
         final Button action = (Button)v.findViewById(R.id.challenge_btn);
 
         final ChallengeDetails msg = _data.get(position);
-        image.setImageResource(msg.getIcon());
         difficulty.setText("Difficulty : " + msg.getDifficulty());
         type.setText("Type : " + msg.getType());
         text.setText("Description : " + msg.getText());
@@ -89,6 +90,18 @@ public class ChallengeItemAdapter extends BaseAdapter {
                     break;
                 }
             }
+        }
+
+        switch(msg.getType()) {
+            case "Speed" :
+                item.setBackgroundColor(Color.parseColor("#ff8f5e")); // orange
+                break;
+            case "Strength" :
+                item.setBackgroundColor(Color.parseColor("#baa9ba")); // purple
+                break;
+            case "Endurance" :
+                item.setBackgroundColor(Color.parseColor("#d6c1ab")); // brown
+                break;
         }
         action.setOnClickListener(new OnClickListener() {
             @Override

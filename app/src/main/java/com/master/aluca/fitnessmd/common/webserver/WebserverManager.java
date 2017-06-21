@@ -27,6 +27,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
+import com.master.aluca.fitnessmd.common.datatypes.AdviceDetails;
+import com.master.aluca.fitnessmd.common.datatypes.ChallengeDetails;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.User;
 import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
@@ -40,7 +42,7 @@ import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
 import com.master.aluca.fitnessmd.library.listeners.ResultListener;
 import com.master.aluca.fitnessmd.library.listeners.SubscribeListener;
 import com.master.aluca.fitnessmd.library.listeners.UnsubscribeListener;
-import com.master.aluca.fitnessmd.models.Challenge;
+import com.master.aluca.fitnessmd.ui.AdvicesActivity;
 import com.master.aluca.fitnessmd.ui.auth.AuthenticationLogic;
 import com.master.aluca.fitnessmd.ui.challenges.ChallengesActivity;
 
@@ -69,7 +71,9 @@ public class WebserverManager implements MeteorCallback{
 
     private UsersDB mDB;
     private static String userLoggingInEmail;
-    private boolean firstSubscriptionToChallenges = true;
+    private boolean successfullySubscribedToChallenges = false;
+    private boolean successfullySubscribedToAdvices = false;
+
 
     LinkedHashMap<Long, Integer> savedStats = new LinkedHashMap<>();
 
@@ -269,12 +273,36 @@ public class WebserverManager implements MeteorCallback{
                         });
                     } else {
                         Log.d(LOG_TAG, "Meteor user NOT logged in");
+                        // somehow the user is still connected in the app although it's not connected to the server
+                        // force finish the activity and disconnect user
+                        // ??????????
+                        if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
+                            Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
+                            intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
+                            mContext.sendBroadcast(intentFinishActivity);
+                        }
                     }
                 } else {
                     Log.d(LOG_TAG, "Meteor not connected. problem with server");
+                    // the server is down
+                    // force finish the activity and disconnect user
+                    // ??????????
+                    if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
+                        Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
+                        intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
+                        mContext.sendBroadcast(intentFinishActivity);
+                    }
                 }
             } else {
                 Log.d(LOG_TAG, "no internet. cannot logout.");
+                // no internet but still the user can click the logout button ?!?!?!?
+                // force finish the activity and disconnect user
+                // ??????????
+                if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
+                    Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
+                    intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
+                    mContext.sendBroadcast(intentFinishActivity);
+                }
             }
         } else {
             Log.d(LOG_TAG, "user not even logged in. how did this call got here?");
@@ -331,6 +359,9 @@ public class WebserverManager implements MeteorCallback{
     public void onDisconnect() {
         Log.d(LOG_TAG, "Meteor DDP onDisconnect");
         dispatchMessageToHandlers(Constants.METEOR_CLIENT_STATE, false);
+        Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
+        intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, true);
+        mContext.sendBroadcast(intentFinishActivity);
     }
 
     @Override
@@ -350,51 +381,59 @@ public class WebserverManager implements MeteorCallback{
             Log.d(LOG_TAG,"userdocIds.length : " + userDocIds.length);
             for (int i = 0; i < userDocIds.length; i++) {
                 InMemoryDocument userdoc = FitnessMDMeteor.getInstance().getDatabase().getCollection(collectionName).getDocument(userDocIds[i]);
-                String[] fieldNames = userdoc.getFieldNames();
-                for (int j = 0; j < fieldNames.length; j++) {
-                    Log.d(LOG_TAG, "" + fieldNames[j] + " : " + userdoc.getField(fieldNames[j]));
-                    if (fieldNames[j].equalsIgnoreCase("emails")) {
-                        Gson gson = new Gson();
-                        String json  = gson.toJson(userdoc.getField(fieldNames[j]));
-                        JsonParser parser = new JsonParser();
-                        JsonElement element = parser.parse(json);
-                        JsonArray obj = element.getAsJsonArray();
-                        for(int t = 0; t < obj.size() ; t++) {
-                            JsonObject elem = obj.get(t).getAsJsonObject();
-                            if (elem.has("address") && elem.get("address").getAsString().equalsIgnoreCase(userLoggingInEmail)) {
-                                mDB.updateUserID(userLoggingInEmail, documentID);
-                            }
-                        }
+                Log.d(LOG_TAG,"field emails : " + userdoc.getField("emails").toString());
+                Gson gson = new Gson();
+                String json  = gson.toJson(userdoc.getField("emails"));
+                JsonParser parser = new JsonParser();
+                JsonElement element = parser.parse(json);
+                JsonArray obj = element.getAsJsonArray();
+                for(int t = 0; t < obj.size() ; t++) {
+                    JsonObject elem = obj.get(t).getAsJsonObject();
+                    if (elem.has("address") && elem.get("address").getAsString().equalsIgnoreCase(userLoggingInEmail)) {
+                        mDB.updateUserID(userLoggingInEmail, documentID);
                     }
                 }
             }
         } else if (collectionName.equalsIgnoreCase("challenges")) {
-            Log.d(LOG_TAG,"firstSubscriptionToChallenges : " + firstSubscriptionToChallenges);
-            if (firstSubscriptionToChallenges) {
-                firstSubscriptionToChallenges = false;
-            } else {
-                InMemoryDocument myChallengeDoc = FitnessMDMeteor.getInstance().getDatabase().getCollection(collectionName)
+            Log.d(LOG_TAG,"successfullySubscribedToChallenges : " + successfullySubscribedToChallenges);
+            if (successfullySubscribedToChallenges) {
+                InMemoryDocument challengeDoc = FitnessMDMeteor.getInstance().getDatabase().getCollection(collectionName)
                         .getDocument(documentID);
-                String[] fieldNames = myChallengeDoc.getFieldNames();
-                for (String fieldName : fieldNames) {
-                    Log.d(LOG_TAG,"fieldName : " + fieldName);
-                }
-                Log.d(LOG_TAG,"field name getby diff: " + myChallengeDoc.getField(Challenge.DIFFICULTY));
-                Log.d(LOG_TAG, "field name getby type: " + myChallengeDoc.getField("type"));
-                Log.d(LOG_TAG, "field name getby text: " + myChallengeDoc.getField("text"));
-                Log.d(LOG_TAG, "field name getby registered users: " + myChallengeDoc.getField(Challenge.REGISTERED_USERS));
-
+                Intent sendChallenge = new Intent(Constants.NEW_CHALLENGE_INTENT);
+                mContext.sendBroadcast(sendChallenge);
                 Intent intent = new Intent(mContext, ChallengesActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 PendingIntent pIntent = PendingIntent.getActivity(mContext, 0, intent,
                         PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext);
                 mBuilder.setSmallIcon(R.drawable.icon_sm);
-                mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText("Difficulty : " + myChallengeDoc.getField(Challenge.DIFFICULTY) + " \n myOtherText"));
-                mBuilder.setContentTitle("New " + myChallengeDoc.getField(Challenge.TYPE).toString() + " challenge !");
-                mBuilder.setContentText("Difficulty : " + myChallengeDoc.getField(Challenge.DIFFICULTY));
-                mBuilder.setSubText("Description : " + myChallengeDoc.getField(Challenge.TEXT));
+                mBuilder.setContentTitle("New " + challengeDoc .getField(ChallengeDetails.TYPE).toString() + " challenge !");
+                mBuilder.setContentText("Difficulty : " + challengeDoc .getField(ChallengeDetails.DIFFICULTY));
+                mBuilder.setSubText("Description : " + challengeDoc .getField(ChallengeDetails.TEXT));
                 mBuilder.addAction(R.drawable.icon_sm, "Take it", pIntent);
                 mBuilder.setContentIntent(pIntent);
+                mBuilder.setAutoCancel(true);
+                NotificationManager mNotificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                mNotificationManager.notify(0, mBuilder.build());
+            }
+        } else if (collectionName.equalsIgnoreCase("advices")) {
+            Log.d(LOG_TAG,"successfullySubscribedToAdvices : " + successfullySubscribedToAdvices);
+            if (successfullySubscribedToAdvices) {
+                InMemoryDocument adviceDoc = FitnessMDMeteor.getInstance().getDatabase().getCollection(collectionName)
+                        .getDocument(documentID);
+                Intent sendAdvice = new Intent(Constants.NEW_ADVICE_INTENT);
+                mContext.sendBroadcast(sendAdvice);
+                Intent intent = new Intent(mContext, AdvicesActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                PendingIntent pIntent = PendingIntent.getActivity(mContext, 0, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(mContext);
+                mBuilder.setSmallIcon(R.drawable.icon_sm);
+                mBuilder.setContentTitle("Advice from " + adviceDoc.getField(AdviceDetails.OWNER).toString() + " !");
+                mBuilder.setContentText(adviceDoc.getField(AdviceDetails.MESSAGE).toString());
+                mBuilder.setSubText(adviceDoc.getField(AdviceDetails.TIMESTAMP).toString());
+                mBuilder.setContentIntent(pIntent);
+                mBuilder.setAutoCancel(true);
                 NotificationManager mNotificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
                 mNotificationManager.notify(0, mBuilder.build());
             }
@@ -553,11 +592,34 @@ public class WebserverManager implements MeteorCallback{
             insertMessage.put("_id", mDB.getConnectedUser().getDocId());
 
 
-            FitnessMDMeteor.getInstance().subscribe("challenges123", new Object[]{insertMessage}, new SubscribeListener() {
+            FitnessMDMeteor.getInstance().subscribe("challenges_all", new Object[]{insertMessage}, new SubscribeListener() {
                 @Override
                 public void onSuccess() {
                     Log.d(LOG_TAG, "onSuccess challenges");
+                    successfullySubscribedToChallenges = true;
+                }
 
+                @Override
+                public void onError(String error, String reason, String details) {
+                    Log.d(LOG_TAG, "onError subscriptionId : " + error + " >>> " + reason + " >>> " + details);
+                }
+            });
+        }
+    }
+
+    public void subscribeToAdvices() {
+        Log.d(LOG_TAG, "subscribeToAdvices ");
+        if (mDB.getConnectedUser() != null) {
+            Log.d(LOG_TAG, "subscribeToAdvices : " + mDB.getConnectedUser().getDocId());
+            Map<String, String> insertMessage = new HashMap<String, String>();
+            insertMessage.put("_id", mDB.getConnectedUser().getDocId());
+
+
+            FitnessMDMeteor.getInstance().subscribe("advices_all", new Object[]{insertMessage}, new SubscribeListener() {
+                @Override
+                public void onSuccess() {
+                    Log.d(LOG_TAG, "onSuccess advices");
+                    successfullySubscribedToAdvices = true;
                 }
 
                 @Override

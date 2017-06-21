@@ -9,7 +9,12 @@
 
 package com.master.aluca.fitnessmd.common.datatypes;
 public class ChallengeDetails {
-    int icon ;
+
+    public static final String DIFFICULTY = "difficulty";
+    public static final String TYPE ="type";
+    public static final String TEXT ="text";
+    public static final String REGISTERED_USERS ="registeredUsers";
+
 
     public String getChallengeDocID() {
         return challengeDocID;
@@ -69,13 +74,5 @@ public class ChallengeDetails {
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    public int getIcon() {
-        return icon;
-    }
-
-    public void setIcon(int icon) {
-        this.icon = icon;
     }
 }

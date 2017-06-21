@@ -31,10 +31,10 @@
         <activity android:name=".ui.auth.SignupActivity" />
         <activity android:name="com.master.aluca.fitnessmd.ui.MainActivity" />
         <activity android:name="com.master.aluca.fitnessmd.ui.PairDeviceActivity" />
-        <activity android:name="com.master.aluca.fitnessmd.ui.NoInternetActivity" />
+        <activity android:name="com.master.aluca.fitnessmd.ui.NoInternetActivity" android:launchMode="singleTop"/>
         <activity android:name=".ui.DietActivity" />
-        <activity android:name=".ui.AdvicesActivity" />
-        <activity android:name=".ui.challenges.ChallengesActivity" />
+        <activity android:name=".ui.AdvicesActivity" android:launchMode="singleTop"/>
+        <activity android:name=".ui.challenges.ChallengesActivity" android:launchMode="singleTop"/>
 
         <service android:name="com.master.aluca.fitnessmd.service.FitnessMDService" />
         <receiver android:process=":remote" android:name=".receivers.AlarmReceiver"></receiver>

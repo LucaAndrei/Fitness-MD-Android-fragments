@@ -35,7 +35,7 @@ import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryCollection;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
-import com.master.aluca.fitnessmd.models.Challenge;
+import com.master.aluca.fitnessmd.ui.NoInternetActivity;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -50,53 +50,19 @@ public class ChallengesActivity extends Activity {
     ArrayList<ChallengeDetails> challenges;
     ChallengeItemAdapter mAdapter;
 
-    private ProgressDialog pDialog;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_challenges);
 
+        Log.d(LOG_TAG, "onCreate");
+
+
         challengesList = (ListView) findViewById(R.id.ChallengesList);
         challenges = new ArrayList<ChallengeDetails>();
-
-        InMemoryCollection challengesCollection = FitnessMDMeteor.getInstance().getDatabase().getCollection("challenges");
-        for (String challengeDocID : challengesCollection.getDocumentIds()) {
-            InMemoryDocument challengeDoc = challengesCollection.getDocument(challengeDocID);
-
-            ChallengeDetails challenge = new ChallengeDetails(challengeDoc.getField(Challenge.DIFFICULTY).toString(),
-                    challengeDoc.getField(Challenge.TYPE).toString(), challengeDoc.getField(Challenge.TEXT).toString());
-            challenge.setChallengeDocID(challengeDocID);
-            if (challengeDoc.getField(Challenge.REGISTERED_USERS) != null) {
-                Log.d(LOG_TAG, "---------------- : " + challengeDoc.getField(Challenge.DIFFICULTY));
-                String regUsers = challengeDoc.getField(Challenge.REGISTERED_USERS).toString();
-                regUsers = regUsers.substring(1, regUsers.length() - 1);
-                Log.d(LOG_TAG, "regUsers : " + regUsers);
-                if (regUsers.indexOf(",") != -1) {
-                    String[] regUsersArr = regUsers.split(", ");
-                    challenge.setRegisteredUsers(regUsersArr);
-                    for (String regUserID : regUsersArr) {
-                        Log.d(LOG_TAG,"regUserID : " + regUserID);
-                    }
-                } else {
-                    String[] regUsersArr = new String[]{regUsers};
-                    challenge.setRegisteredUsers(regUsersArr);
-                }
-
-                //challenge.setRegisteredUsers(challengeDoc.getField(Challenge.REGISTERED_USERS));
-            }
-            challenges.add(challenge);
-        }
-
-        pDialog = new ProgressDialog(ChallengesActivity.this);
-
         mWebserverManager =  WebserverManager.getInstance(this);
-
-
         mAdapter = new ChallengeItemAdapter(challenges,this);
-
         challengesList.setAdapter(mAdapter);
-
         challengesList.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView a, View v, int position, long id) {
 
@@ -105,7 +71,74 @@ public class ChallengesActivity extends Activity {
             }
         });
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
+        intentFilter.addAction(Constants.NEW_CHALLENGE_INTENT);
+        getApplicationContext().registerReceiver(mBroadcastReceiver, intentFilter);
+
+        updateChallengesList();
+
     }
+
+    private void updateChallengesList() {
+
+        InMemoryCollection challengesCollection = FitnessMDMeteor.getInstance().getDatabase().getCollection("challenges");
+        if (challengesCollection != null) {
+            Log.d(LOG_TAG,"updateChallengesList");
+            challenges.clear();
+            for (String challengeDocID : challengesCollection.getDocumentIds()) {
+                InMemoryDocument challengeDoc = challengesCollection.getDocument(challengeDocID);
+                ChallengeDetails challenge = new ChallengeDetails(challengeDoc.getField(ChallengeDetails.DIFFICULTY).toString(),
+                        challengeDoc.getField(ChallengeDetails.TYPE).toString(), challengeDoc.getField(ChallengeDetails.TEXT).toString());
+                challenge.setChallengeDocID(challengeDocID);
+                if (challengeDoc.getField(ChallengeDetails.REGISTERED_USERS) != null) {
+                    Log.d(LOG_TAG, "---------------- : " + challengeDoc.getField(ChallengeDetails.DIFFICULTY));
+                    String regUsers = challengeDoc.getField(ChallengeDetails.REGISTERED_USERS).toString();
+                    regUsers = regUsers.substring(1, regUsers.length() - 1);
+                    Log.d(LOG_TAG, "regUsers : " + regUsers);
+                    if (regUsers.indexOf(",") != -1) {
+                        String[] regUsersArr = regUsers.split(", ");
+                        challenge.setRegisteredUsers(regUsersArr);
+                        for (String regUserID : regUsersArr) {
+                            Log.d(LOG_TAG,"regUserID : " + regUserID);
+                        }
+                    } else {
+                        String[] regUsersArr = new String[]{regUsers};
+                        challenge.setRegisteredUsers(regUsersArr);
+                    }
+
+                    //challenge.setRegisteredUsers(challengeDoc.getField(Challenge.REGISTERED_USERS));
+                }
+                challenges.add(challenge);
+            }
+            mAdapter.notifyDataSetChanged();
+        } else {
+            Log.d(LOG_TAG,"challenges collection is null");
+        }
+    }
+
+    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
+            if (intent.getAction() == Constants.FINISH_ACTIVITY_INTENT) {
+                Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
+                boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
+                if (shouldFinish) {
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    startActivity(intentMainActiv);
+                    finish();
+                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    WebserverManager mWebserverManager = WebserverManager.getInstance(getApplicationContext());
+                    mWebserverManager.destroyMeteor();
+                } else {
+                    finish();
+                }
+            } else if (intent.getAction().equalsIgnoreCase("new_challenge_intent")) {
+                updateChallengesList();
+            }
+        }
+    };
 
 
     @Override

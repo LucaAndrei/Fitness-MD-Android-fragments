@@ -10,7 +10,10 @@
 package com.master.aluca.fitnessmd.ui;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -20,8 +23,10 @@ import android.widget.Toast;
 
 
 import com.master.aluca.fitnessmd.R;
+import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.util.NetworkUtil;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
+import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.auth.LoginActivity;
 
 public class NoInternetActivity extends Activity {
@@ -63,6 +68,7 @@ public class NoInternetActivity extends Activity {
                 }
             }
         });
+
     }
 
     @Override

@@ -34,6 +34,7 @@ import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
+import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
 import java.util.Set;
@@ -59,7 +60,32 @@ public class PairDeviceActivity extends Activity {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         initializeElements();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
+        getApplicationContext().registerReceiver(mBroadcastReceiver, intentFilter);
+
     }
+
+    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
+            if (intent.getAction() == Constants.FINISH_ACTIVITY_INTENT) {
+                Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
+                boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
+                if (shouldFinish) {
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    startActivity(intentMainActiv);
+                    finish();
+                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    WebserverManager mWebserverManager = WebserverManager.getInstance(getApplicationContext());
+                    mWebserverManager.destroyMeteor();
+                } else {
+                    finish();
+                }
+            }
+        }
+    };
 
     private void initializeElements() {
         // Initialize the button to perform device discovery

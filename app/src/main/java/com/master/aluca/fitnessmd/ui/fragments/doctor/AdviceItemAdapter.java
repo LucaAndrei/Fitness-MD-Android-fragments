@@ -14,21 +14,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.master.aluca.fitnessmd.R;
-import com.master.aluca.fitnessmd.common.datatypes.MessageDetails;
+import com.master.aluca.fitnessmd.common.datatypes.AdviceDetails;
 
 import java.util.ArrayList;
 
 
 public class AdviceItemAdapter extends BaseAdapter {
 
-    private ArrayList<MessageDetails> _data;
+    private ArrayList<AdviceDetails> _data;
     Context _c;
 
-    public AdviceItemAdapter(ArrayList<MessageDetails> data, Context c){
+    public AdviceItemAdapter(ArrayList<AdviceDetails> data, Context c){
         _data = data;
         _c = c;
     }
@@ -57,18 +56,16 @@ public class AdviceItemAdapter extends BaseAdapter {
             v = vi.inflate(R.layout.advice_item_message, null);
         }
 
-        ImageView image = (ImageView) v.findViewById(R.id.icon);
         TextView fromView = (TextView)v.findViewById(R.id.From);
-        TextView subView = (TextView)v.findViewById(R.id.subject);
         TextView descView = (TextView)v.findViewById(R.id.description);
         TextView timeView = (TextView)v.findViewById(R.id.time);
 
-        MessageDetails msg = _data.get(position);
-        image.setImageResource(msg.getIcon());
-        fromView.setText(msg.getName());
-        subView.setText("Subject: "+msg.getSub());
-        descView.setText(msg.getDesc());
-        timeView.setText(msg.getTime());
+        AdviceDetails msg = _data.get(position);
+        fromView.setText(msg.getOwnerName());
+        descView.setText(msg.getMessage());
+        android.text.format.DateFormat df = new android.text.format.DateFormat();
+
+        timeView.setText(df.format("yyyy-MM-dd hh:mm", Long.parseLong(msg.getTimestamp())));
 
         return v;
     }

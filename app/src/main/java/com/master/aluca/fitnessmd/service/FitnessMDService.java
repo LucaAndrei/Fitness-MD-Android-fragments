@@ -94,6 +94,7 @@ public class FitnessMDService extends Service {
 
         mContext = getApplicationContext();
         WebserverManager.getInstance(mContext).subscribeToChallenges();
+        WebserverManager.getInstance(mContext).subscribeToAdvices();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);

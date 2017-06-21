@@ -10,6 +10,10 @@
 package com.master.aluca.fitnessmd.ui;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -23,6 +27,8 @@ import android.widget.Toast;
 
 
 import com.master.aluca.fitnessmd.R;
+import com.master.aluca.fitnessmd.common.Constants;
+import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -96,7 +102,32 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
             }
         });
         webView.loadUrl("file:///android_asset/monday.html");
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
+        getApplicationContext().registerReceiver(mBroadcastReceiver, intentFilter);
+
     }
+
+    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
+            if (intent.getAction() == Constants.FINISH_ACTIVITY_INTENT) {
+                Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
+                boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
+                if (shouldFinish) {
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    startActivity(intentMainActiv);
+                    finish();
+                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    WebserverManager mWebserverManager = WebserverManager.getInstance(getApplicationContext());
+                    mWebserverManager.destroyMeteor();
+                } else {
+                    finish();
+                }
+            }
+        }
+    };
 
     private void createBreakfast() {
         String breakfastText =

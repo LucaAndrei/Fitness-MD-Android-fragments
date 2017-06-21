@@ -1,30 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-
+              android:id="@+id/challenge_item"
               android:layout_width="match_parent"
 
               android:layout_height="match_parent"
 
-              android:orientation="vertical" >
+              android:orientation="vertical"
+              android:background="@color/colorPrimary"
+              android:padding="20dp">
 
-    <LinearLayout
-
-        android:layout_width="match_parent"
-
-        android:layout_height="wrap_content"
-
-        android:orientation="horizontal" >
-
-        <ImageView
-
-            android:id="@+id/challenge_icon"
-
-            android:layout_width="wrap_content"
-
-            android:layout_height="40dp" />
-
-    </LinearLayout>
     <TextView
 
         android:id="@+id/challenge_difficulty"
@@ -37,7 +22,7 @@
 
         android:textAppearance="?android:attr/textAppearanceMedium"
 
-        android:textColor="#003366" />
+        android:textColor="#FFFFFF" />
 
     <TextView
 
@@ -49,7 +34,7 @@
         android:layout_gravity="center"
 
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#003366"
+        android:textColor="#FFFFFF"
  />
 
     <TextView
@@ -62,12 +47,13 @@
         android:layout_gravity="center"
 
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#003366" />
+        android:textColor="#FFFFFF" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="---"
-        android:id="@+id/challenge_btn"/>
+        android:id="@+id/challenge_btn"
+        android:textColor="#FFFFFF"/>
 
 </LinearLayout>
