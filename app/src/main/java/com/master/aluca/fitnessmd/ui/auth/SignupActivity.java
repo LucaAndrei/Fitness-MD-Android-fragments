@@ -38,6 +38,8 @@ import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.MainActivity;
 import com.master.aluca.fitnessmd.ui.NoInternetActivity;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 
 public class SignupActivity extends Activity {
     private static final String LOG_TAG = "Fitness_Signup";
@@ -51,6 +53,7 @@ public class SignupActivity extends Activity {
 
     ProgressDialog progressDialog = null;
     private UsersDB mDB;
+    private AtomicBoolean isReceiverRegistered = new AtomicBoolean(false);
 
     @Override
     protected void onResume() {
@@ -71,13 +74,18 @@ public class SignupActivity extends Activity {
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
             registerReceiver(mReceiver, intentFilter);
+            isReceiverRegistered.set(true);
         }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        unregisterReceiver(mReceiver);
+        if (isReceiverRegistered.get()) {
+            isReceiverRegistered.set(false);
+            unregisterReceiver(mReceiver);
+        }
+
     }
 
     @Override
