@@ -37,7 +37,7 @@ import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.receivers.AlarmReceiver;
 import com.master.aluca.fitnessmd.ui.MainActivity;
-import com.master.aluca.fitnessmd.ui.NoInternetActivity;
+import com.master.aluca.fitnessmd.ui.NoMeteorConnectionActivity;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -103,7 +103,7 @@ public class FitnessMDService extends Service {
         intentFilter.addAction(Constants.DEVICE_CONNECTION_LOST);
         intentFilter.addAction("myIntent");
 
-        registerReceiver(mReceiver, intentFilter);
+        registerReceiver(mBroadcastReceiver, intentFilter);
         sharedPreferencesManager = SharedPreferencesManager.getInstance(getApplicationContext());
         mDB = UsersDB.getInstance(getApplicationContext());
 
@@ -345,7 +345,7 @@ public class FitnessMDService extends Service {
         return sRunning;
     }
 
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Log.d(LOG_TAG, "action : " + action);
@@ -369,10 +369,6 @@ public class FitnessMDService extends Service {
                     Log.d(LOG_TAG, "NETWORK_STATUS_NOT_CONNECTED");
                     isConnectedToNetworkData.set(false);
                     isConnectedToWifi.set(false);
-
-                    Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
-                    intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, true);
-                    mContext.sendBroadcast(intentFinishActivity);
                 } else if (status == NetworkUtil.NETWORK_STATUS_MOBILE) {
                     Log.d(LOG_TAG, "NETWORK_STATUS_MOBILE");
                     isConnectedToWifi.set(false);
@@ -388,38 +384,6 @@ public class FitnessMDService extends Service {
                     isConnectedToNetworkData.set(false);
                     Log.d(LOG_TAG, "network status unknown");
                 }
-            } else if (action.equals(Constants.END_OF_DAY)) {
-                Log.d(LOG_TAG, "save to db intent received");
-                /*Log.d(LOG_TAG, "weight : " + mDB.getAverageWeight().getWeight());
-                long dayForReport = intent.getLongExtra(Constants.END_OF_DAY_BUNDLE_KEY, -1);
-                int steps = 110;//getSteps();
-                float weight = getWeight();
-                int calories = 220;//getCalories();
-                long timeActive = getTimeActive();
-                int wasPushedToServer = 0;
-                Log.d(LOG_TAG, "dayForReport : " + (new Date(dayForReport)) + " >>> steps : " + steps + " >>> weight : " + weight
-                        + " >>> calories : " + calories + " >>> timeActive : " + (new Date(timeActive)) + " >>> wasPushedToServer : " + wasPushedToServer);
-                long error = mDB.insertActivityReport(dayForReport, steps, weight, calories, timeActive, wasPushedToServer);
-
-                if ( error == ErrorCodes.GENERAL_ERROR) {
-                    Log.d(LOG_TAG, "inserting to DB failed. GENERAL_ERROR");
-                } else if (error == ErrorCodes.INVALID_TIME) {
-                    Log.d(LOG_TAG, "inserting to DB failed. INVALID_TIME");
-                } else if (error == ErrorCodes.INVALID_WEIGHT) {
-                    Log.d(LOG_TAG, "inserting to DB failed. INVALID_WEIGHT");
-                }
-                if (isConnectedToWifi) {
-                    Log.d(LOG_TAG, "user connected to WIFI");
-                    pushDataToServer(false);
-                } else if (isConnectedToNetworkData) {
-                    Log.d(LOG_TAG, "user connected to NetworkData");
-                    pushDataToServer(true);
-                } else {
-                    Log.d(LOG_TAG, "user not connected to internet");
-                    mNotPushedToServerData.add(new StepsDayReport(steps, dayForReport, timeActive));
-                }*/
-
-                //NetworkUtil.setMobileDataEnabled(context, true);
             } else if (action.equals(Constants.CONNECTED_DEVICE_DETAILS_INTENT)) {
                 Log.d(LOG_TAG, "Service - CONNECTED_DEVICE_DETAILS: ");
 

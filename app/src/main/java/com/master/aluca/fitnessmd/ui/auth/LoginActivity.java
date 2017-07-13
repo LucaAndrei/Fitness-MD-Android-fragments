@@ -37,7 +37,7 @@ import com.master.aluca.fitnessmd.common.util.NetworkUtil;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.MainActivity;
-import com.master.aluca.fitnessmd.ui.NoInternetActivity;
+import com.master.aluca.fitnessmd.ui.NoMeteorConnectionActivity;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -61,39 +61,17 @@ public class LoginActivity extends Activity{
     ProgressDialog progressDialog = null;
 
     private static Handler mActivityHandler = null;
-    private AtomicBoolean isReceiverRegistered = new AtomicBoolean(false);
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(LOG_TAG, "onResume");
-        if (!NetworkUtil.isConnectedToInternet(getApplicationContext())) {
-            Log.d(LOG_TAG, "NO INTERNET CONNECTION");
-
-            // should comment out these lines until production otherwise i will have to keep internet enabled all the time
-            // in order to enter the application.
-            // this screen should look like the one from the playstore when you have no internet
-            // a return/back button to exit the app, or retry
-            Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
-            startActivity(intentMainActiv);
-            finish();
-            overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-        } else {
-            IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-            registerReceiver(mReceiver, intentFilter);
-            isReceiverRegistered.set(true);
-        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
         Log.d(LOG_TAG, "onPause");
-        if (isReceiverRegistered.get()) {
-            isReceiverRegistered.set(false);
-            unregisterReceiver(mReceiver);
-        }
     }
 
     @Override
@@ -101,19 +79,6 @@ public class LoginActivity extends Activity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         Log.d(LOG_TAG, "onCreate");
-
-        if (!NetworkUtil.isConnectedToInternet(getApplicationContext())) {
-            Log.d(LOG_TAG, "NO INTERNET CONNECTION");
-
-            // should comment out these lines until production otherwise i will have to keep internet enabled all the time
-            // in order to enter the application.
-            // this screen should look like the one from the playstore when you have no internet
-            // a return/back button to exit the app, or retry
-            Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
-            startActivity(intentMainActiv);
-            finish();
-            overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-        } else {
             mDB = UsersDB.getInstance(getApplicationContext());
             if (mDB.getConnectedUser() != null) {
                 Log.d(LOG_TAG, "mDB isLoggedIn : true");
@@ -144,7 +109,7 @@ public class LoginActivity extends Activity{
                     progressDialog.show();
                 }*/
             }
-        }
+        
     }
 
     public class ActivityHandler extends Handler {
@@ -170,14 +135,6 @@ public class LoginActivity extends Activity{
 
                         Intent intentMainActivity = new Intent(getApplicationContext(), MainActivity.class);
                         startActivity(intentMainActivity);
-                        finish();
-                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                    } else if (msg.arg2 > 0) {
-                        Log.d(LOG_TAG, "Login error >> NO INTERNET CONNECTION");
-                        _loginButton.setEnabled(true);
-                        _loginButton.setBackgroundColor(Color.parseColor("#52B3D9"));
-                        Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
-                        startActivity(intentMainActiv);
                         finish();
                         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
                     } else {
@@ -344,25 +301,6 @@ public class LoginActivity extends Activity{
             }
         }
     }
-
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            //Log.d(LOG_TAG, "action : " + action);
-            if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-                Log.d(LOG_TAG, "ConnectivityManager.CONNECTIVITY_ACTION received");
-                int status = NetworkUtil.getConnectivityStatusString(context);
-                //Log.d(LOG_TAG, "status : " + status);
-                if (status == NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
-                    Log.d(LOG_TAG, "NETWORK_STATUS_NOT_CONNECTED");
-                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
-                    startActivity(intentMainActiv);
-                    finish();
-                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                }
-            }
-        }
-    };
 
     @Override
     public void onBackPressed() {

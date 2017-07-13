@@ -333,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
                 boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
                 if (shouldFinish) {
-                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoMeteorConnectionActivity.class);
                     startActivity(intentMainActiv);
                     finish();
                     overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
@@ -385,17 +385,12 @@ public class MainActivity extends AppCompatActivity {
     public void onPause() {
         Log.d(LOG_TAG, "onPause()");
         super.onPause();
+        unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
-
-        //WebserverManager mWebserverManager = WebserverManager.getInstance(this);
-        //mWebserverManager.destroyMeteor();
-
         super.onDestroy();
     }
-
-
 }

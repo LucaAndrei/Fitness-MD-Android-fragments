@@ -29,43 +29,25 @@ import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.auth.LoginActivity;
 
-public class NoInternetActivity extends Activity {
+public class NoMeteorConnectionActivity extends Activity {
 
     public static final String LOG_TAG = "Fitness_NoNetActivity";
-    private Button _btnRetry;
+    private Button _btnFinish;
     private UsersDB mDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(LOG_TAG, "onCreate");
-        setContentView(R.layout.activity_nointernet);
+        setContentView(R.layout.activity_no_meteor_conn);
 
         mDB = UsersDB.getInstance(getApplicationContext());
 
-        _btnRetry = (Button) findViewById(R.id.btn_retry);
-        _btnRetry.setOnClickListener(new OnClickListener() {
+        _btnFinish = (Button) findViewById(R.id.btn_finish);
+        _btnFinish.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!NetworkUtil.isConnectedToInternet(getApplicationContext())) {
-                    Log.d(LOG_TAG, "NO INTERNET CONNECTION");
-                    Toast.makeText(getBaseContext(), "No Internet", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getBaseContext(), "Has internet conn", Toast.LENGTH_LONG).show();
-                    if (mDB.getConnectedUser() != null) {
-                        Log.d(LOG_TAG, "mDB isLoggedIn : true");
-                        Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
-                        startActivity(intentMainActiv);
-                        finish();
-                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                    } else {
-                        Intent intentMainActiv = new Intent(getApplicationContext(), LoginActivity.class);
-                        startActivity(intentMainActiv);
-                        finish();
-                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                    }
-
-                }
+                finish();
             }
         });
 

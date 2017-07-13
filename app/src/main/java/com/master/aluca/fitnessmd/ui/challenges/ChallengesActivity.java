@@ -35,7 +35,7 @@ import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryCollection;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
-import com.master.aluca.fitnessmd.ui.NoInternetActivity;
+import com.master.aluca.fitnessmd.ui.NoMeteorConnectionActivity;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -125,7 +125,7 @@ public class ChallengesActivity extends Activity {
                 Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
                 boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
                 if (shouldFinish) {
-                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoMeteorConnectionActivity.class);
                     startActivity(intentMainActiv);
                     finish();
                     overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
@@ -145,6 +145,12 @@ public class ChallengesActivity extends Activity {
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
         super.onDestroy();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        unregisterReceiver(mBroadcastReceiver);
     }
 
 }

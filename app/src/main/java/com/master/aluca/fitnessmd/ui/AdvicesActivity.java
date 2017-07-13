@@ -104,7 +104,7 @@ public class AdvicesActivity extends Activity {
                 Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
                 boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
                 if (shouldFinish) {
-                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoMeteorConnectionActivity.class);
                     startActivity(intentMainActiv);
                     finish();
                     overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
@@ -124,6 +124,12 @@ public class AdvicesActivity extends Activity {
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
         super.onDestroy();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        unregisterReceiver(mBroadcastReceiver);
     }
 
 }

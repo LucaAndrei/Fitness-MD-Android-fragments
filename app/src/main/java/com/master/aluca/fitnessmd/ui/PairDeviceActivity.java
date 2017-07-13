@@ -60,32 +60,7 @@ public class PairDeviceActivity extends Activity {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         initializeElements();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
-        getApplicationContext().registerReceiver(mBroadcastReceiver, intentFilter);
-
     }
-
-    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(LOG_TAG, "onReceive : " + intent.getAction());
-            if (intent.getAction() == Constants.FINISH_ACTIVITY_INTENT) {
-                Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
-                boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
-                if (shouldFinish) {
-                    Intent intentMainActiv = new Intent(getApplicationContext(), NoInternetActivity.class);
-                    startActivity(intentMainActiv);
-                    finish();
-                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                    WebserverManager mWebserverManager = WebserverManager.getInstance(getApplicationContext());
-                    mWebserverManager.destroyMeteor();
-                } else {
-                    finish();
-                }
-            }
-        }
-    };
 
     private void initializeElements() {
         // Initialize the button to perform device discovery
@@ -178,17 +153,18 @@ public class PairDeviceActivity extends Activity {
     public void onResume() {
         super.onResume();
         // Register for broadcasts when a device is discovered
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_FOUND);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        this.registerReceiver(mReceiver, filter);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
+        this.registerReceiver(mBroadcastReceiver, intentFilter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        unregisterReceiver(mReceiver);
+        unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
@@ -254,7 +230,7 @@ public class PairDeviceActivity extends Activity {
 
     // The BroadcastReceiver that listens for discovered devices and
     // changes the title when discovery is finished
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -285,6 +261,19 @@ public class PairDeviceActivity extends Activity {
                         == BluetoothAdapter.STATE_OFF) {
                     Log.d(LOG_TAG, "Service - Bluetooth turned off");
                     mBluetoothAdapter.cancelDiscovery();
+                }
+            } else if (intent.getAction() == Constants.FINISH_ACTIVITY_INTENT) {
+                Log.d(LOG_TAG, "FINISH_ACTIVITY_INTENT received");
+                boolean shouldFinish = intent.getBooleanExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY,false);
+                if (shouldFinish) {
+                    Intent intentMainActiv = new Intent(getApplicationContext(), NoMeteorConnectionActivity.class);
+                    startActivity(intentMainActiv);
+                    finish();
+                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                    WebserverManager mWebserverManager = WebserverManager.getInstance(getApplicationContext());
+                    mWebserverManager.destroyMeteor();
+                } else {
+                    finish();
                 }
             }
         }

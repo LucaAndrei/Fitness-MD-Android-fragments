@@ -93,11 +93,8 @@ public class WebserverManager implements MeteorCallback{
         mDB = UsersDB.getInstance(context);
 
         // create a new instance
-        //FitnessMDMeteor.createInstance(context, "ws://192.168.1.4:3000/websocket");
-        FitnessMDMeteor.createInstance(context, "ws://128.224.108.202:3000/websocket");
-        //FitnessMDMeteor.createInstance(context, "wss://fitnessmd.now.sh/websocket");
+        FitnessMDMeteor.createInstance(context, "ws://192.168.X.X:3000/websocket");
         // register the callback that will handle events and receive messages
-
         FitnessMDMeteor.getInstance().addCallback(this);
 
         // establish the connection
@@ -114,7 +111,6 @@ public class WebserverManager implements MeteorCallback{
 
     public void requestLogin(final EditText emailText, final EditText passwordText) {
         Log.d(LOG_TAG, "requestLogin");
-        if (NetworkUtil.isConnectedToInternet(mContext)) {
             if (!mAuthLogicInstance.isInputValid(null, emailText, passwordText)) {
                 Log.d(LOG_TAG, "Login failed");
                 dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Input is not valid");
@@ -140,10 +136,7 @@ public class WebserverManager implements MeteorCallback{
                         } else {
                             Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected() false");
                             dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Server is not up and running");
-                            //mDB.setUserConnected(email, true);
-                            //dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Log in successful, problem with server");
                         }
-
                     } else {
                         dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Password not correct");
                     }
@@ -151,17 +144,10 @@ public class WebserverManager implements MeteorCallback{
                     dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Email not registered");
                 }
             }
-        } else {
-            Log.d(LOG_TAG, "Login successfully, no internet, no login to server");
-            dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, 0, Constants.NO_INTERNET_CONNECTION, "No Internet connection");
-            //mDB.setUserConnected(email, true);
-            //dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Login successfully, no internet, no login to server");
-        }
     }
 
     public void requestSignup(final EditText nameText, final EditText emailText, final EditText passwordText) {
         Log.d(LOG_TAG, "requestSignup");
-        if (NetworkUtil.isConnectedToInternet(mContext)) {
             if (!mAuthLogicInstance.isInputValid(nameText, emailText, passwordText)) {
                 Log.d(LOG_TAG, "input not valid");
                 dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Input is not valid");
@@ -179,7 +165,7 @@ public class WebserverManager implements MeteorCallback{
                                 hashedPassword);
                         if (addSuccess) {
                             Log.d(LOG_TAG, "addSuccess : " + addSuccess);
-                            // connect only if the client has internet connection and the webserver is up and running
+                            // connect only if the webserver is up and running
                             Log.d(LOG_TAG, "try to connect to web server");
 
                             Log.d(LOG_TAG, "Meteor client connected");
@@ -192,15 +178,8 @@ public class WebserverManager implements MeteorCallback{
                     }
                 } else {
                     dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Server is not up and running");
-                    //mDB.setUserConnected(emailText.getText().toString(), true);
-                    //dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully, problem with server");
                 }
             }
-        } else {
-            dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, 0, Constants.NO_INTERNET_CONNECTION, "No Internet connection");
-            //mDB.setUserConnected(emailText.getText().toString(), true);
-            //dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, true, "Signup successfully, no internet, not registered on server");
-        }
     }
 
     private void doLogin(final String email, String normalPassword) {
@@ -248,7 +227,6 @@ public class WebserverManager implements MeteorCallback{
         Log.d(LOG_TAG, "requestLogout");
         final User connectedUser = mDB.getConnectedUser();
         if (connectedUser != null) {
-            if (NetworkUtil.isConnectedToInternet(mContext)) {
                 Log.d(LOG_TAG,"try to connect to web server");
                 if (FitnessMDMeteor.getInstance().isConnected()) {
                     Log.d(LOG_TAG, "Meteor client connected");
@@ -273,28 +251,16 @@ public class WebserverManager implements MeteorCallback{
                         });
                     } else {
                         Log.d(LOG_TAG, "Meteor user NOT logged in");
-                        // somehow the user is still connected in the app although it's not connected to the server
-                        // force finish the activity and disconnect user
-                        // ??????????
-                        if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
-                            Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
-                            intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
-                            mContext.sendBroadcast(intentFinishActivity);
-                        }
+                        /* somehow the user is still connected in the app although it's not connected to the server
+                         force finish the activity and disconnect user
+                         ?????????? */
                     }
                 } else {
                     Log.d(LOG_TAG, "Meteor not connected. problem with server");
-                    // the server is down
-                    // force finish the activity and disconnect user
-                    // ??????????
-                    if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
-                        Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
-                        intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
-                        mContext.sendBroadcast(intentFinishActivity);
-                    }
+                    /* the server is down
+                       force finish the activity and disconnect user
+                       ?????????? */
                 }
-            } else {
-                Log.d(LOG_TAG, "no internet. cannot logout.");
                 // no internet but still the user can click the logout button ?!?!?!?
                 // force finish the activity and disconnect user
                 // ??????????
@@ -303,7 +269,7 @@ public class WebserverManager implements MeteorCallback{
                     intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
                     mContext.sendBroadcast(intentFinishActivity);
                 }
-            }
+            
         } else {
             Log.d(LOG_TAG, "user not even logged in. how did this call got here?");
         }
@@ -359,9 +325,11 @@ public class WebserverManager implements MeteorCallback{
     public void onDisconnect() {
         Log.d(LOG_TAG, "Meteor DDP onDisconnect");
         dispatchMessageToHandlers(Constants.METEOR_CLIENT_STATE, false);
+        requestLogout();
+        /*mDB.setUserConnected(connectedUser.getEmail(), false)
         Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
         intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, true);
-        mContext.sendBroadcast(intentFinishActivity);
+        mContext.sendBroadcast(intentFinishActivity);*/
     }
 
     @Override

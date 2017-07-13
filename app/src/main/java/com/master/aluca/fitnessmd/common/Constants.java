@@ -158,7 +158,7 @@ public class Constants {
     public static final int NOT_CONNECTED = 103;           // we're doing nothing
     public static final int CONNECTING = 104;     // now initiating an outgoing connection
     public static final int CONNECTED = 105;      // now connected to a remote device
-    public static final int NO_INTERNET_CONNECTION = 106;
+    public static final int NO_METEOR_CONNECTION = 106;
     public static final String NEW_CHALLENGE_INTENT = "new_challenge_intent";
     public static final String NEW_ADVICE_INTENT = "new_advice_intent";
 

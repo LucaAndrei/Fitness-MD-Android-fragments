@@ -31,7 +31,7 @@
         <activity android:name=".ui.auth.SignupActivity" />
         <activity android:name="com.master.aluca.fitnessmd.ui.MainActivity" />
         <activity android:name="com.master.aluca.fitnessmd.ui.PairDeviceActivity" />
-        <activity android:name="com.master.aluca.fitnessmd.ui.NoInternetActivity" android:launchMode="singleTop"/>
+        <activity android:name="com.master.aluca.fitnessmd.ui.NoMeteorConnectionActivity" android:launchMode="singleTop"/>
         <activity android:name=".ui.DietActivity" />
         <activity android:name=".ui.AdvicesActivity" android:launchMode="singleTop"/>
         <activity android:name=".ui.challenges.ChallengesActivity" android:launchMode="singleTop"/>
