@@ -66,7 +66,7 @@ public class PedometerFragment extends Fragment {
     double caloriesBurned = 0.0d;
     private String mHours, mMinutes, mSeconds;
 
-    Button startTimer;
+    //Button startTimer;
 
     private static final String TWO_DIGITS = "%02d";
     private static final String ONE_DIGIT = "%01d";
@@ -266,7 +266,7 @@ public class PedometerFragment extends Fragment {
 
         timeElapsed = (Chronometer) view.findViewById(R.id.chronometer);
         final int[] contor = {0};
-        startTimer = (Button) view.findViewById(R.id.startTimer);
+        /*startTimer = (Button) view.findViewById(R.id.startTimer);
         startTimer.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -317,7 +317,7 @@ public class PedometerFragment extends Fragment {
                         break;
                 }
             }
-        });
+        });*/
         setKm();
         setKCal();
 
@@ -327,14 +327,14 @@ public class PedometerFragment extends Fragment {
     private void doStop() {
         Log.d(LOG_TAG, "doStop()");
         stopUpdateThread();
-        startTimer.setText("START");
+        //startTimer.setText("START");
         mState = Constants.STOPWATCH_STOPPED;
     }
     private void doStart() {
         Log.d(LOG_TAG, "doStart()");
         mStartTime = SystemClock.elapsedRealtime();
         startUpdateThread();
-        startTimer.setText("STOP");
+        //startTimer.setText("STOP");
         mState = Constants.STOPWATCH_RUNNING;
     }
 
@@ -446,7 +446,7 @@ public class PedometerFragment extends Fragment {
         readFromSharedPref();
         pedometerView.postInvalidate();
         Log.d(LOG_TAG, "onResume() mState : " + mState);
-        startTimer.setText(mState == Constants.STOPWATCH_RUNNING ? "STOP" : "START");
+        //startTimer.setText(mState == Constants.STOPWATCH_RUNNING ? "STOP" : "START");
         setTime(mAccumulatedTime);
         super.onResume();
     }

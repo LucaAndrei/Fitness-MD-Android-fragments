@@ -172,7 +172,6 @@ public class PairDeviceActivity extends Activity {
         super.onStop();
         Log.d(LOG_TAG, "onStop()");
 
-
         if (mService != null) {
             mContext.unbindService(mServiceConnection);
         }
