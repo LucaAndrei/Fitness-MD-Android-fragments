@@ -10,13 +10,8 @@
 package com.master.aluca.fitnessmd.ui.auth;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -33,14 +28,9 @@ import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.util.NetworkUtil;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.ui.MainActivity;
-import com.master.aluca.fitnessmd.ui.NoMeteorConnectionActivity;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
 
 public class LoginActivity extends Activity{
 
@@ -57,8 +47,6 @@ public class LoginActivity extends Activity{
     private WebserverManager mWebserverManager;
 
     private UsersDB mDB;
-
-    ProgressDialog progressDialog = null;
 
     private static Handler mActivityHandler = null;
 
@@ -79,37 +67,29 @@ public class LoginActivity extends Activity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         Log.d(LOG_TAG, "onCreate");
-            mDB = UsersDB.getInstance(getApplicationContext());
-            if (mDB.getConnectedUser() != null) {
-                Log.d(LOG_TAG, "mDB isLoggedIn : true");
-                Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(intentMainActiv);
-                finish();
-                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-            } else {
-                _emailText = (EditText) findViewById(R.id.input_email_login);
-                _passwordText = (EditText) findViewById(R.id.input_password_login);
-                _loginButton = (Button) findViewById(R.id.btn_login);
-                _signupLink = (TextView) findViewById(R.id.link_signup);
+        mDB = UsersDB.getInstance(getApplicationContext());
+        if (mDB.getConnectedUser() != null) {
+            Log.d(LOG_TAG, "mDB isLoggedIn : true");
+            Intent intentMainActiv = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(intentMainActiv);
+            finish();
+            overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+        } else {
+            _emailText = (EditText) findViewById(R.id.input_email_login);
+            _passwordText = (EditText) findViewById(R.id.input_password_login);
+            _loginButton = (Button) findViewById(R.id.btn_login);
+            _signupLink = (TextView) findViewById(R.id.link_signup);
 
-                progressDialog = new ProgressDialog(LoginActivity.this);
-
-
-                setListeners();
-                if (!animPlayed) {
-                    startAnimations();
-                    animPlayed = true;
-                }
-                mWebserverManager =  WebserverManager.getInstance(this);
-                mActivityHandler = new ActivityHandler();
-                mWebserverManager.registerCallback(mActivityHandler);
-                /*if (!progressDialog.isShowing()) {
-                    progressDialog.setIndeterminate(true);
-                    progressDialog.setMessage("Connecting to server...");
-                    progressDialog.show();
-                }*/
+            setListeners();
+            if (!animPlayed) {
+                startAnimations();
+                animPlayed = true;
             }
-        
+            mWebserverManager =  WebserverManager.getInstance(this);
+            mActivityHandler = new ActivityHandler();
+            mWebserverManager.registerCallback(mActivityHandler);
+        }
+
     }
 
     public class ActivityHandler extends Handler {
@@ -125,9 +105,6 @@ public class LoginActivity extends Activity{
                         Log.d(LOG_TAG, "msg.obj : " + String.valueOf(msg.obj.toString()));
                     }
                     if (msg.arg1 > 0) {
-                        /*if (progressDialog.isShowing()) {
-                            progressDialog.dismiss();
-                        }*/
                         _loginButton.setEnabled(false);
                         _loginButton.setBackgroundColor(Color.LTGRAY);
 
@@ -141,9 +118,7 @@ public class LoginActivity extends Activity{
                         _loginButton.setEnabled(true);
                         _loginButton.setBackgroundColor(Color.parseColor("#52B3D9"));
                         Log.d(LOG_TAG, "Login error");
-                        /*if (progressDialog.isShowing()) {
-                            progressDialog.dismiss();
-                        }*/
+
                         if (msg.obj!= null) {
                             Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
                         }
@@ -163,9 +138,6 @@ public class LoginActivity extends Activity{
                         startActivity(intentMainActivity);
                         finish();
                         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                        /*if (progressDialog.isShowing()) {
-                            progressDialog.dismiss();
-                        }*/
                         _loginButton.setEnabled(false);
                         _loginButton.setBackgroundColor(Color.LTGRAY);
                         if (msg.obj!= null) {
@@ -176,9 +148,6 @@ public class LoginActivity extends Activity{
                         _loginButton.setEnabled(true);
                         _loginButton.setBackgroundColor(Color.parseColor("#52B3D9"));
                         Log.d(LOG_TAG, "Login after signup error");
-                        /*if (progressDialog.isShowing()) {
-                            progressDialog.dismiss();
-                        }*/
                         if (msg.obj!= null) {
                             Toast.makeText(getBaseContext(), String.valueOf(msg.obj.toString()), Toast.LENGTH_LONG).show();
                         }
@@ -204,9 +173,6 @@ public class LoginActivity extends Activity{
                         // should display login form
                         Log.d(LOG_TAG, "should NOT log in automatically");
                     }
-                    /*if (progressDialog.isShowing()) {
-                        progressDialog.dismiss();
-                    }*/
                 }
                 default:
                     break;
@@ -275,11 +241,6 @@ public class LoginActivity extends Activity{
 
     public void login() {
         Log.d(LOG_TAG, "Login");
-        /*if (!progressDialog.isShowing()) {
-            progressDialog.setIndeterminate(true);
-            progressDialog.setMessage("Logging in...");
-            progressDialog.show();
-        }*/
 
         _loginButton.setEnabled(false);
         _loginButton.setBackgroundColor(Color.LTGRAY);

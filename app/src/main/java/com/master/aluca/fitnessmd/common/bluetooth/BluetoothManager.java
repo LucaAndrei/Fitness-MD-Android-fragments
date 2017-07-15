@@ -28,7 +28,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.common.Constants;
 
@@ -52,9 +51,6 @@ public class BluetoothManager {
 
     private CommunicationWithDevice mCommuncationWithDevice;
 
-    // Name for the SDP record when creating server socket
-    private static final String NAME = "BluetoothManager";
-
     // Unique UUID for this application
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -62,12 +58,13 @@ public class BluetoothManager {
     private Context mContext;
     private BluetoothDevice mBluetoothDevice;
 
-    private AsyncTask<Void,Void,Void> pairWithDevice;
+    private AsyncTask<Void, Void, Void> pairWithDevice;
 
     /**
      * Constructor. Prepares a new BluetoothManager session.
-     * @param context  The UI Activity Context
-     * @param handler  A Handler to send messages back to the UI Activity
+     *
+     * @param context The UI Activity Context
+     * @param handler A Handler to send messages back to the UI Activity
      */
     public BluetoothManager(Context context, Handler handler) {
         Log.d(LOG_TAG, "BluetoothManager constructor");
@@ -90,7 +87,8 @@ public class BluetoothManager {
 
     /**
      * Set the current state of the connection
-     * @param state  An integer defining the current connection state
+     *
+     * @param state An integer defining the current connection state
      */
     private synchronized void setConnectionState(int state) {
         String previousState = "null";
@@ -117,7 +115,8 @@ public class BluetoothManager {
 
     /**
      * Start the ConnectedThread to begin managing a Bluetooth connection
-     * @param socket  The BluetoothSocket on which the connection was made
+     *
+     * @param socket The BluetoothSocket on which the connection was made
      */
     public synchronized void initiateCommunicationWithDevice(BluetoothSocket socket) {
         Log.d(LOG_TAG, "initiateCommunicationWithDevice");
@@ -150,7 +149,8 @@ public class BluetoothManager {
 
     /**
      * Start the ConnectThread to initiate a connection to a remote device.
-     * @param device  The BluetoothDevice to connect
+     *
+     * @param device The BluetoothDevice to connect
      */
     public synchronized void pairDevice(BluetoothDevice device) {
         Log.d(LOG_TAG, "Connecting to: " + device + " mState : " + getStateAsString());
@@ -207,15 +207,13 @@ public class BluetoothManager {
         @Override
         protected void onPreExecute() {
             Log.d(LOG_TAG, "PairWithDeviceTask onPreExecute : " + mContext);
-            //progress = ProgressDialog.show(mContext, "Connecting...", "Please wait!!!");  //show a progress dialog
-            //alertMessage.alertbox();
         }
 
         @Override
         protected Void doInBackground(Void... params) {
             Log.d(LOG_TAG, "PairWithDeviceTask doInBackground");
             try {
-                if(mmSocket == null || mState != Constants.CONNECTED) {
+                if (mmSocket == null || mState != Constants.CONNECTED) {
                     Log.d(LOG_TAG, "PairWithDeviceTask create&connect socket");
                     mmSocket = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(MY_UUID);
                     mAdapter.cancelDiscovery();
@@ -225,7 +223,6 @@ public class BluetoothManager {
                 }
             } catch (IOException e) {
                 Log.d(LOG_TAG, "PairWithDeviceTask catch exception");
-                // Constants.displayToastMessage(mContext, "Unable to connect device"); -> http://stackoverflow.com/questions/16830255/how-to-display-toast-in-asynctask-in-android
                 // Close the socket
                 setConnectionState(Constants.NOT_CONNECTED);
                 try {
@@ -247,13 +244,11 @@ public class BluetoothManager {
             Log.d(LOG_TAG, "PairWithDeviceTask onPostExecute");
             if (mState == Constants.NOT_CONNECTED) {
                 Log.d(LOG_TAG, "PairWithDeviceTask call connectionFailed");
-                //Constants.displayToastMessage(mContext, "Device connection was lost");
             } else {
                 Log.d(LOG_TAG, "PairWithDeviceTask initiate communication with device");
                 initiateCommunicationWithDevice(mmSocket);
             }
             Log.d(LOG_TAG, "PairWithDeviceTask dismiss progress dialog");
-            // alertMessage.dismiss();
         }
 
         @Override
@@ -295,25 +290,23 @@ public class BluetoothManager {
 
             while (true) {
                 try {
-                    Log.d(LOG_TAG,"true. read !!!");
+                    Log.d(LOG_TAG, "true. read !!!");
                     // Read from the InputStream
                     byte[] buffer = new byte[1];
-                    Arrays.fill(buffer, (byte)0x00);
+                    Arrays.fill(buffer, (byte) 0x00);
                     bytes = mmInStream.read(buffer);
-                    Log.d(LOG_TAG,"bytes : " + bytes);
+                    Log.d(LOG_TAG, "bytes : " + bytes);
                     for (int i = 0; i < buffer.length; i++) {
-                        Log.d(LOG_TAG,"buffer["+i+"] : " + buffer[i]);
+                        Log.d(LOG_TAG, "buffer[" + i + "] : " + buffer[i]);
                     }
 
-                    Log.d(LOG_TAG,"===========================================");
+                    Log.d(LOG_TAG, "===========================================");
 
                     // Send the obtained bytes to the main thread
                     mHandler.obtainMessage(Constants.READ, bytes, -1, buffer).sendToTarget();
 
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "CommunicationWithDevice disconnected - device connection lost", e);
-                    //Toast.makeText(mContext, "Device connection was lost",Toast.LENGTH_LONG).show();
-                    //Constants.displayToastMessage(mContext, "Device connection was lost");
                     Intent intent = new Intent(Constants.DEVICE_CONNECTION_LOST);
                     mContext.sendBroadcast(intent);
                     break;
@@ -329,7 +322,5 @@ public class BluetoothManager {
                 Log.e(LOG_TAG, "CommunicationWithDevice close() of connect socket failed");
             }
         }
-
     }
-
 }

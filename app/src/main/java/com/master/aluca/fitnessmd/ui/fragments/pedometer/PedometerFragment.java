@@ -103,7 +103,6 @@ public class PedometerFragment extends Fragment {
         }
     };
 
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -125,9 +124,6 @@ public class PedometerFragment extends Fragment {
             Log.e(LOG_TAG, "Unable to bind to optical service");
         }
         //loadSharedPrefs();
-
-
-
     }
 
     public void onStop() {
@@ -147,7 +143,6 @@ public class PedometerFragment extends Fragment {
 
         return inflater.inflate(R.layout.layout_tab_pedometer, container, false);
     }
-
 
     @Override
     public void onActivityCreated(Bundle bundle) {
@@ -174,7 +169,6 @@ public class PedometerFragment extends Fragment {
         pedometerView = view;
         setup(view);
     }
-
 
     BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -295,7 +289,6 @@ public class PedometerFragment extends Fragment {
         setKCal();
 
     }
-
 
     private void doStop() {
         Log.d(LOG_TAG, "doStop()");

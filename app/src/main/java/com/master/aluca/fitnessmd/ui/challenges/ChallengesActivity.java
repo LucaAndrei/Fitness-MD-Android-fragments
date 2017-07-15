@@ -10,14 +10,11 @@
 package com.master.aluca.fitnessmd.ui.challenges;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -26,11 +23,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.ChallengeDetails;
-import com.master.aluca.fitnessmd.common.datatypes.MessageDetails;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
 import com.master.aluca.fitnessmd.library.db.memory.InMemoryCollection;
@@ -38,13 +33,10 @@ import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
 import com.master.aluca.fitnessmd.ui.NoMeteorConnectionActivity;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 public class ChallengesActivity extends Activity {
 
     public static final String LOG_TAG = "Fitness_ChallengesActiv";
-
-    private WebserverManager mWebserverManager;
 
     ListView challengesList;
     ArrayList<ChallengeDetails> challenges;
@@ -60,7 +52,6 @@ public class ChallengesActivity extends Activity {
 
         challengesList = (ListView) findViewById(R.id.ChallengesList);
         challenges = new ArrayList<ChallengeDetails>();
-        mWebserverManager =  WebserverManager.getInstance(this);
         mAdapter = new ChallengeItemAdapter(challenges,this);
         challengesList.setAdapter(mAdapter);
         challengesList.setOnItemClickListener(new OnItemClickListener() {
@@ -129,8 +120,7 @@ public class ChallengesActivity extends Activity {
                     startActivity(intentMainActiv);
                     finish();
                     overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-                    WebserverManager mWebserverManager = WebserverManager.getInstance(getApplicationContext());
-                    mWebserverManager.destroyMeteor();
+                    WebserverManager.getInstance(getApplicationContext()).destroyMeteor();
                 } else {
                     finish();
                 }
@@ -152,5 +142,4 @@ public class ChallengesActivity extends Activity {
         super.onPause();
         unregisterReceiver(mBroadcastReceiver);
     }
-
 }

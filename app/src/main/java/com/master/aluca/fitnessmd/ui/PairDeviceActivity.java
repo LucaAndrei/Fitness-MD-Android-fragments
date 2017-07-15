@@ -94,8 +94,6 @@ public class PairDeviceActivity extends Activity {
         newDevicesListView.setAdapter(mNewDevicesArrayAdapter);
         newDevicesListView.setOnItemClickListener(mDeviceClickListener);
 
-
-
         // Get a set of currently paired devices
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
 

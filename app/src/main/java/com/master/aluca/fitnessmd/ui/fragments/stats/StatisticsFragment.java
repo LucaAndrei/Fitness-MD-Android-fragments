@@ -37,7 +37,6 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.util.IStatsChanged;
-import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.service.FitnessMDService;
 
@@ -63,7 +62,6 @@ public class StatisticsFragment extends Fragment {
     private FitnessMDService mService;
 
     private WebserverManager webserverManager;
-    private UsersDB mDB;
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -75,9 +73,6 @@ public class StatisticsFragment extends Fragment {
             if (mService == null) {
                 Log.e(LOG_TAG, "unable to connect to service");
                 return;
-            } else {
-                //webserverManager.subscribeToChallenges();
-                //webserverManager.subscribeToStats();
             }
         }
 
@@ -181,7 +176,6 @@ public class StatisticsFragment extends Fragment {
         }
 
         Log.d(LOG_TAG, "onActivityCreated StatisticsFragment");
-        mDB = UsersDB.getInstance(getActivity());
         webserverManager = WebserverManager.getInstance(getActivity());
 
         setup(view);
@@ -202,11 +196,9 @@ public class StatisticsFragment extends Fragment {
         mChart.setScaleXEnabled(false);
         mChart.setScaleYEnabled(false);
 
-
         IAxisValueFormatter xAxisFormatter = new DayAxisValueFormatter();
 
         mChart.setDrawValueAboveBar(false);
-
 
         XAxis xAxis = mChart.getXAxis();
         xAxis.setPosition(XAxisPosition.BOTTOM);

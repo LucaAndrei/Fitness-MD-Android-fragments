@@ -9,7 +9,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.datatypes.Device;
 import com.master.aluca.fitnessmd.common.datatypes.User;
 
 import java.util.ArrayList;
@@ -92,8 +91,6 @@ public class UsersDB extends SQLiteOpenHelper {
     private static final String DATABASE_DROP_USERS_DATA_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME_USERS_DATA;
 
     // Context, System
-    private final Context mContext;
-    private SQLiteDatabase mDb;
     private static UsersDB sInstance;
     private static String connectedUserEmail = "";
 
@@ -101,7 +98,6 @@ public class UsersDB extends SQLiteOpenHelper {
     private UsersDB(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         Log.d(LOG_TAG, "UsersDB constructor");
-        this.mContext = context;
     }
 
     public static synchronized UsersDB getInstance(Context context) {
@@ -364,8 +360,6 @@ public class UsersDB extends SQLiteOpenHelper {
         return ret == 1;
     }
 
-
-
     public boolean saveDevice(String deviceName, String deviceAddress) {
         Log.d(LOG_TAG, "saveDevice deviceName: " + deviceName + " >>> deviceAddress : " + deviceAddress);
         if (TextUtils.isEmpty(connectedUserEmail) || TextUtils.isEmpty(deviceName) || TextUtils.isEmpty(deviceAddress)) {
@@ -420,27 +414,6 @@ public class UsersDB extends SQLiteOpenHelper {
 
         cursor.close();
         return ret == 1;
-    }
-
-    public Device getPairedDevice() {
-        Device ret = null;
-        Cursor c = getReadableDatabase().query(TABLE_NAME_USERS, null, EMAIL + "=?",
-                new String[]{connectedUserEmail}, null, null, null);
-
-        if (c == null) {
-            return null;
-        }
-        if (c.moveToFirst()) {
-            int columnIndexName = c.getColumnIndex(SAVED_DEVICE_NAME);
-            int columnIndexAddress = c.getColumnIndex(SAVED_DEVICE_ADDRESS);
-
-            if (columnIndexName != -1 && columnIndexAddress != -1) {
-                ret = new Device(c.getString(columnIndexName), c.getString(columnIndexAddress));
-            }
-        }
-        c.close();
-
-        return ret;
     }
 
     public boolean setUserConnected(String email, boolean isConnected) {
@@ -573,7 +546,7 @@ public class UsersDB extends SQLiteOpenHelper {
                         c.getInt(columnIndexAlwaysEnableBT), c.getInt(columnIndexHasProfilePicture),
                         c.getInt(columnIndexHasDeviceConnected),
                         c.getInt(columnIndexIsOnline)
-                        );
+                );
 
                 connectedUserEmail = c.getString(columnIndexEmail);
                 c.close();
@@ -601,33 +574,6 @@ public class UsersDB extends SQLiteOpenHelper {
                 callback.onDataChanged(changedProperty);
             }
         }
-    }
-
-    public String getNameByEmail(String email) {
-        String ret = "";
-        Cursor c = getReadableDatabase().query(TABLE_NAME_USERS, null, EMAIL + "=?",
-                new String[]{email}, null, null, null);
-
-        if (c == null) {
-            return ret;
-        }
-        Log.d(LOG_TAG, "getNameByEmail : " + c.getCount());
-        if (c.getCount() == 1 && c.moveToFirst()) {
-            int columnIndexName = c.getColumnIndex(NAME);
-
-            if (columnIndexName != -1 ) {
-                ret = c.getString(columnIndexName);
-                c.close();
-                return ret;
-            } else {
-                Log.d(LOG_TAG, "getNameByEmail : index e egal cu -1");
-            }
-        } else {
-            Log.d(LOG_TAG, "getNameByEmail : posibil sa fi returnat mai multi useri");
-        }
-        c.close();
-
-        return ret;
     }
 
     public boolean updateUserID(String email, String documentID) {

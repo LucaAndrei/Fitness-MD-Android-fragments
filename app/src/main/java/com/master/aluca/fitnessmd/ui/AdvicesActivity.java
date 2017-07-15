@@ -23,12 +23,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.AdviceDetails;
@@ -39,8 +33,6 @@ import com.master.aluca.fitnessmd.library.db.memory.InMemoryDocument;
 import com.master.aluca.fitnessmd.ui.fragments.doctor.AdviceItemAdapter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 
 public class AdvicesActivity extends Activity {
 
@@ -119,7 +111,6 @@ public class AdvicesActivity extends Activity {
         }
     };
 
-
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
@@ -131,5 +122,4 @@ public class AdvicesActivity extends Activity {
         super.onPause();
         unregisterReceiver(mBroadcastReceiver);
     }
-
 }

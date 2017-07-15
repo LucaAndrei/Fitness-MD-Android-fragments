@@ -37,7 +37,6 @@
         <activity android:name=".ui.challenges.ChallengesActivity" android:launchMode="singleTop"/>
 
         <service android:name="com.master.aluca.fitnessmd.service.FitnessMDService" />
-        <receiver android:process=":remote" android:name=".receivers.AlarmReceiver"></receiver>
     </application>
 
 </manifest>

@@ -25,7 +25,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.os.SystemClock;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -103,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
         mTextStatus = (TextView) findViewById(R.id.status_text);
         mTextStatus.setText(getResources().getString(R.string.bt_state_init));
 
-
         setupTabIcons(viewPager);
 
         mImageBT = (ImageView) findViewById(R.id.status_title);
@@ -114,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Constants.FINISH_ACTIVITY_INTENT);
         getApplicationContext().registerReceiver(mBroadcastReceiver, intentFilter);
-
     }
 
     private void setupTabIcons(ViewPager viewPager) {
@@ -168,7 +165,6 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
     }
-
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
 

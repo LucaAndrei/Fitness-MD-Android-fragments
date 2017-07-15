@@ -25,7 +25,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
@@ -33,8 +32,6 @@ import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
-
 
 public class DietActivity extends Activity implements OnItemSelectedListener {
 
@@ -47,8 +44,6 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
     private ArrayList<String> dinner = new ArrayList<>();
 
     WebView webView;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,28 +127,28 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
     private void createBreakfast() {
         String breakfastText =
                 "&#8226; Oat meal and skim milk<br/>" +
-                "&#8226; Ground flax<br/>" +
-                "&#8226; Maple syrup<br/>";
+                        "&#8226; Ground flax<br/>" +
+                        "&#8226; Maple syrup<br/>";
         breakfast.add(breakfastText);
         breakfastText =
                 "&#8226; Veg Omelet<br/>" +
-                "&#8226; Wheat bread<br/>" +
-                "&#8226; Orange<br/>";
+                        "&#8226; Wheat bread<br/>" +
+                        "&#8226; Orange<br/>";
         breakfast.add(breakfastText);
         breakfastText =
                 "&#8226; Cooked oats<br/>" +
-                "&#8226; Almond beverage<br/>" +
-                "&#8226; Sliced mango<br/>";
+                        "&#8226; Almond beverage<br/>" +
+                        "&#8226; Sliced mango<br/>";
         breakfast.add(breakfastText);
         breakfastText =
                 "&#8226; Fruit smoothies<br/>" +
-                "&#8226; Almond milk<br/>" +
-                "&#8226; Bananas and Blueberries<br/>";
+                        "&#8226; Almond milk<br/>" +
+                        "&#8226; Bananas and Blueberries<br/>";
         breakfast.add(breakfastText);
         breakfastText =
                 "&#8226; Plain yogurt<br/>" +
-                "&#8226; Mixed berries<br/>" +
-                "&#8226; Fruits<br/>";
+                        "&#8226; Mixed berries<br/>" +
+                        "&#8226; Fruits<br/>";
         breakfast.add(breakfastText);
     }
 
@@ -259,7 +254,7 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
         switch (position) {
             case 0:
                 webView.loadUrl("file:///android_asset/monday_diet.html");
-            break;
+                break;
             case 1:
                 webView.loadUrl("file:///android_asset/tuesday_diet.html");
                 break;
@@ -281,8 +276,7 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
         // TODO Auto-generated method stub
     }
 
-
-        @Override
+    @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy()");
         super.onDestroy();
@@ -293,6 +287,4 @@ public class DietActivity extends Activity implements OnItemSelectedListener {
         super.onPause();
         unregisterReceiver(mBroadcastReceiver);
     }
-
-
 }

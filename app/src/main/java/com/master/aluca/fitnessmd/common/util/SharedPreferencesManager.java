@@ -34,10 +34,6 @@ public class SharedPreferencesManager {
     long mSWStartTime, mSWAccumulatedTime;
     int mSWState;
 
-
-
-
-
     public static SharedPreferencesManager getInstance(Context context) {
         if (mInstance == null) {
             mInstance = new SharedPreferencesManager(context);
@@ -84,11 +80,6 @@ public class SharedPreferencesManager {
     }
 
     public void setStepsForCurrentDay(String key, int steps) {
-        /*if (isUpdate) {
-            mStepsForCurrentDay += steps;
-        } else {
-            mStepsForCurrentDay = 0;
-        }*/
         sharedPreferencesEditor.putInt(key, steps);
         sharedPreferencesEditor.commit();
         mStepsForCurrentDay = steps;
@@ -119,8 +110,6 @@ public class SharedPreferencesManager {
     public long getSWStartTime() {
         return mSWStartTime;
     }
-
-
 
     public long getSWAccumTime() {
         return mSWAccumulatedTime;

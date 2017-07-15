@@ -18,13 +18,11 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.datatypes.ChallengeDetails;
-import com.master.aluca.fitnessmd.common.datatypes.MessageDetails;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 

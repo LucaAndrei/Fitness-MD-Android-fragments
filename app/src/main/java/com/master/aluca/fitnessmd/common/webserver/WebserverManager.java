@@ -15,7 +15,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
-import android.text.Html;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -29,11 +28,8 @@ import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.AdviceDetails;
 import com.master.aluca.fitnessmd.common.datatypes.ChallengeDetails;
-import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.User;
-import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IStatsChanged;
-import com.master.aluca.fitnessmd.common.util.NetworkUtil;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.library.FitnessMDMeteor;
 import com.master.aluca.fitnessmd.library.MeteorCallback;
@@ -62,8 +58,6 @@ public class WebserverManager implements MeteorCallback{
     private AtomicBoolean isMeteorClientConnected = new AtomicBoolean(false);
 
     private static WebserverManager sWebserverManager = null;
-    private StepsDayReport bestSteps;
-    //private Collection advices;
 
     private ArrayList<Handler> handlerList = new ArrayList<>();
     private ArrayList<IStatsChanged> statsCallbackList = new ArrayList<>();
@@ -74,9 +68,7 @@ public class WebserverManager implements MeteorCallback{
     private boolean successfullySubscribedToChallenges = false;
     private boolean successfullySubscribedToAdvices = false;
 
-
     LinkedHashMap<Long, Integer> savedStats = new LinkedHashMap<>();
-
 
     public static WebserverManager getInstance(Context context) {
         Log.d(LOG_TAG, "WebserverManager getInstance :" + String.valueOf(sWebserverManager));
@@ -105,81 +97,77 @@ public class WebserverManager implements MeteorCallback{
         }
     }
 
-    public boolean isLoggedIn() {
-        return FitnessMDMeteor.getInstance().isLoggedIn();
-    }
-
     public void requestLogin(final EditText emailText, final EditText passwordText) {
         Log.d(LOG_TAG, "requestLogin");
-            if (!mAuthLogicInstance.isInputValid(null, emailText, passwordText)) {
-                Log.d(LOG_TAG, "Login failed");
-                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Input is not valid");
-            } else {
-                final String email = emailText.getText().toString();
-                String password = passwordText.getText().toString();
+        if (!mAuthLogicInstance.isInputValid(null, emailText, passwordText)) {
+            Log.d(LOG_TAG, "Login failed");
+            dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Input is not valid");
+        } else {
+            final String email = emailText.getText().toString();
+            String password = passwordText.getText().toString();
 
-                boolean isEmailRegistered = mDB.isEmailRegistered(email);
-                if (isEmailRegistered) {
-                    String hashedPassword = Constants.getHashedPassword(password);
-                    boolean isPasswordCorrect = mDB.isPasswordCorrect(email, hashedPassword);
-                    if (isPasswordCorrect) {
+            boolean isEmailRegistered = mDB.isEmailRegistered(email);
+            if (isEmailRegistered) {
+                String hashedPassword = Constants.getHashedPassword(password);
+                boolean isPasswordCorrect = mDB.isPasswordCorrect(email, hashedPassword);
+                if (isPasswordCorrect) {
 
-                        Log.d(LOG_TAG, "try to connect to web server");
-                        if (FitnessMDMeteor.getInstance().isConnected()) {
-                            Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected()");
-                            if (!FitnessMDMeteor.getInstance().isLoggedIn()) {
-                                doLogin(email, password);
-                            } else {
-                                mDB.setUserConnected(email, true);
-                                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Log in successful, already logged in on server");
-                            }
+                    Log.d(LOG_TAG, "try to connect to web server");
+                    if (FitnessMDMeteor.getInstance().isConnected()) {
+                        Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected()");
+                        if (!FitnessMDMeteor.getInstance().isLoggedIn()) {
+                            doLogin(email, password);
                         } else {
-                            Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected() false");
-                            dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Server is not up and running");
+                            mDB.setUserConnected(email, true);
+                            dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, true, "Log in successful, already logged in on server");
                         }
                     } else {
-                        dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Password not correct");
+                        Log.d(LOG_TAG, "FitnessMDMeteor.getInstance().isConnected() false");
+                        dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Server is not up and running");
                     }
                 } else {
-                    dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Email not registered");
+                    dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Password not correct");
                 }
+            } else {
+                dispatchMessageToHandlers(Constants.LOGIN_RESULT_INTENT, false, "Email not registered");
             }
+        }
     }
 
     public void requestSignup(final EditText nameText, final EditText emailText, final EditText passwordText) {
         Log.d(LOG_TAG, "requestSignup");
-            if (!mAuthLogicInstance.isInputValid(nameText, emailText, passwordText)) {
-                Log.d(LOG_TAG, "input not valid");
-                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Input is not valid");
-            } else {
-                if (FitnessMDMeteor.getInstance().isConnected()) {
-                    String name = nameText.getText().toString();
-                    String email = emailText.getText().toString();
-                    String hashedPassword = Constants.getHashedPassword(passwordText.getText().toString());
+        if (!mAuthLogicInstance.isInputValid(nameText, emailText, passwordText)) {
+            Log.d(LOG_TAG, "input not valid");
+            dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Input is not valid");
+        } else {
+            if (FitnessMDMeteor.getInstance().isConnected()) {
+                String name = nameText.getText().toString();
+                String email = emailText.getText().toString();
+                String hashedPassword = Constants.getHashedPassword(passwordText.getText().toString());
 
-                    boolean isEmailRegistered = mDB.isEmailRegistered(email);
-                    if (!isEmailRegistered) {
-                        boolean addSuccess = mDB.addUser(
-                                name,
-                                email,
-                                hashedPassword);
-                        if (addSuccess) {
-                            Log.d(LOG_TAG, "addSuccess : " + addSuccess);
-                            // connect only if the webserver is up and running
-                            Log.d(LOG_TAG, "try to connect to web server");
+                boolean isEmailRegistered = mDB.isEmailRegistered(email);
+                if (!isEmailRegistered) {
+                    boolean addSuccess = mDB.addUser(
+                            name,
+                            email,
+                            hashedPassword);
+                    if (addSuccess) {
+                        Log.d(LOG_TAG, "addSuccess : " + addSuccess);
+                        // connect only if the webserver is up and running
+                        Log.d(LOG_TAG, "try to connect to web server");
 
-                            Log.d(LOG_TAG, "Meteor client connected");
-                            doSignup(name, email, hashedPassword);
-                        } else {
-                            dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Could not add user");
-                        }
+                        Log.d(LOG_TAG, "Meteor client connected");
+                        doSignup(name, email, hashedPassword);
                     } else {
-                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Email already registered");
+                        dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Could not add user");
                     }
                 } else {
-                    dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Server is not up and running");
+                    dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Email already registered");
                 }
+            } else {
+                dispatchMessageToHandlers(Constants.SIGNUP_RESULT_INTENT, false, "Server is not up and running");
             }
+        }
     }
 
     private void doLogin(final String email, String normalPassword) {
@@ -227,49 +215,49 @@ public class WebserverManager implements MeteorCallback{
         Log.d(LOG_TAG, "requestLogout");
         final User connectedUser = mDB.getConnectedUser();
         if (connectedUser != null) {
-                Log.d(LOG_TAG,"try to connect to web server");
-                if (FitnessMDMeteor.getInstance().isConnected()) {
-                    Log.d(LOG_TAG, "Meteor client connected");
-                    if (FitnessMDMeteor.getInstance().isLoggedIn()) {
-                        Log.d(LOG_TAG, "Meteor user already logged in. Logging out ...");
-                        FitnessMDMeteor.getInstance().logout(new ResultListener() {
-                            @Override
-                            public void onSuccess(String result) {
-                                Log.d(LOG_TAG, "requestLogout onSuccess");
-                                if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
-                                    Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
-                                    intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
-                                    mContext.sendBroadcast(intentFinishActivity);
-                                }
+            Log.d(LOG_TAG,"try to connect to web server");
+            if (FitnessMDMeteor.getInstance().isConnected()) {
+                Log.d(LOG_TAG, "Meteor client connected");
+                if (FitnessMDMeteor.getInstance().isLoggedIn()) {
+                    Log.d(LOG_TAG, "Meteor user already logged in. Logging out ...");
+                    FitnessMDMeteor.getInstance().logout(new ResultListener() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(LOG_TAG, "requestLogout onSuccess");
+                            if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
+                                Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
+                                intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
+                                mContext.sendBroadcast(intentFinishActivity);
                             }
+                        }
 
-                            @Override
-                            public void onError(String error, String reason, String details) {
-                                Log.d(LOG_TAG, "requestLogout onError");
-                                Toast.makeText(mContext, reason, Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    } else {
-                        Log.d(LOG_TAG, "Meteor user NOT logged in");
+                        @Override
+                        public void onError(String error, String reason, String details) {
+                            Log.d(LOG_TAG, "requestLogout onError");
+                            Toast.makeText(mContext, reason, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                } else {
+                    Log.d(LOG_TAG, "Meteor user NOT logged in");
                         /* somehow the user is still connected in the app although it's not connected to the server
                          force finish the activity and disconnect user
                          ?????????? */
-                    }
-                } else {
-                    Log.d(LOG_TAG, "Meteor not connected. problem with server");
+                }
+            } else {
+                Log.d(LOG_TAG, "Meteor not connected. problem with server");
                     /* the server is down
                        force finish the activity and disconnect user
                        ?????????? */
-                }
-                // no internet but still the user can click the logout button ?!?!?!?
-                // force finish the activity and disconnect user
-                // ??????????
-                if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
-                    Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
-                    intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
-                    mContext.sendBroadcast(intentFinishActivity);
-                }
-            
+            }
+            // no internet but still the user can click the logout button ?!?!?!?
+            // force finish the activity and disconnect user
+            // ??????????
+            if (mDB.setUserConnected(connectedUser.getEmail(), false)) {
+                Intent intentFinishActivity = new Intent(Constants.FINISH_ACTIVITY_INTENT);
+                intentFinishActivity.putExtra(Constants.FINISH_ACTIVITY_BUNDLE_KEY, false);
+                mContext.sendBroadcast(intentFinishActivity);
+            }
+
         } else {
             Log.d(LOG_TAG, "user not even logged in. how did this call got here?");
         }
@@ -610,21 +598,6 @@ public class WebserverManager implements MeteorCallback{
         return null;
     }
 
-    public StepsDayReport getBestSteps() {
-        bestSteps = new StepsDayReport(1234, 1485461807,3600);
-        return bestSteps;
-    }
-
-    public WeightDayReport getBestWeight() {
-        WeightDayReport bestWeight = new WeightDayReport();
-        return bestWeight;
-    }
-
-    public WeightDayReport getAverageWeight() {
-        WeightDayReport averageWeight = new WeightDayReport();
-        return averageWeight;
-    }
-
     public void registerCallback(Handler mActivityHandler) {
         handlerList.add(mActivityHandler);
     }
@@ -634,10 +607,6 @@ public class WebserverManager implements MeteorCallback{
 
     public void registerStatsCallback(IStatsChanged callback) {
         statsCallbackList.add(callback);
-    }
-
-    public void removeStatsCallback() {
-        //handlerList.remove(0);
     }
 
     public void sendStepsToServer(long startOfCurrentDay, int totalSteps, int hourIndex) {

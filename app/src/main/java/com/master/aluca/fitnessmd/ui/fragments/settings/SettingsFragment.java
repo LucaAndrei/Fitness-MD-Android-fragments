@@ -11,10 +11,7 @@ package com.master.aluca.fitnessmd.ui.fragments.settings;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
 import android.support.v4.app.Fragment;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -31,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.NumberPicker;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
@@ -118,7 +116,6 @@ public class SettingsFragment extends Fragment {
         return inflater.inflate(R.layout.layout_tab_settings, container, false);
     }
 
-
     @Override
     public void onActivityCreated(Bundle bundle) {
         super.onActivityCreated(bundle);
@@ -130,7 +127,6 @@ public class SettingsFragment extends Fragment {
         Log.d(LOG_TAG, "SettingsFragment");
         mDB = UsersDB.getInstance(getActivity());
         webserverManager = WebserverManager.getInstance(getActivity());
-
         setup(view);
     }
 
@@ -307,7 +303,6 @@ public class SettingsFragment extends Fragment {
             public void onClick(View v) {
                 Log.d(LOG_TAG, "btnLogout onClick");
                 webserverManager.requestLogout();
-                //getActivity().finish();
             }
         });
 
@@ -315,12 +310,7 @@ public class SettingsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Log.d(LOG_TAG, "btnSyncNow onClick");
-                /*ProgressDialog mProgressDialog = new ProgressDialog(getActivity());
-                mProgressDialog.setMessage("Receiving data from server");
-                mProgressDialog.show();
-                mProgressDialog.dismiss();*/
                 Intent intent = new Intent(getActivity(), ChallengesActivity.class);
-                //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             }
         });
@@ -335,7 +325,7 @@ public class SettingsFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Log.d(LOG_TAG, "btnEraseData OK click");
-                        mService.eraseAllData();
+                        Toast.makeText(getActivity(), "Data erased !", Toast.LENGTH_LONG).show();
                     }
                 }).setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
                     @Override
@@ -345,8 +335,6 @@ public class SettingsFragment extends Fragment {
                 });
                 AlertDialog levelDialog = builder.create();
                 levelDialog.show();
-
-
             }
         });
     }
@@ -375,8 +363,4 @@ public class SettingsFragment extends Fragment {
         Log.d(LOG_TAG, "onDestroy()");
         super.onDestroy();
     }
-
-
-
-
 }

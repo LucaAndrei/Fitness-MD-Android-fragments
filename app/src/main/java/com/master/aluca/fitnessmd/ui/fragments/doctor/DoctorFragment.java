@@ -49,10 +49,7 @@ public class DoctorFragment extends Fragment {
     private Activity mActivity;
     private TextView tvDrHeightUM, tvDrAgeUM, tvDrWeightUM;
     private FitnessMDService mService;
-    //LinearLayout btnSetWeightAsGoal, btnToFitnessMD;
     private double mIdealBodyWeight;
-
-    private Dialog mDialog;
 
     View listRowBMI;
     TextView listRowBMITitle, listRowBMISubtitle;
@@ -158,7 +155,6 @@ public class DoctorFragment extends Fragment {
 
     }
 
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -183,9 +179,6 @@ public class DoctorFragment extends Fragment {
         Log.d(LOG_TAG, "onStop()");
         super.onStop();
 
-        if (mDialog != null && mDialog.isShowing()) {
-            mDialog.dismiss();
-        }
         if (mService != null) {
             mActivity.unbindService(mServiceConnection);
         }
@@ -215,24 +208,7 @@ public class DoctorFragment extends Fragment {
         setup(view);
     }
 
-
-
-
-    private void setListeners(View view) {
-
-        /*btnToFitnessMD.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(LOG_TAG, "btnToFitnessMD onClick");
-                Intent intent = new Intent(mContext, Diet.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                mContext.startActivity(intent);
-            }
-        });*/
-    }
-
     private void updateBMR(String gender, float weight, int height, int yob) {
-
         double BMR = 0;
         Calendar calendar = Calendar.getInstance();
         int currentYear = calendar.get(Calendar.YEAR);
@@ -265,7 +241,6 @@ public class DoctorFragment extends Fragment {
 
         listRowBMISubtitle.setText(String.valueOf(mBMI));
 
-
         float normalBMIAverage = 21.75f;
         float mWeightGoal = (mHeightMeters * mHeightMeters) * normalBMIAverage;
         mWeightGoal = Math.round(mWeightGoal * 10f) / 10f;
@@ -290,8 +265,6 @@ public class DoctorFragment extends Fragment {
         listRowIdealBodyWeightSubtitle.setText(String.valueOf(mIdealBodyWeight) + " kg");
     }
 
-
-
     private void updateWaterRequired(float weight) {
         Log.d(LOG_TAG, "updateWaterRequired weight : " + weight);
         double mWaterRequired = weight / 30;
@@ -303,16 +276,12 @@ public class DoctorFragment extends Fragment {
         tvDrHeightUM = (TextView) view.findViewById(R.id.tvDrHeightUM);
         tvDrAgeUM = (TextView) view.findViewById(R.id.tvDrAgeUM);
         tvDrWeightUM = (TextView) view.findViewById(R.id.tvDrWeightUM);
-        //btnSetWeightAsGoal = (LinearLayout) view.findViewById(R.id.btnSetWeightAsGoal);
-        //btnToFitnessMD = (LinearLayout) view.findViewById(R.id.btnToFitnessMD);
 
         User connectedUser = mDB.getConnectedUser();
 
         initUserData(connectedUser);
         setupListRows(view, connectedUser);
-        setListeners(view);
     }
-
 
     private void initUserData(User connectedUser) {
         Log.d(LOG_TAG, "initUserData");
@@ -368,8 +337,6 @@ public class DoctorFragment extends Fragment {
             }
         });
 
-
-
         listRowBMR = view.findViewById(R.id.listRowBMR);
         listRowBMRTitle = (TextView) listRowBMR.findViewById(R.id.listRowTitle);
         listRowBMRSubtitle = (TextView) listRowBMR.findViewById(R.id.listRowSubtitle);
@@ -392,8 +359,6 @@ public class DoctorFragment extends Fragment {
 
             }
         });
-
-
 
         listRowWater = view.findViewById(R.id.listRowWater);
         listRowWaterTitle = (TextView) listRowWater.findViewById(R.id.listRowTitle);
@@ -419,8 +384,6 @@ public class DoctorFragment extends Fragment {
                 levelDialog.show();
             }
         });
-
-
 
         listRowIdealBodyWeight = view.findViewById(R.id.listRowIdealBodyWeight);
         listRowIdealBodyWeightTitle = (TextView) listRowIdealBodyWeight.findViewById(R.id.listRowTitle);
@@ -459,8 +422,6 @@ public class DoctorFragment extends Fragment {
                 levelDialog.show();
             }
         });
-
-
 
         listRowCalorieNeeds = view.findViewById(R.id.listRowCalorieNeeds);
         listRowCalorieNeedsTitle = (TextView) listRowCalorieNeeds.findViewById(R.id.listRowTitle);
@@ -505,8 +466,6 @@ public class DoctorFragment extends Fragment {
             }
         });
 
-
-
         listRowDiet = view.findViewById(R.id.listRowDiet);
         listRowDietTitle = (TextView) listRowDiet.findViewById(R.id.listRowTitle);
         listRowDietSubtitle = (TextView) listRowDiet.findViewById(R.id.listRowSubtitle);
@@ -540,7 +499,6 @@ public class DoctorFragment extends Fragment {
             public void onClick(View v) {
                 Log.d(LOG_TAG, "listRowAdvice onClick");
                 Intent intent = new Intent(getActivity(), AdvicesActivity.class);
-                //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             }
         });
@@ -551,7 +509,6 @@ public class DoctorFragment extends Fragment {
         Log.d(LOG_TAG, "onDestroy()");
         super.onDestroy();
     }
-
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {

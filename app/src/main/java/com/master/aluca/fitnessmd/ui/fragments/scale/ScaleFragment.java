@@ -23,7 +23,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.ArcProgress;
 import com.master.aluca.fitnessmd.common.Constants;
@@ -117,7 +116,6 @@ public class ScaleFragment extends Fragment {
         mDB = UsersDB.getInstance(getActivity());
         mDB.registerCallback(mCallback);
 
-
         setup(view);
     }
 
@@ -136,14 +134,7 @@ public class ScaleFragment extends Fragment {
                         Log.d(LOG_TAG, "WEIGHT_CHANGED_CALLBACK userWeight : " + userWeight + " >> weightGoal : " + weightGoal);
                         mArcProgressScale.setProgressWeight();
                     }
-                    // long lastMeasurementDay = intent.getLongExtra(Constants.WEIGHT_RECEIVED_LAST_MSRMNT_BUNDLE_KEY, -1);
-                    // if (lastMeasurementDay != -1) {
-                    //     Log.d(LOG_TAG, "lastMeasurementDay : " + (new Date(lastMeasurementDay)));
-                    //     SimpleDateFormat s = new SimpleDateFormat("d MMMM yyyy");
-                    //     tvDate.setText(s.format(new Date(lastMeasurementDay)));
-                    // } else {
-                    //     Log.d(LOG_TAG, "lastMeasurementDay ERROR");
-                    // }
+
                     break;
                 case Constants.WEIGHT_GOAL_CHANGED_CALLBACK :
                     float weightGoal = connectedUser.getWeightGoal();

@@ -33,7 +33,6 @@ import android.widget.TextView;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.datatypes.User;
-import com.master.aluca.fitnessmd.common.datatypes.WeightDayReport;
 import com.master.aluca.fitnessmd.common.util.IDataRefreshCallback;
 import com.master.aluca.fitnessmd.common.util.IStatsChanged;
 import com.master.aluca.fitnessmd.common.util.ProfilePhotoUtils;
@@ -110,7 +109,6 @@ public class ProfileFragment extends Fragment {
         if (webserverManager != null) {
             webserverManager.registerStatsCallback(mStatsChangedCallback);
         }
-
     }
 
     private IStatsChanged mStatsChangedCallback = new IStatsChanged() {
@@ -135,8 +133,6 @@ public class ProfileFragment extends Fragment {
         @Override
         public void onLast7DaysStats(HashMap<Long, Integer> last7DaysStats) {
         }
-
-
     };
 
     public void onStop() {
@@ -146,7 +142,6 @@ public class ProfileFragment extends Fragment {
         if (mService != null) {
             mActivity.unbindService(mServiceConnection);
         }
-
     }
 
     @Override
@@ -277,7 +272,6 @@ public class ProfileFragment extends Fragment {
     }
 
 
-
     private void initUserData() {
         Log.d(LOG_TAG,"initUserData");
 
@@ -291,11 +285,8 @@ public class ProfileFragment extends Fragment {
         }
 
         updateGenderTextView(connectedUser.getGender());
-
         updateAgeTextView(connectedUser.getYearOfBirth());
-
         updateHeightTextView(connectedUser.getHeight());
-
         updateProfilePicture(connectedUser.getProfilePictureURI());
     }
 
@@ -332,19 +323,13 @@ public class ProfileFragment extends Fragment {
             updateBestSteps(Constants.getStartOfCurrentDay(), 0);
         }
 
+        tvPersonalBestWeight.setText(String.valueOf(Constants.WEIGHT_DEFAULT_VALUE) + " kg");
 
-
-        WeightDayReport weightBestReport = webserverManager.getBestWeight();
-        float weight = weightBestReport.getWeight();
-        tvPersonalBestWeight.setText(String.valueOf(weight) + " kg");
-
-        day = dateFormat.format(new Date(weightBestReport.getDay()));
+        day = dateFormat.format(new Date(System.currentTimeMillis()));
         Log.d(LOG_TAG,"day : " + day);
         tvPersonalBestWeightDate.setText(day);
 
-        WeightDayReport averageWeightRaport = webserverManager.getAverageWeight();
-        float averageWeight = averageWeightRaport.getWeight();
-        tvAverageWeight.setText(String.valueOf(averageWeight) + " kg");
+        tvAverageWeight.setText(String.valueOf(Constants.WEIGHT_DEFAULT_VALUE) + " kg");
 
         tvAverageSteps.setText("0 steps");
 
@@ -358,7 +343,6 @@ public class ProfileFragment extends Fragment {
         imageViewProfile.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.user));
         //imageViewProfile.setImageResource(mContext.getResources().getDrawable(R.drawable.user));
     }
-
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {

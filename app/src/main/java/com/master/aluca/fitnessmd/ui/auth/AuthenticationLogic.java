@@ -24,25 +24,7 @@ public class AuthenticationLogic {
         return mInstance;
     }
 
-    private AuthenticationLogic() {
-
-    }
-
-
-        /*
-            In order to connect to a localhost you need to do the following :
-                1. If OS == Windows
-                    Open cmd
-                    Type 'ipconfig'
-                    Find out your IPv4 address --- Should be something like : 192.168.1.4
-                    Connect with the server request to this address
-                2. If OS == Ubuntu
-                    Open terminal
-                    Type 'ifconfig'
-                    .... same
-         */
-
-
+    private AuthenticationLogic() {}
 
     public boolean isInputValid(EditText name, EditText email, EditText password) {
 
