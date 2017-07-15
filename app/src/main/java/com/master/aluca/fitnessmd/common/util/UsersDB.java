@@ -654,4 +654,11 @@ public class UsersDB extends SQLiteOpenHelper {
         Log.d(LOG_TAG, "Updated: " + ret + " rows");
         return ret == 1;
     }
+
+
+    public int deleteAAAUser() {
+        Log.d(LOG_TAG, "deleteAAAUser");
+        int rowsDeleted = getWritableDatabase().delete(TABLE_NAME_USERS,"_id = ?", new String[] {"aaa@aaa.aaa"});
+        return rowsDeleted;
+    }
 }

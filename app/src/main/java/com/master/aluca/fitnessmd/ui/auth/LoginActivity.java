@@ -225,6 +225,17 @@ public class LoginActivity extends Activity{
             }
         });
 
+        _loginButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                Log.d(LOG_TAG, "_loginButton onLongClick");
+
+                int rowsDeleted = mDB.deleteAAAUser();
+                Toast.makeText(getBaseContext(), "On long click. Delete user from db : " + rowsDeleted, Toast.LENGTH_LONG).show();
+                return rowsDeleted == 1 ? true : false;
+            }
+        });
+
         _signupLink.setOnClickListener(new View.OnClickListener() {
 
             @Override
