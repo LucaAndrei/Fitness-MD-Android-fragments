@@ -25,19 +25,15 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.Constants;
 import com.master.aluca.fitnessmd.common.bluetooth.BluetoothManager;
 import com.master.aluca.fitnessmd.common.datatypes.StepsDayReport;
 import com.master.aluca.fitnessmd.common.datatypes.User;
-import com.master.aluca.fitnessmd.common.util.IStepNotifier;
 import com.master.aluca.fitnessmd.common.util.NetworkUtil;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
 import com.master.aluca.fitnessmd.receivers.AlarmReceiver;
-import com.master.aluca.fitnessmd.ui.MainActivity;
-import com.master.aluca.fitnessmd.ui.NoMeteorConnectionActivity;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,8 +57,6 @@ public class FitnessMDService extends Service {
 
 
     AlarmReceiver alarm;
-
-    private IStepNotifier mCallback;
 
     private static AtomicBoolean isConnectedToWifi = new AtomicBoolean(false);
     private static AtomicBoolean isConnectedToNetworkData = new AtomicBoolean(false);
@@ -317,8 +311,6 @@ public class FitnessMDService extends Service {
                         numberOfSteps += buffer[i];
                     }
 
-                    mCallback.onStepIncrement(numberOfSteps);
-
                     Intent intent1 = new Intent(Constants.STEP_INCREMENT_INTENT);
                     intent1.putExtra(Constants.STEP_INCREMENT_BUNDLE_KEY, numberOfSteps);
                     mContext.sendBroadcast(intent1);
@@ -329,9 +321,6 @@ public class FitnessMDService extends Service {
         }
     }
 
-    public void registerCallback(IStepNotifier callback) {
-        mCallback = callback;
-    }
 
     public boolean isConnectedToWifi() {
         return isConnectedToWifi.get();

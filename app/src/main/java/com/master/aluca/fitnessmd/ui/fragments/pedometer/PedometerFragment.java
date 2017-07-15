@@ -11,7 +11,6 @@ package com.master.aluca.fitnessmd.ui.fragments.pedometer;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -25,9 +24,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,7 +33,6 @@ import android.widget.Toast;
 import com.master.aluca.fitnessmd.R;
 import com.master.aluca.fitnessmd.common.ArcProgress;
 import com.master.aluca.fitnessmd.common.Constants;
-import com.master.aluca.fitnessmd.common.util.IStepNotifier;
 import com.master.aluca.fitnessmd.common.util.SharedPreferencesManager;
 import com.master.aluca.fitnessmd.common.util.UsersDB;
 import com.master.aluca.fitnessmd.common.webserver.WebserverManager;
@@ -91,7 +87,6 @@ public class PedometerFragment extends Fragment {
             } else {
                 if (mService.isDeviceConnected()) {
                     Log.d(LOG_TAG, "Device connected");
-                    mService.registerCallback(mCallback);
                     if (mState == Constants.STOPWATCH_RUNNING) {
                         startUpdateThread();
                     }
@@ -106,28 +101,6 @@ public class PedometerFragment extends Fragment {
             Log.d(LOG_TAG, "on service disconnected");
             mService = null;
         }
-    };
-
-    /*
-        When the user sets Gender, Year of birth or Height from the Settings menu
-        the Profile tab does not get updated unless this callback is called.
-     */
-    private IStepNotifier mCallback = new IStepNotifier() {
-            @Override
-            public void onStepIncrement(int steps) {
-                Log.d(LOG_TAG, "IStepNotified STEP_INCREMENT_CALLBACK received");
-                totalSteps += steps;
-                Log.d(LOG_TAG, "IStepNotified totalSteps : " + totalSteps);
-                mArcProgress.setProgress(totalSteps);
-                setKm();
-                setKCal();
-                if (totalSteps % 10 == 0) {
-                    Log.d(LOG_TAG, "IStepNotified 10 steps");
-                    if (mService!= null) {
-                        mService.sendStepsToServer(sharedPreferencesManager.getStartOfCurrentDay(), totalSteps, 0);
-                    }
-                }
-            }
     };
 
 
